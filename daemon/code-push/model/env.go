@@ -3,7 +3,7 @@ package model
 import "time"
 
 type Env struct {
-	BranchId    string	  `json:"branch_id"`
+	BranchId    string    `json:"branch_id"`
 	EnvId       string    `json:"env_id"`
 	EnvName     string    `json:"env_name"`
 	EnvEncToken string    `json:"env_enc_token"`
@@ -15,7 +15,7 @@ func NewEnv(
 	createTime time.Time,
 ) *Env {
 	return &Env{
-		BranchId: 	 branchId,
+		BranchId:    branchId,
 		EnvId:       envId,
 		EnvName:     name,
 		EnvEncToken: encToken,

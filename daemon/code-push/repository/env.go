@@ -11,4 +11,3 @@ type IEnv interface {
 	Save(env *model.Env) error
 	Delete(env *model.Env) error
 }
-

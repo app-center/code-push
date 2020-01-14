@@ -3,7 +3,7 @@ package model
 import "time"
 
 type Version struct {
-	EnvId			 string	   `json:"env_id"`
+	EnvId            string    `json:"env_id"`
 	AppVersion       string    `json:"app_version"`
 	CompatAppVersion string    `json:"compat_app_version"`
 	MustUpdate       bool      `json:"must_update"`

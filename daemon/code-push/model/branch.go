@@ -5,7 +5,7 @@ import (
 )
 
 type Branch struct {
-	BranchId	   string `json:"branch_id"`
+	BranchId       string    `json:"branch_id"`
 	BranchName     string    `json:"branch_name"`
 	BranchAuthHost string    `json:"branch_auth_host"`
 	BranchEncToken string    `json:"branch_enc_token"`
