@@ -1,6 +1,9 @@
 package errors
 
-import "github.com/funnyecho/code-push/pkg/errors"
+import (
+	"fmt"
+	"github.com/funnyecho/code-push/pkg/errors"
+)
 
 type InvalidPreReleaseVersionError struct {
 	Err        error
@@ -21,4 +24,22 @@ func (err *InvalidPreReleaseVersionError) Error() *errors.Error {
 			"PRBuild":    err.PRBuild,
 		},
 	})
+}
+
+type InvalidPreReleaseVersionErrorConfig struct {
+	Err        error
+	RawVersion string
+	PRStage    interface{}
+	PRVersion  interface{}
+	PRBuild    interface{}
+}
+
+func NewInvalidPreReleaseVersionError(config InvalidPreReleaseVersionErrorConfig) *InvalidPreReleaseVersionError {
+	return &InvalidPreReleaseVersionError{
+		Err:        config.Err,
+		RawVersion: config.RawVersion,
+		PRStage:    fmt.Sprintf("%v", config.PRStage),
+		PRVersion:  fmt.Sprintf("%v", config.PRVersion),
+		PRBuild:    fmt.Sprintf("%v", config.PRBuild),
+	}
 }

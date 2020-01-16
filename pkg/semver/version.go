@@ -34,52 +34,36 @@ type SemVer struct {
 }
 
 func (ver *SemVer) StageSafetyCompare(ver2 interface{}) int {
-	if rawVerString, isString := ver2.(string); isString {
-		if semVer2, err := ParseVersion(rawVerString); err != nil {
-			return ver.stageSafetyCompare(semVer2)
-		} else {
-			return CompareLessFlag
-		}
-	}
-
 	switch i := ver2.(type) {
 	case string:
-		if semVer2, err := ParseVersion(i); err != nil {
+		if semVer2, err := ParseVersion(i); err == nil {
 			return ver.stageSafetyCompare(semVer2)
 		} else {
-			return CompareLessFlag
+			return CompareLargeFlag
 		}
 	case *SemVer:
 		return ver.stageSafetyCompare(i)
 	case SemVer:
 		return ver.stageSafetyCompare(&i)
 	default:
-		return CompareLessFlag
+		return CompareLargeFlag
 	}
 }
 
 func (ver *SemVer) Compare(ver2 interface{}) int {
-	if rawVerString, isString := ver2.(string); isString {
-		if semVer2, err := ParseVersion(rawVerString); err != nil {
-			return ver.compare(semVer2)
-		} else {
-			return CompareLessFlag
-		}
-	}
-
 	switch i := ver2.(type) {
 	case string:
-		if semVer2, err := ParseVersion(i); err != nil {
+		if semVer2, err := ParseVersion(i); err == nil {
 			return ver.compare(semVer2)
 		} else {
-			return CompareLessFlag
+			return CompareLargeFlag
 		}
 	case *SemVer:
 		return ver.compare(i)
 	case SemVer:
 		return ver.compare(&i)
 	default:
-		return CompareLessFlag
+		return CompareLargeFlag
 	}
 }
 
@@ -88,7 +72,11 @@ func (ver *SemVer) stageSafetyCompare(ver2 *SemVer) int {
 
 	switch {
 	case mainCompare == CompareLessFlag:
-		return CompareLessFlag
+		if ver.prStageCompare(ver2) == CompareLargeFlag {
+			return CompareLargeFlag
+		} else {
+			return CompareLessFlag
+		}
 	case mainCompare == CompareEqualFlag:
 		return ver.prCompare(ver2)
 	case mainCompare == CompareLargeFlag:
@@ -184,8 +172,28 @@ func (ver *SemVer) String() string {
 	)
 }
 
+func (ver *SemVer) MajorVersion() int {
+	return ver.majorV
+}
+
+func (ver *SemVer) MinorVersion() int {
+	return ver.minorV
+}
+
+func (ver *SemVer) PatchVersion() int {
+	return ver.patchV
+}
+
 func (ver *SemVer) PRStage() int {
 	return ver.prStage
+}
+
+func (ver *SemVer) PRVersion() int {
+	return ver.prVersion
+}
+
+func (ver *SemVer) PRBuild() int {
+	return ver.prBuild
 }
 
 func ParseVersion(rawVer string) (semVer *SemVer, parseErr errors.IError) {
@@ -197,7 +205,7 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr errors.IError) {
 
 	matches := re.Split(rawVer, 4)
 
-	if len(matches) < 3 || len(matches) > 4 {
+	if len(matches) < 3 {
 		return nil, &semverErrors.InvalidRawVersionFormatError{RawVersion: rawVer}
 	}
 
@@ -293,55 +301,65 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr errors.IError) {
 	}
 
 	return New(CtorConfig{
-		majorV:    majorV,
-		minorV:    minorV,
-		patchV:    patchV,
-		prStage:   prStage,
-		prVersion: prVersion,
-		prBuild:   prBuild,
+		MajorV:    majorV,
+		MinorV:    minorV,
+		PatchV:    patchV,
+		PRStage:   prStage,
+		PRVersion: prVersion,
+		PRBuild:   prBuild,
 	})
 }
 
 type CtorConfig struct {
-	majorV int
-	minorV int
-	patchV int
+	MajorV int
+	MinorV int
+	PatchV int
 
-	prStage   int
-	prVersion int
-	prBuild   int
+	PRStage   int
+	PRVersion int
+	PRBuild   int
 }
 
 func (config CtorConfig) ToRawVersion() string {
 	return fmt.Sprintf(
 		"%v.%v.%v-%v.%v.%v",
-		config.majorV,
-		config.minorV,
-		config.patchV,
-		config.prStage,
-		config.prVersion,
-		config.prBuild,
+		config.MajorV,
+		config.MinorV,
+		config.PatchV,
+		config.PRStage,
+		config.PRVersion,
+		config.PRBuild,
 	)
 }
 
 func New(config CtorConfig) (semVer *SemVer, err errors.IError) {
-	if config.majorV < 0 ||
-		config.minorV < 0 ||
-		config.patchV < 0 ||
-		(config.prStage < PRStageAlpha || config.prStage > PRStageRelease) ||
-		config.prVersion < 0 ||
-		config.prBuild < 0 {
-		return nil, &semverErrors.InvalidRawVersionFormatError{
-			RawVersion: config.ToRawVersion(),
-		}
-	}
+	rawVersion := config.ToRawVersion()
 
-	return &SemVer{
-		majorV:    config.majorV,
-		minorV:    config.minorV,
-		patchV:    config.patchV,
-		prStage:   config.prStage,
-		prVersion: config.prVersion,
-		prBuild:   config.prBuild,
-	}, nil
+	switch true {
+	case config.MajorV < 0:
+		return nil, semverErrors.NewInvalidMajorVersionError(nil, rawVersion, config.MajorV)
+	case config.MinorV < 0:
+		return nil, semverErrors.NewInvalidMinorVersionError(nil, rawVersion, config.MinorV)
+	case config.PatchV < 0:
+		return nil, semverErrors.NewInvalidPatchVersionError(nil, rawVersion, config.PatchV)
+	case (config.PRStage < PRStageAlpha || config.PRStage > PRStageRelease) ||
+		config.PRVersion < 0 ||
+		(config.PRBuild < 1 || config.PRBuild > 9):
+		return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
+			Err:        nil,
+			RawVersion: rawVersion,
+			PRStage:    config.PRStage,
+			PRVersion:  config.PRVersion,
+			PRBuild:    config.PRBuild,
+		})
+	default:
+		return &SemVer{
+			majorV:    config.MajorV,
+			minorV:    config.MinorV,
+			patchV:    config.PatchV,
+			prStage:   config.PRStage,
+			prVersion: config.PRVersion,
+			prBuild:   config.PRBuild,
+		}, nil
+	}
 }

@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"fmt"
 	"github.com/funnyecho/code-push/pkg/errors"
 )
 
@@ -19,4 +20,12 @@ func (err *InvalidPatchVersionError) Error() *errors.Error {
 			"PatchVersion": err.PatchVersion,
 		},
 	})
+}
+
+func NewInvalidPatchVersionError(err error, rawVersion string, patchVersion interface{}) *InvalidPatchVersionError {
+	return &InvalidPatchVersionError{
+		Err:          err,
+		RawVersion:   rawVersion,
+		PatchVersion: fmt.Sprintf("%v", patchVersion),
+	}
 }
