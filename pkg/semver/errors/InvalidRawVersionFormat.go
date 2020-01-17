@@ -4,15 +4,18 @@ import (
 	"github.com/funnyecho/code-push/pkg/errors"
 )
 
-type InvalidRawVersionFormatError struct {
+type InvalidRawVersionFormatError errors.Error
+
+type InvalidRawVersionFormatErrorConfig struct {
 	RawVersion string
 }
 
-func (err *InvalidRawVersionFormatError) Error() *errors.Error {
-	return errors.New(errors.CtorConfig{
-		Msg: "invalid raw version format",
-		Meta: errors.MetaFields{
-			"RawVersion": err.RawVersion,
-		},
-	})
+func NewInvalidRawVersionFormatError(config InvalidRawVersionFormatErrorConfig) *InvalidRawVersionFormatError {
+	return &InvalidRawVersionFormatError{
+		OpenError: errors.NewOpenError(errors.CtorConfig{
+			Msg: "invalid raw version format",
+			Meta: errors.MetaFields{
+				"RawVersion": config.RawVersion,
+			},
+		})}
 }

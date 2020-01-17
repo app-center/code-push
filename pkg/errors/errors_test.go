@@ -1,45 +1,37 @@
 package errors
 
 import (
-	"encoding/json"
 	"fmt"
+	assert "github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestError(t *testing.T) {
 	nErr := fmt.Errorf("native errors")
 
-	var decodeFunc DecodeFunc = func(params DecodeParams) string {
-		v, _ := json.Marshal(params)
-		return string(v)
+	encodeFunc := func(params EncodeParams) string {
+		return fmt.Sprintf("Code: %s; Msg: %s; Meta.foo: %d", params.Code, params.Msg, params.Meta["foo"])
 	}
 
-	err := New(CtorConfig{
-		Error: nErr,
-		Code:  "FA_ERROR",
-		Msg:   "Unknown Error",
-		Meta: MetaFields{
-			"foo": 1,
-		},
-		DecodeFunc: decodeFunc,
-	})
-	expectErrOutput := decodeFunc(DecodeParams{
+	openParams := EncodeParams{
 		Code: "FA_ERROR",
 		Msg:  "Unknown Error",
 		Meta: MetaFields{
 			"foo": 1,
 		},
+	}
+
+	expectErrMessage := fmt.Sprintf("Code: %s; Msg: %s; Meta.foo: %d", openParams.Code, openParams.Msg, openParams.Meta["foo"])
+
+	err := NewOpenError(CtorConfig{
+		Error:      nErr,
+		Code:       openParams.Code,
+		Msg:        openParams.Msg,
+		Meta:       openParams.Meta,
+		EncodeFunc: encodeFunc,
 	})
 
-	if err.Error() != expectErrOutput {
-		t.Fatalf(`Invalid errors output; expected: %s; got: %s`, expectErrOutput, err.Error())
-	}
-
-	if err.String() != expectErrOutput {
-		t.Fatalf(`Invalid errors output; expected: %s; got: %s`, expectErrOutput, err.String())
-	}
-
-	if err.Unwrap() != nErr {
-		t.Fatalf(`Invalid downstream output; expected: %v; got: %v`, nErr, err.Unwrap())
-	}
+	assert.Equal(t, expectErrMessage, err.Error())
+	assert.Equal(t, expectErrMessage, err.String())
+	assert.Equal(t, nErr, err.Unwrap())
 }

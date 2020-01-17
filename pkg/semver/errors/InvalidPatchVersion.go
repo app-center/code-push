@@ -1,31 +1,26 @@
 package errors
 
 import (
-	"fmt"
 	"github.com/funnyecho/code-push/pkg/errors"
 )
 
-type InvalidPatchVersionError struct {
+type InvalidPatchVersionError errors.Error
+
+type InvalidPatchVersionErrorConfig struct {
 	Err          error
 	RawVersion   string
-	PatchVersion string
+	PatchVersion interface{}
 }
 
-func (err *InvalidPatchVersionError) Error() *errors.Error {
-	return errors.New(errors.CtorConfig{
-		Error: err.Err,
-		Msg:   "invalid patch version",
-		Meta: errors.MetaFields{
-			"RawVersion":   err.RawVersion,
-			"PatchVersion": err.PatchVersion,
-		},
-	})
-}
-
-func NewInvalidPatchVersionError(err error, rawVersion string, patchVersion interface{}) *InvalidPatchVersionError {
+func NewInvalidPatchVersionError(config InvalidPatchVersionErrorConfig) *InvalidPatchVersionError {
 	return &InvalidPatchVersionError{
-		Err:          err,
-		RawVersion:   rawVersion,
-		PatchVersion: fmt.Sprintf("%v", patchVersion),
+		OpenError: errors.NewOpenError(errors.CtorConfig{
+			Error: config.Err,
+			Msg:   "invalid patch version",
+			Meta: errors.MetaFields{
+				"RawVersion":   config.RawVersion,
+				"PatchVersion": config.PatchVersion,
+			},
+		}),
 	}
 }

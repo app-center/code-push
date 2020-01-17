@@ -2,7 +2,6 @@ package semver
 
 import (
 	"fmt"
-	"github.com/funnyecho/code-push/pkg/errors"
 	semverErrors "github.com/funnyecho/code-push/pkg/semver/errors"
 	"regexp"
 	"strconv"
@@ -196,7 +195,7 @@ func (ver *SemVer) PRBuild() int {
 	return ver.prBuild
 }
 
-func ParseVersion(rawVer string) (semVer *SemVer, parseErr errors.IError) {
+func ParseVersion(rawVer string) (semVer *SemVer, parseErr error) {
 	rawVer = strings.TrimPrefix(rawVer, "v")
 
 	var majorV, minorV, patchV, prStage, prVersion, prBuild int
@@ -206,7 +205,7 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr errors.IError) {
 	matches := re.Split(rawVer, 4)
 
 	if len(matches) < 3 {
-		return nil, &semverErrors.InvalidRawVersionFormatError{RawVersion: rawVer}
+		return nil, semverErrors.NewInvalidRawVersionFormatError(semverErrors.InvalidRawVersionFormatErrorConfig{RawVersion: rawVer})
 	}
 
 	var v int64
@@ -214,32 +213,33 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr errors.IError) {
 
 	v, err = strconv.ParseInt(matches[0], 10, 64)
 	if err != nil {
-		return nil, &semverErrors.InvalidMajorVersionError{
+		return nil, semverErrors.NewInvalidMajorVersionError(semverErrors.InvalidMajorVersionErrorConfig{
+			Err:          err,
 			RawVersion:   rawVer,
 			MajorVersion: matches[0],
-		}
+		})
 	} else {
 		majorV = int(v)
 	}
 
 	v, err = strconv.ParseInt(matches[1], 10, 64)
 	if err != nil {
-		return nil, &semverErrors.InvalidMinorVersionError{
+		return nil, semverErrors.NewInvalidMinorVersionError(semverErrors.InvalidMinorVersionErrorConfig{
 			Err:          err,
 			RawVersion:   rawVer,
 			MinorVersion: matches[1],
-		}
+		})
 	} else {
 		minorV = int(v)
 	}
 
 	v, err = strconv.ParseInt(matches[2], 10, 64)
 	if err != nil {
-		return nil, &semverErrors.InvalidPatchVersionError{
+		return nil, semverErrors.NewInvalidPatchVersionError(semverErrors.InvalidPatchVersionErrorConfig{
 			Err:          err,
 			RawVersion:   rawVer,
 			PatchVersion: matches[2],
-		}
+		})
 	} else {
 		patchV = int(v)
 	}
@@ -264,19 +264,19 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr errors.IError) {
 			case "release":
 				prStage = PRStageRelease
 			default:
-				return nil, &semverErrors.InvalidPreReleaseVersionError{
+				return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
 					RawVersion: rawVer,
 					PRStage:    rawPRStage,
-				}
+				})
 			}
 
 			v, err = strconv.ParseInt(rawPRVersion, 10, 32)
 			if err != nil {
-				return nil, &semverErrors.InvalidPreReleaseVersionError{
+				return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
 					Err:        err,
 					RawVersion: rawVer,
 					PRVersion:  rawPRVersion,
-				}
+				})
 			} else {
 				prVersion = int(v)
 				prBuild = 1
@@ -284,10 +284,10 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr errors.IError) {
 		} else {
 			v, err = strconv.ParseInt(rawPR, 10, 32)
 			if err != nil {
-				return nil, &semverErrors.InvalidPreReleaseVersionError{
+				return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
 					Err:        err,
 					RawVersion: rawVer,
-				}
+				})
 			}
 
 			prStage = int(v / 1000)
@@ -332,20 +332,36 @@ func (config CtorConfig) ToRawVersion() string {
 	)
 }
 
-func New(config CtorConfig) (semVer *SemVer, err errors.IError) {
+func New(config CtorConfig) (semVer *SemVer, err error) {
 	rawVersion := config.ToRawVersion()
 
 	switch true {
 	case config.MajorV < 0:
-		return nil, semverErrors.NewInvalidMajorVersionError(nil, rawVersion, config.MajorV)
+		err = semverErrors.NewInvalidMajorVersionError(semverErrors.InvalidMajorVersionErrorConfig{
+			Err:          nil,
+			RawVersion:   rawVersion,
+			MajorVersion: config.MajorV,
+		})
 	case config.MinorV < 0:
-		return nil, semverErrors.NewInvalidMinorVersionError(nil, rawVersion, config.MinorV)
+		err = semverErrors.NewInvalidMinorVersionError(semverErrors.InvalidMinorVersionErrorConfig{
+			Err:          nil,
+			RawVersion:   rawVersion,
+			MinorVersion: config.MinorV,
+		})
 	case config.PatchV < 0:
-		return nil, semverErrors.NewInvalidPatchVersionError(nil, rawVersion, config.PatchV)
+		err = semverErrors.NewInvalidPatchVersionError(semverErrors.InvalidPatchVersionErrorConfig{
+			Err:          nil,
+			RawVersion:   rawVersion,
+			PatchVersion: config.PatchV,
+		})
+	case config.MajorV == 0 && config.MinorV == 0 && config.PatchV == 0:
+		err = semverErrors.NewInvalidRawVersionFormatError(semverErrors.InvalidRawVersionFormatErrorConfig{
+			RawVersion: rawVersion,
+		})
 	case (config.PRStage < PRStageAlpha || config.PRStage > PRStageRelease) ||
 		config.PRVersion < 0 ||
 		(config.PRBuild < 1 || config.PRBuild > 9):
-		return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
+		err = semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
 			Err:        nil,
 			RawVersion: rawVersion,
 			PRStage:    config.PRStage,
@@ -353,13 +369,15 @@ func New(config CtorConfig) (semVer *SemVer, err errors.IError) {
 			PRBuild:    config.PRBuild,
 		})
 	default:
-		return &SemVer{
+		semVer = &SemVer{
 			majorV:    config.MajorV,
 			minorV:    config.MinorV,
 			patchV:    config.PatchV,
 			prStage:   config.PRStage,
 			prVersion: config.PRVersion,
 			prBuild:   config.PRBuild,
-		}, nil
+		}
 	}
+
+	return
 }

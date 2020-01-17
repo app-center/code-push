@@ -3,14 +3,14 @@ package errors
 import "fmt"
 
 type MetaFields = map[string]interface{}
-type DecodeParams struct {
+type EncodeParams struct {
 	Code string
 	Msg  string
 	Meta MetaFields
 }
-type DecodeFunc func(params DecodeParams) string
+type EncodeFunc func(params EncodeParams) string
 
-func defaultErrorDecodeFunc(params DecodeParams) string {
+func defaultErrorDecodeFunc(params EncodeParams) string {
 	errMeta := ""
 
 	if params.Meta != nil {
@@ -20,31 +20,31 @@ func defaultErrorDecodeFunc(params DecodeParams) string {
 	return fmt.Sprintf("code-push errors: Code=%s\tMsg=%s\tMeta=%+v", params.Code, params.Msg, errMeta)
 }
 
-type IError interface {
-	Error() *Error
-}
-
-type Error struct {
+type OpenError struct {
 	err        error
 	code       string
 	msg        string
 	meta       MetaFields
-	decodeFunc DecodeFunc
+	encodeFunc EncodeFunc
 }
 
-func (err *Error) Error() string {
-	return err.decodeFunc(DecodeParams{
+type Error struct {
+	*OpenError
+}
+
+func (err *OpenError) Error() string {
+	return err.encodeFunc(EncodeParams{
 		Code: err.code,
 		Msg:  err.msg,
 		Meta: err.meta,
 	})
 }
 
-func (err *Error) String() string {
+func (err *OpenError) String() string {
 	return err.Error()
 }
 
-func (err *Error) Unwrap() error {
+func (err *OpenError) Unwrap() error {
 	return err.err
 }
 
@@ -53,19 +53,19 @@ type CtorConfig struct {
 	Code       string
 	Msg        string
 	Meta       MetaFields
-	DecodeFunc DecodeFunc
+	EncodeFunc EncodeFunc
 }
 
-func New(config CtorConfig) *Error {
-	if config.DecodeFunc == nil {
-		config.DecodeFunc = defaultErrorDecodeFunc
+func NewOpenError(config CtorConfig) *OpenError {
+	if config.EncodeFunc == nil {
+		config.EncodeFunc = defaultErrorDecodeFunc
 	}
 
-	return &Error{
+	return &OpenError{
 		err:        config.Error,
 		code:       config.Code,
 		msg:        config.Msg,
 		meta:       config.Meta,
-		decodeFunc: config.DecodeFunc,
+		encodeFunc: config.EncodeFunc,
 	}
 }

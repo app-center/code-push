@@ -102,6 +102,10 @@ func (c *Cache) Remove(key KeyType) bool {
 	return false
 }
 
+func (c *Cache) Capacity() int {
+	return c.capacity
+}
+
 func (c *Cache) Len() int {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -178,6 +182,10 @@ type CtorConfig struct {
 func New(config CtorConfig) *Cache {
 	if config.AllocFunc == nil {
 		config.AllocFunc = defaultValueAllocationFunc
+	}
+
+	if config.Capacity < 0 {
+		config.Capacity = 0
 	}
 
 	return &Cache{

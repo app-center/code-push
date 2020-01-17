@@ -1,30 +1,10 @@
 package errors
 
 import (
-	"fmt"
 	"github.com/funnyecho/code-push/pkg/errors"
 )
 
-type InvalidPreReleaseVersionError struct {
-	Err        error
-	RawVersion string
-	PRStage    string
-	PRVersion  string
-	PRBuild    string
-}
-
-func (err *InvalidPreReleaseVersionError) Error() *errors.Error {
-	return errors.New(errors.CtorConfig{
-		Error: err.Err,
-		Msg:   "invalid pre release version",
-		Meta: errors.MetaFields{
-			"RawVersion": err.RawVersion,
-			"PRStage":    err.PRStage,
-			"PRVersion":  err.PRVersion,
-			"PRBuild":    err.PRBuild,
-		},
-	})
-}
+type InvalidPreReleaseVersionError errors.Error
 
 type InvalidPreReleaseVersionErrorConfig struct {
 	Err        error
@@ -36,10 +16,15 @@ type InvalidPreReleaseVersionErrorConfig struct {
 
 func NewInvalidPreReleaseVersionError(config InvalidPreReleaseVersionErrorConfig) *InvalidPreReleaseVersionError {
 	return &InvalidPreReleaseVersionError{
-		Err:        config.Err,
-		RawVersion: config.RawVersion,
-		PRStage:    fmt.Sprintf("%v", config.PRStage),
-		PRVersion:  fmt.Sprintf("%v", config.PRVersion),
-		PRBuild:    fmt.Sprintf("%v", config.PRBuild),
+		OpenError: errors.NewOpenError(errors.CtorConfig{
+			Error: config.Err,
+			Msg:   "invalid pre release version",
+			Meta: errors.MetaFields{
+				"RawVersion": config.RawVersion,
+				"PRStage":    config.PRStage,
+				"PRVersion":  config.PRVersion,
+				"PRBuild":    config.PRBuild,
+			},
+		}),
 	}
 }
