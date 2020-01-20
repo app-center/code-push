@@ -2,16 +2,16 @@ package semver
 
 import (
 	"fmt"
+	"github.com/funnyecho/code-push/pkg/safemath"
 	semverErrors "github.com/funnyecho/code-push/pkg/semver/errors"
-	"regexp"
 	"strconv"
 	"strings"
 )
 
 const (
-	CompareLessFlag  = -1
-	CompareEqualFlag = 0
-	CompareLargeFlag = 1
+	CompareLessFlag  = safemath.CompareLessFlag
+	CompareEqualFlag = safemath.CompareEqualFlag
+	CompareLargeFlag = safemath.CompareLargeFlag
 )
 
 const (
@@ -22,14 +22,13 @@ const (
 )
 
 type SemVer struct {
-	// major.minor.patch-preRelease
-	majorV int
-	minorV int
-	patchV int
+	majorV uint
+	minorV uint
+	patchV uint
 
-	prStage   int
-	prVersion int
-	prBuild   int
+	prStage   uint8
+	prVersion uint8
+	prBuild   uint8
 }
 
 func (ver *SemVer) StageSafetyCompare(ver2 interface{}) int {
@@ -90,7 +89,7 @@ func (ver *SemVer) stageSafetyCompare(ver2 *SemVer) int {
 }
 
 func (ver *SemVer) compare(ver2 *SemVer) int {
-	c := ver.majorV - ver2.majorV
+	c := safemath.UintCompare(ver.majorV, ver2.majorV)
 
 	if c > 0 {
 		return CompareLargeFlag
@@ -98,7 +97,7 @@ func (ver *SemVer) compare(ver2 *SemVer) int {
 		return CompareLessFlag
 	}
 
-	c = ver.minorV - ver2.minorV
+	c = safemath.UintCompare(ver.minorV, ver2.minorV)
 
 	if c > 0 {
 		return CompareLargeFlag
@@ -106,7 +105,7 @@ func (ver *SemVer) compare(ver2 *SemVer) int {
 		return CompareLessFlag
 	}
 
-	c = ver.patchV - ver2.patchV
+	c = safemath.UintCompare(ver.patchV, ver2.patchV)
 
 	if c > 0 {
 		return CompareLargeFlag
@@ -118,7 +117,7 @@ func (ver *SemVer) compare(ver2 *SemVer) int {
 }
 
 func (ver *SemVer) prStageCompare(ver2 *SemVer) int {
-	c := ver.prStage - ver2.prStage
+	c := safemath.Uint8Compare(ver.prStage, ver2.prStage)
 	switch {
 	case c > 0:
 		return CompareLargeFlag
@@ -132,7 +131,7 @@ func (ver *SemVer) prStageCompare(ver2 *SemVer) int {
 }
 
 func (ver *SemVer) prCompare(ver2 *SemVer) int {
-	c := ver.prStage - ver2.prStage
+	c := safemath.Uint8Compare(ver.prStage, ver2.prStage)
 	switch {
 	case c > 0:
 		return CompareLargeFlag
@@ -140,7 +139,7 @@ func (ver *SemVer) prCompare(ver2 *SemVer) int {
 		return CompareLessFlag
 	}
 
-	c = ver.prVersion - ver2.prVersion
+	c = safemath.Uint8Compare(ver.prVersion, ver2.prVersion)
 	switch {
 	case c > 0:
 		return CompareLargeFlag
@@ -148,7 +147,7 @@ func (ver *SemVer) prCompare(ver2 *SemVer) int {
 		return CompareLessFlag
 	}
 
-	c = ver.prBuild - ver2.prBuild
+	c = safemath.Uint8Compare(ver.prBuild, ver2.prBuild)
 	switch {
 	case c > 0:
 		return CompareLargeFlag
@@ -171,90 +170,129 @@ func (ver *SemVer) String() string {
 	)
 }
 
-func (ver *SemVer) MajorVersion() int {
+func (ver *SemVer) MajorVersion() uint {
 	return ver.majorV
 }
 
-func (ver *SemVer) MinorVersion() int {
+func (ver *SemVer) MinorVersion() uint {
 	return ver.minorV
 }
 
-func (ver *SemVer) PatchVersion() int {
+func (ver *SemVer) PatchVersion() uint {
 	return ver.patchV
 }
 
-func (ver *SemVer) PRStage() int {
+func (ver *SemVer) PRStage() uint8 {
 	return ver.prStage
 }
 
-func (ver *SemVer) PRVersion() int {
+func (ver *SemVer) PRVersion() uint8 {
 	return ver.prVersion
 }
 
-func (ver *SemVer) PRBuild() int {
+func (ver *SemVer) PRBuild() uint8 {
 	return ver.prBuild
 }
 
 func ParseVersion(rawVer string) (semVer *SemVer, parseErr error) {
 	rawVer = strings.TrimPrefix(rawVer, "v")
 
-	var majorV, minorV, patchV, prStage, prVersion, prBuild int
+	var majorV, minorV, patchV uint
+	var prStage, prVersion, prBuild uint8
 
-	re := regexp.MustCompile(`[.-]`)
+	var rawMajorV, rawMinorV, rawPatchV, rawPR string
 
-	matches := re.Split(rawVer, 4)
+	parts := strings.SplitN(rawVer, ".", 3)
 
-	if len(matches) < 3 {
+	if len(parts) < 3 {
 		return nil, semverErrors.NewInvalidRawVersionFormatError(semverErrors.InvalidRawVersionFormatErrorConfig{RawVersion: rawVer})
 	}
 
-	var v int64
+	rawMajorV = parts[0]
+	rawMinorV = parts[1]
+
+	var v uint64
 	var err error
 
-	v, err = strconv.ParseInt(matches[0], 10, 64)
+	v, err = strconv.ParseUint(rawMajorV, 10, 64)
 	if err != nil {
 		return nil, semverErrors.NewInvalidMajorVersionError(semverErrors.InvalidMajorVersionErrorConfig{
 			Err:          err,
 			RawVersion:   rawVer,
-			MajorVersion: matches[0],
+			MajorVersion: rawMajorV,
 		})
 	} else {
-		majorV = int(v)
+		majorV = uint(v)
 	}
 
-	v, err = strconv.ParseInt(matches[1], 10, 64)
+	v, err = strconv.ParseUint(rawMinorV, 10, 64)
 	if err != nil {
 		return nil, semverErrors.NewInvalidMinorVersionError(semverErrors.InvalidMinorVersionErrorConfig{
 			Err:          err,
 			RawVersion:   rawVer,
-			MinorVersion: matches[1],
+			MinorVersion: rawMinorV,
 		})
 	} else {
-		minorV = int(v)
+		minorV = uint(v)
 	}
 
-	v, err = strconv.ParseInt(matches[2], 10, 64)
+	rawPRBound := strings.IndexAny(parts[2], ".-")
+
+	if rawPRBound > 0 {
+		rawPatchV = parts[2][0:rawPRBound]
+		rawPR = parts[2][rawPRBound:]
+	} else {
+		rawPatchV = parts[2]
+		rawPR = ""
+	}
+
+	v, err = strconv.ParseUint(rawPatchV, 10, 64)
 	if err != nil {
 		return nil, semverErrors.NewInvalidPatchVersionError(semverErrors.InvalidPatchVersionErrorConfig{
 			Err:          err,
 			RawVersion:   rawVer,
-			PatchVersion: matches[2],
+			PatchVersion: rawPatchV,
 		})
 	} else {
-		patchV = int(v)
+		patchV = uint(v)
 	}
 
-	if len(matches) == 3 {
-		prStage = PRStageRelease
-		prVersion = 1
-		prBuild = 1
-	} else {
-		rawPR := strings.ToLower(matches[3])
-		if i := strings.Index(rawPR, "."); i > -1 {
-			rawPRStage := rawPR[0:i]
-			rawPRVersion := rawPR[i+1:]
+	if len(rawPR) > 0 {
+		switch rawPR[:1] {
+		case ".":
+			numericRawPR := rawPR[1:]
+			v, err = strconv.ParseUint(numericRawPR, 10, 32)
+			if err != nil {
+				return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
+					Err:        err,
+					RawVersion: rawVer,
+					RawPR:      rawPR,
+				})
+			}
 
-			switch rawPRStage {
+			prStage = uint8(v / 1000)
+			v = v % 1000
+
+			prVersion = uint8(v / 10)
+			v = v % 10
+
+			prBuild = uint8(v)
+		case "-":
+			strRawPR := rawPR[1:]
+
+			versionBound := strings.Index(strRawPR, ".")
+
+			if versionBound <= 0 || versionBound == len(strRawPR)-1 {
+				return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
+					Err:        err,
+					RawVersion: rawVer,
+					RawPR:      rawPR,
+				})
+			}
+
+			rawPRStage := strRawPR[0:versionBound]
+
+			switch strings.ToLower(rawPRStage) {
 			case "alpha":
 				prStage = PRStageAlpha
 			case "beta":
@@ -266,11 +304,37 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr error) {
 			default:
 				return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
 					RawVersion: rawVer,
+					RawPR:      strRawPR,
 					PRStage:    rawPRStage,
 				})
 			}
 
-			v, err = strconv.ParseInt(rawPRVersion, 10, 32)
+			rawPRLeft := strRawPR[versionBound+1:]
+			buildBound := strings.Index(rawPRLeft, "+")
+
+			var rawPRVersion string
+
+			if buildBound >= 0 {
+				rawPRVersion = rawPRLeft[0:buildBound]
+				rawPRBuild := rawPRLeft[buildBound+1:]
+
+				v, err = strconv.ParseUint(rawPRBuild, 10, 32)
+				if err != nil {
+					return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
+						Err:        err,
+						RawVersion: rawVer,
+						PRVersion:  rawPRVersion,
+					})
+				} else {
+					prBuild = uint8(v)
+				}
+
+			} else {
+				rawPRVersion = rawPRLeft
+				prBuild = 1
+			}
+
+			v, err = strconv.ParseUint(rawPRVersion, 10, 32)
 			if err != nil {
 				return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
 					Err:        err,
@@ -278,26 +342,18 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr error) {
 					PRVersion:  rawPRVersion,
 				})
 			} else {
-				prVersion = int(v)
-				prBuild = 1
+				prVersion = uint8(v)
 			}
-		} else {
-			v, err = strconv.ParseInt(rawPR, 10, 32)
-			if err != nil {
-				return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
-					Err:        err,
-					RawVersion: rawVer,
-				})
-			}
-
-			prStage = int(v / 1000)
-			v = v % 1000
-
-			prVersion = int(v / 10)
-			v = v % 10
-
-			prBuild = int(v)
+		default:
+			return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
+				RawVersion: rawVer,
+				RawPR:      rawPR,
+			})
 		}
+	} else {
+		prStage = PRStageRelease
+		prVersion = 1
+		prBuild = 1
 	}
 
 	return New(CtorConfig{
@@ -311,18 +367,18 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr error) {
 }
 
 type CtorConfig struct {
-	MajorV int
-	MinorV int
-	PatchV int
+	MajorV uint
+	MinorV uint
+	PatchV uint
 
-	PRStage   int
-	PRVersion int
-	PRBuild   int
+	PRStage   uint8
+	PRVersion uint8
+	PRBuild   uint8
 }
 
 func (config CtorConfig) ToRawVersion() string {
 	return fmt.Sprintf(
-		"%v.%v.%v-%v.%v.%v",
+		"%v.%v.%v-%v.%v+%v",
 		config.MajorV,
 		config.MinorV,
 		config.PatchV,
@@ -359,7 +415,7 @@ func New(config CtorConfig) (semVer *SemVer, err error) {
 			RawVersion: rawVersion,
 		})
 	case (config.PRStage < PRStageAlpha || config.PRStage > PRStageRelease) ||
-		config.PRVersion < 0 ||
+		(config.PRVersion < 1 || config.PRVersion > 99) ||
 		(config.PRBuild < 1 || config.PRBuild > 9):
 		err = semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
 			Err:        nil,
