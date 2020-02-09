@@ -2,14 +2,12 @@ package service
 
 import (
 	"github.com/funnyecho/code-push/daemon/code-push/domain/repository"
-	"sync"
 )
 
 type IBranchService interface {
 }
 
 type branchService struct {
-	mtx        sync.RWMutex
 	branchRepo repository.IBranch
 }
 

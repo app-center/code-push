@@ -23,7 +23,7 @@ func TestError(t *testing.T) {
 
 	expectErrMessage := fmt.Sprintf("Code: %s; Msg: %s; Meta.foo: %d", openParams.Code, openParams.Msg, openParams.Meta["foo"])
 
-	err := NewOpenError(CtorConfig{
+	err := Throw(CtorConfig{
 		Error:      nErr,
 		Code:       openParams.Code,
 		Msg:        openParams.Msg,

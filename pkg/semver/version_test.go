@@ -24,7 +24,7 @@ func TestParseVersion(t *testing.T) {
 					"major.2.3",
 					".2.3",
 				},
-				new(semverErrors.InvalidMajorVersionError),
+				semverErrors.NewInvalidMajorVersionError(semverErrors.InvalidMajorVersionErrorConfig{}),
 			},
 			{
 				"minorV shall be a natural number",
@@ -33,7 +33,7 @@ func TestParseVersion(t *testing.T) {
 					"1.minor.3",
 					"1..3",
 				},
-				new(semverErrors.InvalidMinorVersionError),
+				semverErrors.NewInvalidMinorVersionError(semverErrors.InvalidMinorVersionErrorConfig{}),
 			},
 			{
 				"patchV shall be a natural number",
@@ -42,14 +42,14 @@ func TestParseVersion(t *testing.T) {
 					"1.2.patch",
 					"1.2.",
 				},
-				new(semverErrors.InvalidPatchVersionError),
+				semverErrors.NewInvalidPatchVersionError(semverErrors.InvalidPatchVersionErrorConfig{}),
 			},
 			{
 				"0.0.0 is not meaningless",
 				[]string{
 					"0.0.0",
 				},
-				new(semverErrors.InvalidRawVersionFormatError),
+				semverErrors.NewInvalidRawVersionFormatError(semverErrors.InvalidRawVersionFormatErrorConfig{}),
 			},
 			{
 				"divider must be a dot",
@@ -58,7 +58,7 @@ func TestParseVersion(t *testing.T) {
 					"1-2-3",
 					"1_2_3",
 				},
-				new(semverErrors.InvalidRawVersionFormatError),
+				semverErrors.NewInvalidRawVersionFormatError(semverErrors.InvalidRawVersionFormatErrorConfig{}),
 			},
 		}
 
@@ -88,7 +88,7 @@ func TestParseVersion(t *testing.T) {
 		}
 
 		t.Run("majorV.minorV.patchV-prStage.prVersion[+prBuild]", func(t *testing.T) {
-			preReleaseError := new(semverErrors.InvalidPreReleaseVersionError)
+			preReleaseError := semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{})
 			invalidTests := InvalidVersionInputs{
 				{
 					`divider of patchV and pre-release is "-"`,
@@ -97,7 +97,7 @@ func TestParseVersion(t *testing.T) {
 						"1.2.3_beta.1",
 						"1.2.3?beta.1",
 					},
-					new(semverErrors.InvalidPatchVersionError),
+					semverErrors.NewInvalidPatchVersionError(semverErrors.InvalidPatchVersionErrorConfig{}),
 				},
 				{
 					"prStage in:[release,rc,beta,alpha]",
@@ -192,7 +192,7 @@ func TestParseVersion(t *testing.T) {
 		})
 
 		t.Run("majorV.minorV.patchV.numericPrVersion", func(t *testing.T) {
-			preReleaseError := new(semverErrors.InvalidPreReleaseVersionError)
+			preReleaseError := semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{})
 			invalidTests := InvalidVersionInputs{
 				{
 					"numericPrVersion must be a four-digit integer",
@@ -286,7 +286,7 @@ func TestNew(t *testing.T) {
 	}
 
 	t.Run("0.0.0 is not meaningless", func(t *testing.T) {
-		tErr := new(semverErrors.InvalidRawVersionFormatError)
+		tErr := semverErrors.NewInvalidRawVersionFormatError(semverErrors.InvalidRawVersionFormatErrorConfig{})
 
 		verConfig := newVersionConfig()
 
@@ -299,7 +299,7 @@ func TestNew(t *testing.T) {
 	})
 
 	t.Run("prStage in:1,2,3,4", func(t *testing.T) {
-		tErr := new(semverErrors.InvalidPreReleaseVersionError)
+		tErr := semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{})
 
 		verConfig := newVersionConfig()
 
@@ -312,7 +312,7 @@ func TestNew(t *testing.T) {
 	})
 
 	t.Run("prVersion in:[1,99]", func(t *testing.T) {
-		tErr := new(semverErrors.InvalidPreReleaseVersionError)
+		tErr := semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{})
 
 		verConfig := newVersionConfig()
 
@@ -325,7 +325,7 @@ func TestNew(t *testing.T) {
 	})
 
 	t.Run("prBuild in:[1,9]", func(t *testing.T) {
-		tErr := new(semverErrors.InvalidPreReleaseVersionError)
+		tErr := semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{})
 
 		verConfig := newVersionConfig()
 

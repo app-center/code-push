@@ -4,7 +4,7 @@ import (
 	"github.com/funnyecho/code-push/pkg/errors"
 )
 
-type InvalidPatchVersionError errors.Error
+type InvalidPatchVersionError error
 
 type InvalidPatchVersionErrorConfig struct {
 	Err          error
@@ -12,15 +12,13 @@ type InvalidPatchVersionErrorConfig struct {
 	PatchVersion interface{}
 }
 
-func NewInvalidPatchVersionError(config InvalidPatchVersionErrorConfig) *InvalidPatchVersionError {
-	return &InvalidPatchVersionError{
-		OpenError: errors.NewOpenError(errors.CtorConfig{
-			Error: config.Err,
-			Msg:   "invalid patch version",
-			Meta: errors.MetaFields{
-				"RawVersion":   config.RawVersion,
-				"PatchVersion": config.PatchVersion,
-			},
-		}),
-	}
+func NewInvalidPatchVersionError(config InvalidPatchVersionErrorConfig) InvalidPatchVersionError {
+	return errors.Throw(errors.CtorConfig{
+		Error: config.Err,
+		Msg:   "invalid patch version",
+		Meta: errors.MetaFields{
+			"RawVersion":   config.RawVersion,
+			"PatchVersion": config.PatchVersion,
+		},
+	})
 }

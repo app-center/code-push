@@ -20,7 +20,7 @@ func defaultErrorDecodeFunc(params EncodeParams) string {
 	return fmt.Sprintf("code-push errors: Code=%s\tMsg=%s\tMeta=%+v", params.Code, params.Msg, errMeta)
 }
 
-type OpenError struct {
+type metaError struct {
 	err        error
 	code       string
 	msg        string
@@ -28,11 +28,11 @@ type OpenError struct {
 	encodeFunc EncodeFunc
 }
 
-type Error struct {
-	*OpenError
+func (err *metaError) Code() string {
+	return err.code
 }
 
-func (err *OpenError) Error() string {
+func (err *metaError) Error() string {
 	return err.encodeFunc(EncodeParams{
 		Code: err.code,
 		Msg:  err.msg,
@@ -40,11 +40,11 @@ func (err *OpenError) Error() string {
 	})
 }
 
-func (err *OpenError) String() string {
+func (err *metaError) String() string {
 	return err.Error()
 }
 
-func (err *OpenError) Unwrap() error {
+func (err *metaError) Unwrap() error {
 	return err.err
 }
 
@@ -56,12 +56,12 @@ type CtorConfig struct {
 	EncodeFunc EncodeFunc
 }
 
-func NewOpenError(config CtorConfig) *OpenError {
+func Throw(config CtorConfig) *metaError {
 	if config.EncodeFunc == nil {
 		config.EncodeFunc = defaultErrorDecodeFunc
 	}
 
-	return &OpenError{
+	return &metaError{
 		err:        config.Error,
 		code:       config.Code,
 		msg:        config.Msg,

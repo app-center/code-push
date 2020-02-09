@@ -4,7 +4,7 @@ import (
 	"github.com/funnyecho/code-push/pkg/errors"
 )
 
-type InvalidPreReleaseVersionError errors.Error
+type InvalidPreReleaseVersionError error
 
 type InvalidPreReleaseVersionErrorConfig struct {
 	Err        error
@@ -15,18 +15,16 @@ type InvalidPreReleaseVersionErrorConfig struct {
 	PRBuild    interface{}
 }
 
-func NewInvalidPreReleaseVersionError(config InvalidPreReleaseVersionErrorConfig) *InvalidPreReleaseVersionError {
-	return &InvalidPreReleaseVersionError{
-		OpenError: errors.NewOpenError(errors.CtorConfig{
-			Error: config.Err,
-			Msg:   "invalid pre release version",
-			Meta: errors.MetaFields{
-				"RawVersion": config.RawVersion,
-				"RawPR":      config.RawPR,
-				"PRStage":    config.PRStage,
-				"PRVersion":  config.PRVersion,
-				"PRBuild":    config.PRBuild,
-			},
-		}),
-	}
+func NewInvalidPreReleaseVersionError(config InvalidPreReleaseVersionErrorConfig) InvalidPreReleaseVersionError {
+	return errors.Throw(errors.CtorConfig{
+		Error: config.Err,
+		Msg:   "invalid pre release version",
+		Meta: errors.MetaFields{
+			"RawVersion": config.RawVersion,
+			"RawPR":      config.RawPR,
+			"PRStage":    config.PRStage,
+			"PRVersion":  config.PRVersion,
+			"PRBuild":    config.PRBuild,
+		},
+	})
 }
