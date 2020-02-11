@@ -51,8 +51,8 @@ type VersionConfig struct {
 	CreateTime       time.Time
 }
 
-func NewVersion(config VersionConfig) *Version {
-	return &Version{
+func NewVersion(config VersionConfig) Version {
+	return Version{
 		envId:            config.EnvId,
 		appVersion:       config.AppVersion,
 		compatAppVersion: config.CompatAppVersion,
@@ -63,5 +63,5 @@ func NewVersion(config VersionConfig) *Version {
 	}
 }
 
-type VersionMap = map[string]*Version
-type VersionList = []*Version
+type VersionMap = map[string]Version
+type VersionList = []Version

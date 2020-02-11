@@ -5,9 +5,8 @@ import (
 )
 
 type IEnv interface {
-	Find(envId string) (*model.Env, error)
-	FindAllWithBranchId(branchId string) (model.EnvList, error)
-	Create(env model.Env) error
-	Save(env *model.Env) error
-	Delete(env *model.Env) error
+	FindEnv(envId string) (model.Env, error)
+	FindEnvsWithBranchId(branchId string) (model.EnvList, error)
+	SaveEnv(env model.Env) (model.Env, error)
+	DeleteEnv(envId string) error
 }

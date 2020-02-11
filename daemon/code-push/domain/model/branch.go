@@ -40,8 +40,8 @@ type BranchConfig struct {
 	CreateTime time.Time
 }
 
-func NewBranch(config BranchConfig) *Branch {
-	return &Branch{
+func NewBranch(config BranchConfig) Branch {
+	return Branch{
 		id:         config.Id,
 		name:       config.Name,
 		authHost:   config.AuthHost,
@@ -50,4 +50,4 @@ func NewBranch(config BranchConfig) *Branch {
 	}
 }
 
-type BranchList = []*Branch
+type BranchList = []Branch

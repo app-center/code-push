@@ -7,15 +7,15 @@ import (
 	"path/filepath"
 )
 
-type File struct {
+type file struct {
 	filePath string
 }
 
-func (f *File) Path() string {
+func (f *file) Path() string {
 	return f.filePath
 }
 
-func (f *File) Size() (size int64, err error) {
+func (f *file) Size() (size int64, err error) {
 	fs, err := os.Stat(f.filePath)
 
 	if err != nil {
@@ -25,34 +25,34 @@ func (f *File) Size() (size int64, err error) {
 	return fs.Size(), nil
 }
 
-func (f *File) Extension() string {
+func (f *file) Extension() string {
 	return path.Ext(f.filePath)
 }
 
-func (f *File) CheckNotExist() bool {
+func (f *file) CheckNotExist() bool {
 	_, err := os.Stat(f.filePath)
 	return os.IsNotExist(err)
 }
 
-func (f *File) CheckPermissionDenied() bool {
+func (f *file) CheckPermissionDenied() bool {
 	_, err := os.Stat(f.filePath)
 	return os.IsPermission(err)
 }
 
-func (f *File) DirPath() string {
+func (f *file) DirPath() string {
 	return filepath.Dir(f.filePath)
 }
 
-func (f *File) Directory() (*Directory, error) {
-	return NewDirectory(DirectoryConfig{DirPath: f.DirPath()})
+func (f *file) Directory() (*directory, error) {
+	return Directory(DirectoryConfig{DirPath: f.DirPath()})
 }
 
-func (f *File) EnsurePath() error {
+func (f *file) EnsurePath() error {
 	dir, _ := f.Directory()
 	return dir.EnsurePath()
 }
 
-func (f *File) Open(flag int, perm os.FileMode) (*os.File, error) {
+func (f *file) Open(flag int, perm os.FileMode) (*os.File, error) {
 	dir, dirErr := f.Directory()
 
 	if dirErr != nil {
@@ -79,12 +79,12 @@ func (f *File) Open(flag int, perm os.FileMode) (*os.File, error) {
 	return file, nil
 }
 
-func (f *File) MustOpen() (*os.File, error) {
+func (f *file) MustOpen() (*os.File, error) {
 	return f.Open(os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 }
 
-func (f *File) Move(dstPath string) (*File, error) {
-	dstFile, dstErr := NewFile(FileConfig{FilePath: dstPath})
+func (f *file) Move(dstPath string) (*file, error) {
+	dstFile, dstErr := File(FileConfig{FilePath: dstPath})
 	if dstErr != nil {
 		return nil, dstErr
 	}
@@ -102,7 +102,7 @@ func (f *File) Move(dstPath string) (*File, error) {
 	return dstFile, nil
 }
 
-func (f *File) Delete() error {
+func (f *file) Delete() error {
 	if f.CheckNotExist() {
 		return nil
 	}
@@ -114,7 +114,7 @@ type FileConfig struct {
 	FilePath string
 }
 
-func NewFile(config FileConfig) (f *File, err error) {
+func File(config FileConfig) (f *file, err error) {
 	if len(config.FilePath) <= 0 {
 		return nil, errors.NewInvalidPathError(errors.InvalidPathConfig{
 			Path: config.FilePath,
@@ -129,5 +129,5 @@ func NewFile(config FileConfig) (f *File, err error) {
 		})
 	}
 
-	return &File{filePath}, nil
+	return &file{filePath}, nil
 }

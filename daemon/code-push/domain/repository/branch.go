@@ -5,9 +5,8 @@ import (
 )
 
 type IBranch interface {
-	Find(branchId string) (*model.Branch, error)
-	FindByName(branchName string) (*model.Branch, error)
-	Create(branch model.Branch) error
-	Save(branch *model.Branch) error
-	Delete(branch *model.Branch) error
+	FindBranch(branchId string) (model.Branch, error)
+	FindBranchByName(branchName string) (model.Branch, error)
+	SaveBranch(branch model.Branch) (model.Branch, error)
+	DeleteBranchById(branchId string) error
 }

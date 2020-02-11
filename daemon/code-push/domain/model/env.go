@@ -38,8 +38,8 @@ type EnvConfig struct {
 	CreateTime time.Time
 }
 
-func NewEnv(config EnvConfig) *Env {
-	return &Env{
+func NewEnv(config EnvConfig) Env {
+	return Env{
 		branchId:   config.BranchId,
 		id:         config.Id,
 		name:       config.Name,
@@ -48,5 +48,5 @@ func NewEnv(config EnvConfig) *Env {
 	}
 }
 
-type EnvMap = map[string]*Env
-type EnvList = []*Env
+type EnvMap = map[string]Env
+type EnvList = []Env

@@ -6,25 +6,25 @@ import (
 	"path/filepath"
 )
 
-type Directory struct {
+type directory struct {
 	dirPath string
 }
 
-func (d *Directory) Path() string {
+func (d *directory) Path() string {
 	return d.dirPath
 }
 
-func (d *Directory) CheckNotExist() bool {
+func (d *directory) CheckNotExist() bool {
 	_, err := os.Stat(d.dirPath)
 	return os.IsNotExist(err)
 }
 
-func (d *Directory) CheckPermissionDenied() bool {
+func (d *directory) CheckPermissionDenied() bool {
 	_, err := os.Stat(d.dirPath)
 	return os.IsPermission(err)
 }
 
-func (d *Directory) EnsurePath() error {
+func (d *directory) EnsurePath() error {
 	if d.CheckNotExist() {
 		if err := os.MkdirAll(d.dirPath, os.ModePerm); err != nil {
 			return err
@@ -34,7 +34,7 @@ func (d *Directory) EnsurePath() error {
 	return nil
 }
 
-func (d *Directory) Delete() error {
+func (d *directory) Delete() error {
 	if d.CheckNotExist() {
 		return nil
 	}
@@ -46,7 +46,7 @@ type DirectoryConfig struct {
 	DirPath string
 }
 
-func NewDirectory(config DirectoryConfig) (dir *Directory, err error) {
+func Directory(config DirectoryConfig) (dir *directory, err error) {
 	if len(config.DirPath) <= 0 {
 		return nil, errors.NewInvalidPathError(errors.InvalidPathConfig{
 			Path: config.DirPath,
@@ -61,5 +61,5 @@ func NewDirectory(config DirectoryConfig) (dir *Directory, err error) {
 		})
 	}
 
-	return &Directory{dirPath: dirPath}, nil
+	return &directory{dirPath: dirPath}, nil
 }
