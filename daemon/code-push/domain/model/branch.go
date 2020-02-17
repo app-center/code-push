@@ -12,6 +12,14 @@ type Branch struct {
 	createTime time.Time `json:"create_time"`
 }
 
+func (b *Branch) SetBranchAuthHost(authHost string) {
+	b.authHost = authHost
+}
+
+func (b *Branch) SetBranchName(name string) {
+	b.name = name
+}
+
 func (b *Branch) BranchId() string {
 	return b.id
 }

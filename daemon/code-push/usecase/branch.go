@@ -6,6 +6,7 @@ import (
 	"github.com/funnyecho/code-push/daemon/code-push/domain/service"
 	"github.com/funnyecho/code-push/daemon/code-push/usecase/errors"
 	"github.com/funnyecho/code-push/pkg/util"
+	uuid "github.com/satori/go.uuid"
 	"time"
 )
 
@@ -21,7 +22,7 @@ func toBranch(branch model.Branch) *Branch {
 
 type IBranchUseCase interface {
 	CreateBranch(branchName, branchAuthHost string) (*Branch, error)
-	UpdateBranchName(branchId, branchName string) error
+	UpdateBranch(branchId string, params IBranchUpdateParams) error
 	GetBranch(branchId string) (*Branch, error)
 	DeleteBranch(branchId string) error
 }
@@ -51,6 +52,7 @@ func (b *branchUseCase) CreateBranch(branchName, branchAuthHost string) (*Branch
 	}
 
 	branchToCreate := model.NewBranch(model.BranchConfig{
+		Id:         generateBranchId(branchName),
 		Name:       branchName,
 		AuthHost:   branchAuthHost,
 		EncToken:   encToken,
@@ -65,15 +67,100 @@ func (b *branchUseCase) CreateBranch(branchName, branchAuthHost string) (*Branch
 	return toBranch(branchCreated), nil
 }
 
-func (b *branchUseCase) UpdateBranchName(branchId, branchName string) error {
+func (b *branchUseCase) UpdateBranch(branchId string, params IBranchUpdateParams) error {
+	if len(branchId) == 0 {
+		return errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
+			Msg: "branchId is empty",
+			Params: errors.MetaFields{
+				"branchId": branchId,
+			},
+		})
+	}
+
+	updateBranchName, newBranchName := params.BranchName()
+	updateBranchAuthHost, newBranchAuthHost := params.BranchAuthHost()
+
+	if !updateBranchName && !updateBranchAuthHost {
+		return errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
+			Msg: "update params do not have valid keys",
+		})
+	}
+
+	hasInvalidParamsErr := false
+	invalidErrParams := errors.MetaFields{}
+
+	if updateBranchName && len(newBranchName) == 0 {
+		hasInvalidParamsErr = true
+		invalidErrParams["branchName"] = newBranchName
+	}
+
+	if updateBranchAuthHost && len(newBranchAuthHost) == 0 {
+		hasInvalidParamsErr = true
+		invalidErrParams["branchAuthHost"] = newBranchAuthHost
+	}
+
+	if hasInvalidParamsErr {
+		return errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
+			Msg:    "invalid update params",
+			Params: invalidErrParams,
+		})
+	}
+
+	entity, findErr := b.branchRepo.FindBranch(branchId)
+
+	if findErr != nil {
+		return errors.ThrowBranchCanNotFoundError(branchId)
+	}
+
+	if updateBranchName {
+		entity.SetBranchName(newBranchName)
+	}
+
+	if updateBranchAuthHost {
+		entity.SetBranchAuthHost(newBranchAuthHost)
+	}
+
+	_, updateErr := b.branchRepo.SaveBranch(entity)
+	if updateErr != nil {
+		return errors.ThrowBranchSaveError(updateErr, params)
+	}
+
 	return nil
 }
 
 func (b *branchUseCase) GetBranch(branchId string) (*Branch, error) {
-	return nil, nil
+	if len(branchId) == 0 {
+		return nil, errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
+			Msg: "branchId is empty",
+			Params: errors.MetaFields{
+				"branchId": branchId,
+			},
+		})
+	}
+
+	branchEntity, fetchErr := b.branchRepo.FindBranch(branchId)
+	if fetchErr != nil {
+		return nil, errors.ThrowBranchCanNotFoundError(branchId)
+	}
+
+	return toBranch(branchEntity), nil
 }
 
 func (b *branchUseCase) DeleteBranch(branchId string) error {
+	if len(branchId) == 0 {
+		return errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
+			Msg: "branchId is empty",
+			Params: errors.MetaFields{
+				"branchId": branchId,
+			},
+		})
+	}
+
+	deleteErr := b.branchRepo.DeleteBranchById(branchId)
+	if deleteErr != nil {
+		return errors.ThrowBranchDeleteFailedError(branchId, "")
+	}
+
 	return nil
 }
 
@@ -93,4 +180,8 @@ func generateBranchEncToken() (string, error) {
 	token, err := util.RandomPass(16, 8, 0, false, true)
 
 	return token, err
+}
+
+func generateBranchId(branchName string) string {
+	return util.EncodeBase64(util.EncodeMD5(branchName + "/" + uuid.NewV4().String()))
 }
