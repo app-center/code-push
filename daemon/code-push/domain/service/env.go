@@ -5,10 +5,24 @@ import (
 )
 
 type IEnvService interface {
+	IsEnvExisted(envId string) bool
+	IsEnvNameExisted(branchId, envName string) bool
 }
 
 type envService struct {
 	envRepo repository.IEnv
+}
+
+func (e envService) IsEnvExisted(envId string) bool {
+	env, err := e.envRepo.FindEnv(envId)
+
+	return err != nil && env != nil
+}
+
+func (e envService) IsEnvNameExisted(branchId, envName string) bool {
+	env, err := e.envRepo.FindEnvWithBranchIdAndEnvName(branchId, envName)
+
+	return err != nil && env != nil
 }
 
 type EnvServiceConfig struct {

@@ -11,12 +11,16 @@ import (
 )
 
 type Branch struct {
+	BranchId   string
 	BranchName string
+	CreateTime time.Time
 }
 
-func toBranch(branch model.Branch) *Branch {
+func toBranch(branch *model.Branch) *Branch {
 	return &Branch{
+		BranchId:   branch.BranchId(),
 		BranchName: branch.BranchName(),
+		CreateTime: branch.BranchCreateTime(),
 	}
 }
 
@@ -25,6 +29,7 @@ type IBranchUseCase interface {
 	UpdateBranch(branchId string, params IBranchUpdateParams) error
 	GetBranch(branchId string) (*Branch, error)
 	DeleteBranch(branchId string) error
+	GetBranchEncToken(branchId string) (string, error)
 }
 
 type branchUseCase struct {
@@ -73,6 +78,7 @@ func (b *branchUseCase) UpdateBranch(branchId string, params IBranchUpdateParams
 			Msg: "branchId is empty",
 			Params: errors.MetaFields{
 				"branchId": branchId,
+				"params":   params,
 			},
 		})
 	}
@@ -109,7 +115,7 @@ func (b *branchUseCase) UpdateBranch(branchId string, params IBranchUpdateParams
 	entity, findErr := b.branchRepo.FindBranch(branchId)
 
 	if findErr != nil {
-		return errors.ThrowBranchCanNotFoundError(branchId)
+		return errors.ThrowBranchNotFoundError(branchId)
 	}
 
 	if updateBranchName {
@@ -120,7 +126,7 @@ func (b *branchUseCase) UpdateBranch(branchId string, params IBranchUpdateParams
 		entity.SetBranchAuthHost(newBranchAuthHost)
 	}
 
-	_, updateErr := b.branchRepo.SaveBranch(entity)
+	_, updateErr := b.branchRepo.SaveBranch(*entity)
 	if updateErr != nil {
 		return errors.ThrowBranchSaveError(updateErr, params)
 	}
@@ -140,7 +146,7 @@ func (b *branchUseCase) GetBranch(branchId string) (*Branch, error) {
 
 	branchEntity, fetchErr := b.branchRepo.FindBranch(branchId)
 	if fetchErr != nil {
-		return nil, errors.ThrowBranchCanNotFoundError(branchId)
+		return nil, errors.ThrowBranchNotFoundError(branchId)
 	}
 
 	return toBranch(branchEntity), nil
@@ -162,6 +168,24 @@ func (b *branchUseCase) DeleteBranch(branchId string) error {
 	}
 
 	return nil
+}
+
+func (b *branchUseCase) GetBranchEncToken(branchId string) (string, error) {
+	if len(branchId) == 0 {
+		return "", errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
+			Msg: "branchId is empty",
+			Params: errors.MetaFields{
+				"branchId": branchId,
+			},
+		})
+	}
+
+	branchEntity, fetchErr := b.branchRepo.FindBranch(branchId)
+	if fetchErr != nil {
+		return "", errors.ThrowBranchNotFoundError(branchId)
+	}
+
+	return branchEntity.BranchEncToken(), nil
 }
 
 type BranchUseCaseConfig struct {

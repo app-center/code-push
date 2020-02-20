@@ -2,12 +2,12 @@ package errors
 
 import "github.com/funnyecho/code-push/pkg/errors"
 
-type BranchCanNotFoundError error
+type BranchNotFoundError error
 
-func ThrowBranchCanNotFoundError(branchId string) BranchCanNotFoundError {
+func ThrowBranchNotFoundError(branchId string) BranchNotFoundError {
 	return errors.Throw(errors.CtorConfig{
 		Code: FA_BRANCH_CAN_NOT_FOUND,
-		Msg:  "branch name existed",
+		Msg:  "branch not found",
 		Meta: errors.MetaFields{"branchId": branchId},
 	})
 }

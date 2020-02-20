@@ -30,6 +30,10 @@ func (e *Env) CreateTime() time.Time {
 	return e.createTime
 }
 
+func (e *Env) SetName(name string) {
+	e.name = name
+}
+
 type EnvConfig struct {
 	BranchId   string
 	Id         string
@@ -48,5 +52,5 @@ func NewEnv(config EnvConfig) Env {
 	}
 }
 
-type EnvMap = map[string]Env
-type EnvList = []Env
+type EnvMap = map[string]*Env
+type EnvList = []*Env
