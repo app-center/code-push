@@ -5,7 +5,9 @@ import (
 	"github.com/funnyecho/code-push/daemon/code-push/domain/service"
 )
 
-type VersionUseCase interface {
+type IVersionUseCase interface {
+	ReleaseVersion(params IVersionReleaseParams) error
+	UpdateVersion(envId, appVersion string) error
 }
 
 type versionUseCase struct {
@@ -18,7 +20,7 @@ type VersionUseCaseConfig struct {
 	VersionService service.IVersionService
 }
 
-func NewVersionUseCase(config VersionUseCaseConfig) VersionUseCase {
+func NewVersionUseCase(config VersionUseCaseConfig) IVersionUseCase {
 	return &versionUseCase{
 		versionRepo:    config.VersionRepo,
 		versionService: config.VersionService,
