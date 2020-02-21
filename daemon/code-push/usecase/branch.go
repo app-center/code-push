@@ -112,10 +112,10 @@ func (b *branchUseCase) UpdateBranch(branchId string, params IBranchUpdateParams
 		})
 	}
 
-	entity, findErr := b.branchRepo.FindBranch(branchId)
+	entity, findErr := b.branchRepo.FirstBranch(branchId)
 
 	if findErr != nil {
-		return errors.ThrowBranchNotFoundError(branchId)
+		return errors.ThrowBranchNotFoundError(branchId, findErr)
 	}
 
 	if updateBranchName {
@@ -144,9 +144,9 @@ func (b *branchUseCase) GetBranch(branchId string) (*Branch, error) {
 		})
 	}
 
-	branchEntity, fetchErr := b.branchRepo.FindBranch(branchId)
+	branchEntity, fetchErr := b.branchRepo.FirstBranch(branchId)
 	if fetchErr != nil {
-		return nil, errors.ThrowBranchNotFoundError(branchId)
+		return nil, errors.ThrowBranchNotFoundError(branchId, fetchErr)
 	}
 
 	return toBranch(branchEntity), nil
@@ -180,9 +180,9 @@ func (b *branchUseCase) GetBranchEncToken(branchId string) (string, error) {
 		})
 	}
 
-	branchEntity, fetchErr := b.branchRepo.FindBranch(branchId)
+	branchEntity, fetchErr := b.branchRepo.FirstBranch(branchId)
 	if fetchErr != nil {
-		return "", errors.ThrowBranchNotFoundError(branchId)
+		return "", errors.ThrowBranchNotFoundError(branchId, fetchErr)
 	}
 
 	return branchEntity.BranchEncToken(), nil

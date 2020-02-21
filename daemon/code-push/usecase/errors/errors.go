@@ -17,6 +17,7 @@ const (
 	FA_ENV_EXISTED           = "FA_ENV_EXISTED"
 	FA_ENV_NAME_EXISTED      = "FA_ENV_NAME_EXISTED"
 	FA_ENV_SAVE_FAILED       = "FA_ENV_SAVE_FAILED"
+	FA_ENV_DELETE_FAILED     = "FA_ENV_DELETE_FAILED"
 )
 
 type MetaFields = errors.MetaFields

@@ -29,7 +29,7 @@ func toEnv(env *model.Env) *Env {
 type IEnvUserCase interface {
 	CreateEnv(branchId, envName string) (*Env, error)
 	UpdateEnv(envId string, params IEnvUpdateParams) error
-	GetEnv(envId string) (*Branch, error)
+	GetEnv(envId string) (*Env, error)
 	DeleteEnv(envId string) error
 	GetEnvEncToken(envId string) (string, error)
 	GetEnvAuthHost(envId string) (string, error)
@@ -39,6 +39,7 @@ type envUseCase struct {
 	envRepo    repository.IEnv
 	envService service.IEnvService
 
+	branchRepo    repository.IBranch
 	branchService service.IBranchService
 }
 
@@ -53,7 +54,7 @@ func (e envUseCase) CreateEnv(branchId, envName string) (*Env, error) {
 	}
 
 	if e.branchService.IsBranchExisted(branchId) {
-		return nil, errors.ThrowBranchNotFoundError(branchId)
+		return nil, errors.ThrowBranchNotFoundError(branchId, nil)
 	}
 
 	if e.envService.IsEnvNameExisted(branchId, envName) {
@@ -127,10 +128,10 @@ func (e envUseCase) UpdateEnv(envId string, params IEnvUpdateParams) error {
 		})
 	}
 
-	entity, findErr := e.envRepo.FindEnv(envId)
+	entity, findErr := e.envRepo.FirstEnv(envId)
 
-	if findErr != nil || entity == nil {
-		return errors.ThrowEnvNotFoundError(envId)
+	if findErr != nil {
+		return errors.ThrowEnvNotFoundError(envId, findErr)
 	}
 
 	if e.envService.IsEnvNameExisted(entity.BranchId(), newEnvName) {
@@ -149,31 +150,98 @@ func (e envUseCase) UpdateEnv(envId string, params IEnvUpdateParams) error {
 	return nil
 }
 
-func (e envUseCase) GetEnv(envId string) (*Branch, error) {
-	panic("implement me")
+func (e envUseCase) GetEnv(envId string) (*Env, error) {
+	if len(envId) == 0 {
+		return nil, errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
+			Msg: "envId is empty",
+			Params: errors.MetaFields{
+				"envId": envId,
+			},
+		})
+	}
+
+	envEntity, fetchErr := e.envRepo.FirstEnv(envId)
+	if fetchErr != nil {
+		return nil, errors.ThrowEnvNotFoundError(envId, fetchErr)
+	}
+
+	return toEnv(envEntity), nil
 }
 
 func (e envUseCase) DeleteEnv(envId string) error {
-	panic("implement me")
+	if len(envId) == 0 {
+		return errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
+			Msg: "envId is empty",
+			Params: errors.MetaFields{
+				"envId": envId,
+			},
+		})
+	}
+
+	deleteErr := e.envRepo.DeleteEnv(envId)
+	if deleteErr != nil {
+		return errors.ThrowEnvDeleteFailedError(deleteErr, envId)
+	}
+
+	return nil
 }
 
 func (e envUseCase) GetEnvEncToken(envId string) (string, error) {
-	panic("implement me")
+	if len(envId) == 0 {
+		return "", errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
+			Msg: "envId is empty",
+			Params: errors.MetaFields{
+				"envId": envId,
+			},
+		})
+	}
+
+	envEntity, fetchErr := e.envRepo.FirstEnv(envId)
+	if fetchErr != nil {
+		return "", errors.ThrowEnvNotFoundError(envId, fetchErr)
+	}
+
+	return envEntity.EncToken(), nil
 }
 
 func (e envUseCase) GetEnvAuthHost(envId string) (string, error) {
-	panic("implement me")
+	if len(envId) == 0 {
+		return "", errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
+			Msg: "envId is empty",
+			Params: errors.MetaFields{
+				"envId": envId,
+			},
+		})
+	}
+
+	envEntity, fetchErr := e.envRepo.FirstEnv(envId)
+	if fetchErr != nil {
+		return "", errors.ThrowEnvNotFoundError(envId, fetchErr)
+	}
+
+	branchEntity, branchFetchErr := e.branchRepo.FirstBranch(envEntity.BranchId())
+	if branchFetchErr != nil {
+		return "", errors.ThrowBranchNotFoundError(envEntity.BranchId(), branchFetchErr)
+	}
+
+	return branchEntity.BranchAuthHost(), nil
 }
 
 type EnvUseCaseConfig struct {
 	EnvRepo    repository.IEnv
 	EnvService service.IEnvService
+
+	BranchRepo    repository.IBranch
+	BranchService service.IBranchService
 }
 
 func NewEnvUseCase(config EnvUseCaseConfig) IEnvUserCase {
 	return &envUseCase{
 		envRepo:    config.EnvRepo,
 		envService: config.EnvService,
+
+		branchRepo:    config.BranchRepo,
+		branchService: config.BranchService,
 	}
 }
 

@@ -14,13 +14,13 @@ type envService struct {
 }
 
 func (e envService) IsEnvExisted(envId string) bool {
-	env, err := e.envRepo.FindEnv(envId)
+	env, err := e.envRepo.FirstEnv(envId)
 
 	return err != nil && env != nil
 }
 
 func (e envService) IsEnvNameExisted(branchId, envName string) bool {
-	env, err := e.envRepo.FindEnvWithBranchIdAndEnvName(branchId, envName)
+	env, err := e.envRepo.FirstEnvWithBranchIdAndEnvName(branchId, envName)
 
 	return err != nil && env != nil
 }

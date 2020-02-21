@@ -14,7 +14,7 @@ type branchService struct {
 }
 
 func (b *branchService) IsBranchExisted(branchId string) bool {
-	branch, err := b.branchRepo.FindBranch(branchId)
+	branch, err := b.branchRepo.FirstBranch(branchId)
 
 	return err != nil && branch != nil
 }
@@ -24,7 +24,7 @@ func (b *branchService) IsBranchNameExisted(branchName string) bool {
 		return false
 	}
 
-	branch, err := b.branchRepo.FindBranchByName(branchName)
+	branch, err := b.branchRepo.FirstBranchByName(branchName)
 
 	return err == nil && branch != nil
 }
