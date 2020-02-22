@@ -189,15 +189,20 @@ func (b *branchUseCase) GetBranchEncToken(branchId string) (string, error) {
 }
 
 type BranchUseCaseConfig struct {
-	branchRepo    repository.IBranch
-	branchService service.IBranchService
+	BranchRepo    repository.IBranch
+	BranchService service.IBranchService
 }
 
-func NewBranchUseCase(config BranchUseCaseConfig) IBranchUseCase {
-	return &branchUseCase{
-		branchRepo:    config.branchRepo,
-		branchService: config.branchService,
+func NewBranchUseCase(config BranchUseCaseConfig) (IBranchUseCase, error) {
+	if config.BranchRepo == nil ||
+		config.BranchService == nil {
+		panic("invalid branch use case params")
 	}
+
+	return &branchUseCase{
+		branchRepo:    config.BranchRepo,
+		branchService: config.BranchService,
+	}, nil
 }
 
 func generateBranchEncToken() (string, error) {

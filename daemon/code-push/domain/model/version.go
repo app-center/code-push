@@ -47,7 +47,6 @@ type VersionConfig struct {
 	MustUpdate       bool
 	Changelog        string
 	PackageUri       string
-	PackageBlob      string
 	CreateTime       time.Time
 }
 
@@ -63,5 +62,5 @@ func NewVersion(config VersionConfig) Version {
 	}
 }
 
-type VersionMap = map[string]Version
-type VersionList = []Version
+type VersionMap = map[string]*Version
+type VersionList = []*Version

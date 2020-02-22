@@ -235,14 +235,21 @@ type EnvUseCaseConfig struct {
 	BranchService service.IBranchService
 }
 
-func NewEnvUseCase(config EnvUseCaseConfig) IEnvUserCase {
+func NewEnvUseCase(config EnvUseCaseConfig) (IEnvUserCase, error) {
+	if config.BranchRepo == nil ||
+		config.BranchService == nil ||
+		config.EnvRepo == nil ||
+		config.EnvService == nil {
+		panic("invalid env use case params")
+	}
+
 	return &envUseCase{
 		envRepo:    config.EnvRepo,
 		envService: config.EnvService,
 
 		branchRepo:    config.BranchRepo,
 		branchService: config.BranchService,
-	}
+	}, nil
 }
 
 func generateEnvEncToken() (string, error) {
