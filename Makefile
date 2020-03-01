@@ -9,5 +9,10 @@ vet:
 test:
 	go test -count=1 ./pkg/...
 
+test-version-compat-tree:
+	go test ./daemon/code-push/usecase/version_compat_tree/
+
 benchmark:
 	go test -count=1 -cpu 1 -bench . ./pkg/...
+
+@phony: fmt vet test benchmark

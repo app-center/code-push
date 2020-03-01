@@ -11,7 +11,7 @@ import (
 )
 
 type versionCompatTreeNode struct {
-	compatVersion *semver.SemVer
+	compatVersion  *semver.SemVer
 	appVersionList []*semver.SemVer
 }
 
@@ -29,7 +29,7 @@ type envVersionCollection struct {
 	envRepo    repository.IEnv
 	envService service.IEnvService
 
-	versionList model.VersionList
+	versionList       model.VersionList
 	versionCompatTree *avl.Immutable
 }
 
