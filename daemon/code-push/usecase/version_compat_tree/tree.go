@@ -61,14 +61,72 @@ func (v *versionRangeTree) Add(entries ...IEntry) {
 }
 
 func (v *versionRangeTree) StrictCompat(anchor ICompatQueryAnchor) ICompatQueryResult {
-	panic("implement me")
+	queryResult := &compatQueryResult{}
+
+	version := anchor.Version()
+
+	for e := v.tree.Back(); e != nil; e = e.Prev() {
+		entryInList := e.Value.(IEntry)
+
+		compatVersionCompare := entryInList.CompatVersion().StageSafetyStrictCompare(version)
+		versionCompare := entryInList.Version().StageSafetyStrictCompare(version)
+
+		if versionCompare == semver.CompareLessFlag {
+			if queryResult.latestVersion == nil {
+				queryResult.latestVersion = entryInList
+			}
+			continue
+		}
+
+		if compatVersionCompare == semver.CompareLargeFlag {
+			continue
+		}
+
+		queryResult.canUpdateVersion = entryInList
+		if queryResult.latestVersion == nil {
+			queryResult.latestVersion = entryInList
+		}
+
+		break
+	}
+
+	return queryResult
 }
 
 func (v *versionRangeTree) LooseCompat(anchor ICompatQueryAnchor) ICompatQueryResult {
-	panic("implement me")
+	queryResult := &compatQueryResult{}
+
+	version := anchor.Version()
+
+	for e := v.tree.Back(); e != nil; e = e.Prev() {
+		entryInList := e.Value.(IEntry)
+
+		compatVersionCompare := entryInList.CompatVersion().StageSafetyLooseCompare(version)
+		versionCompare := entryInList.Version().StageSafetyLooseCompare(version)
+
+		if versionCompare == semver.CompareLessFlag {
+			if queryResult.latestVersion == nil {
+				queryResult.latestVersion = entryInList
+			}
+			continue
+		}
+
+		if compatVersionCompare == semver.CompareLargeFlag {
+			continue
+		}
+
+		queryResult.canUpdateVersion = entryInList
+		if queryResult.latestVersion == nil {
+			queryResult.latestVersion = entryInList
+		}
+
+		break
+	}
+
+	return queryResult
 }
 
-func New(entries []IEntry) ITree {
+func NewVersionCompatTree(entries []IEntry) ITree {
 	tree := &versionRangeTree{
 		tree: list.New(),
 	}
@@ -76,4 +134,17 @@ func New(entries []IEntry) ITree {
 	tree.Add(entries...)
 
 	return tree
+}
+
+type compatQueryResult struct {
+	latestVersion    IEntry
+	canUpdateVersion IEntry
+}
+
+func (r *compatQueryResult) LatestVersion() IEntry {
+	return r.latestVersion
+}
+
+func (r *compatQueryResult) CanUpdateVersion() IEntry {
+	return r.canUpdateVersion
 }

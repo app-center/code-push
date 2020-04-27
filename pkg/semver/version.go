@@ -31,18 +31,35 @@ type SemVer struct {
 	prBuild   uint8
 }
 
-func (ver *SemVer) StageSafetyCompare(ver2 interface{}) int {
+func (ver *SemVer) StageSafetyStrictCompare(ver2 interface{}) int {
 	switch i := ver2.(type) {
 	case string:
 		if semVer2, err := ParseVersion(i); err == nil {
-			return ver.stageSafetyCompare(semVer2)
+			return ver.stageSafetyStrictCompare(semVer2)
 		} else {
 			return CompareLargeFlag
 		}
 	case *SemVer:
-		return ver.stageSafetyCompare(i)
+		return ver.stageSafetyStrictCompare(i)
 	case SemVer:
-		return ver.stageSafetyCompare(&i)
+		return ver.stageSafetyStrictCompare(&i)
+	default:
+		return CompareLargeFlag
+	}
+}
+
+func (ver *SemVer) StageSafetyLooseCompare(ver2 interface{}) int {
+	switch i := ver2.(type) {
+	case string:
+		if semVer2, err := ParseVersion(i); err == nil {
+			return ver.stageSafetyStrictCompare(semVer2)
+		} else {
+			return CompareLargeFlag
+		}
+	case *SemVer:
+		return ver.stageSafetyStrictCompare(i)
+	case SemVer:
+		return ver.stageSafetyStrictCompare(&i)
 	default:
 		return CompareLargeFlag
 	}
@@ -65,7 +82,7 @@ func (ver *SemVer) Compare(ver2 interface{}) int {
 	}
 }
 
-func (ver *SemVer) stageSafetyCompare(ver2 *SemVer) int {
+func (ver *SemVer) stageSafetyStrictCompare(ver2 *SemVer) int {
 	mainCompare := ver.compare(ver2)
 
 	switch {
@@ -85,6 +102,21 @@ func (ver *SemVer) stageSafetyCompare(ver2 *SemVer) int {
 		} else {
 			return CompareLargeFlag
 		}
+	}
+}
+
+func (ver *SemVer) stageSafetyLooseCompare(ver2 *SemVer) int {
+	mainCompare := ver.compare(ver2)
+
+	switch {
+	case mainCompare == CompareLessFlag:
+		return CompareLessFlag
+	case mainCompare == CompareEqualFlag:
+		return ver.prCompare(ver2)
+	case mainCompare == CompareLargeFlag:
+		fallthrough
+	default:
+		return CompareLargeFlag
 	}
 }
 

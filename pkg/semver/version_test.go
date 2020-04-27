@@ -410,7 +410,7 @@ func TestCompare(t *testing.T) {
 	}
 
 	for _, entry := range tests {
-		assert.Equal(t, entry.stageSafetyCompareExpect, semVer.StageSafetyCompare(entry.in), "stage safety compare, target: %s, input: %s", rawSemVer, entry.in)
+		assert.Equal(t, entry.stageSafetyCompareExpect, semVer.StageSafetyStrictCompare(entry.in), "stage safety compare, target: %s, input: %s", rawSemVer, entry.in)
 		assert.Equal(t, entry.compareExpect, semVer.Compare(entry.in), "compare, target: %s, input: %s", rawSemVer, entry.in)
 	}
 }
