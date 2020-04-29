@@ -20,7 +20,7 @@ func (v *versionRangeTree) Add(entries ...IEntry) {
 			for e := v.tree.Front(); e != nil; {
 				entryInList := e.Value.(IEntry)
 
-				switch entry.CompatVersion().Compare(entryInList.CompatVersion()) {
+				switch entry.CompatVersion().StageSafetyLooseCompare(entryInList.CompatVersion()) {
 				case semver.CompareLargeFlag:
 					e := e.Next()
 					if e == nil {
@@ -28,23 +28,40 @@ func (v *versionRangeTree) Add(entries ...IEntry) {
 						i++
 					}
 				case semver.CompareEqualFlag:
-					switch entry.Version().Compare(entryInList.Version()) {
+					strictCompare := entry.Version().StageSafetyStrictCompare(entryInList.Version())
+					looseCompare := entry.Version().StageSafetyLooseCompare(entryInList.Version())
+
+					switch strictCompare {
 					case semver.CompareEqualFlag:
 						e = nil
 						i++
 					case semver.CompareLessFlag:
-						e = nil
-						i++
+						if looseCompare == semver.CompareLargeFlag {
+							e = e.Next()
+							if e == nil {
+								v.tree.PushBack(entry)
+								i++
+							}
+						} else if looseCompare == semver.CompareLessFlag {
+							e = nil
+							i++
+						}
 					case semver.CompareLargeFlag:
 						fallthrough
 					default:
-						nextElement := e.Next()
+						if looseCompare == semver.CompareLargeFlag {
+							nextElement := e.Next()
 
-						v.tree.Remove(e)
+							v.tree.Remove(e)
 
-						e = nextElement
-						if e == nil {
-							v.tree.PushBack(entry)
+							e = nextElement
+							if e == nil {
+								v.tree.PushBack(entry)
+								i++
+							}
+						} else if looseCompare == semver.CompareLessFlag {
+							v.tree.InsertBefore(entry, e)
+							e = nil
 							i++
 						}
 					}
@@ -68,26 +85,13 @@ func (v *versionRangeTree) StrictCompat(anchor ICompatQueryAnchor) ICompatQueryR
 	for e := v.tree.Back(); e != nil; e = e.Prev() {
 		entryInList := e.Value.(IEntry)
 
-		compatVersionCompare := entryInList.CompatVersion().StageSafetyStrictCompare(version)
+		compatVersionCompare := entryInList.CompatVersion().StageSafetyLooseCompare(version)
 		versionCompare := entryInList.Version().StageSafetyStrictCompare(version)
 
-		if versionCompare == semver.CompareLessFlag {
-			if queryResult.latestVersion == nil {
-				queryResult.latestVersion = entryInList
-			}
-			continue
+		if versionCompare == semver.CompareLargeFlag && compatVersionCompare != semver.CompareLargeFlag {
+			queryResult.canUpdateVersion = entryInList
+			break
 		}
-
-		if compatVersionCompare == semver.CompareLargeFlag {
-			continue
-		}
-
-		queryResult.canUpdateVersion = entryInList
-		if queryResult.latestVersion == nil {
-			queryResult.latestVersion = entryInList
-		}
-
-		break
 	}
 
 	return queryResult
@@ -131,7 +135,9 @@ func NewVersionCompatTree(entries []IEntry) ITree {
 		tree: list.New(),
 	}
 
-	tree.Add(entries...)
+	if entries != nil {
+		tree.Add(entries...)
+	}
 
 	return tree
 }

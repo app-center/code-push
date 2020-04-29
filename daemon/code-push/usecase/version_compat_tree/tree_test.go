@@ -45,9 +45,7 @@ func rawVersionOfEntry(entry IEntry) (raw string) {
 }
 
 func TestSingleCompatRange(t *testing.T) {
-	tree := New()
-
-	tree.Add(Entries{
+	tree := NewVersionCompatTree(Entries{
 		&testEntry{
 			compatVer: parseVersion("v1.0.0"),
 			appVer:    parseVersion("v1.0.0"),
@@ -68,7 +66,7 @@ func TestSingleCompatRange(t *testing.T) {
 			compatVer: parseVersion("v1.0.0"),
 			appVer:    parseVersion("v1.0.8-alpha.1"),
 		},
-	}...)
+	})
 
 	anchor := &testCompatQueryAnchor{ver: parseVersion("1.0.1-alpha.3")}
 	strictCompatResult := tree.StrictCompat(anchor)
@@ -133,7 +131,7 @@ func TestMultiCompatRanges(t *testing.T) {
 				   |---|
 	*/
 	t.Run("intersect", func(t *testing.T) {
-		tree := New()
+		tree := NewVersionCompatTree(nil)
 
 		tree.Add(Entries{
 			&testEntry{
@@ -221,7 +219,7 @@ func TestMultiCompatRanges(t *testing.T) {
 			  |--|
 	*/
 	t.Run("contain", func(t *testing.T) {
-		tree := New()
+		tree := NewVersionCompatTree(nil)
 
 		tree.Add(Entries{
 			&testEntry{
@@ -262,7 +260,7 @@ func TestMultiCompatRanges(t *testing.T) {
 				  |---|
 	*/
 	t.Run("disjoint", func(t *testing.T) {
-		tree := New()
+		tree := NewVersionCompatTree(nil)
 
 		tree.Add(Entries{
 			&testEntry{

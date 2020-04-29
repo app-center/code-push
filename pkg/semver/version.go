@@ -57,9 +57,9 @@ func (ver *SemVer) StageSafetyLooseCompare(ver2 interface{}) int {
 			return CompareLargeFlag
 		}
 	case *SemVer:
-		return ver.stageSafetyStrictCompare(i)
+		return ver.stageSafetyLooseCompare(i)
 	case SemVer:
-		return ver.stageSafetyStrictCompare(&i)
+		return ver.stageSafetyLooseCompare(&i)
 	default:
 		return CompareLargeFlag
 	}
