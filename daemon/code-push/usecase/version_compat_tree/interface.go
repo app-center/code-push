@@ -21,5 +21,4 @@ type ICompatQueryResult interface {
 type ITree interface {
 	Add(entries ...IEntry)
 	StrictCompat(anchor ICompatQueryAnchor) ICompatQueryResult
-	LooseCompat(anchor ICompatQueryAnchor) ICompatQueryResult
 }
