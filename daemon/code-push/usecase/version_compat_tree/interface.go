@@ -19,6 +19,6 @@ type ICompatQueryResult interface {
 }
 
 type ITree interface {
-	Add(entries ...IEntry)
+	Publish(entries ...IEntry)
 	StrictCompat(anchor ICompatQueryAnchor) ICompatQueryResult
 }

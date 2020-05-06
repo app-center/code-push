@@ -6,17 +6,19 @@ type versionRangeTree struct {
 	*strictCompatQueryBranch
 }
 
-func (v *versionRangeTree) Add(entries ...IEntry) {
+func (v *versionRangeTree) Publish(entries ...IEntry) {
 	for _, entry := range entries {
-		evictEntryList := v.compatVersionBranchMap.Enqueue(entry)
+		evictEntryList, ignored := v.compatVersionBranchMap.Enqueue(entry)
 		if evictEntryList != nil {
 			for _, entry := range evictEntryList {
 				v.strictCompatQueryBranch.Evict(entry)
 			}
 		}
 
-		v.latestVersionBranch.Enqueue(entry)
-		v.strictCompatQueryBranch.Insert(entry)
+		if !ignored {
+			v.latestVersionBranch.Enqueue(entry)
+			v.strictCompatQueryBranch.Insert(entry)
+		}
 	}
 }
 
@@ -34,13 +36,13 @@ func (v *versionRangeTree) StrictCompat(anchor ICompatQueryAnchor) ICompatQueryR
 
 func NewVersionCompatTree(entries []IEntry) ITree {
 	tree := &versionRangeTree{
-		compatVersionBranchMap: newCompatVersionBranchMap(),
-		latestVersionBranch: newLatestVersionBranch(),
-		strictCompatQueryBranch: &strictCompatQueryBranch{},
+		compatVersionBranchMap:  newCompatVersionBranchMap(),
+		latestVersionBranch:     newLatestVersionBranch(),
+		strictCompatQueryBranch: newStrictCompatQueryBranch(),
 	}
 
 	if entries != nil {
-		tree.Add(entries...)
+		tree.Publish(entries...)
 	}
 
 	return tree

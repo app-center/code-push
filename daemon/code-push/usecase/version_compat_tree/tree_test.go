@@ -70,57 +70,39 @@ func TestSingleCompatRange(t *testing.T) {
 
 	anchor := &testCompatQueryAnchor{ver: parseVersion("1.0.1-alpha.3")}
 	strictCompatResult := tree.StrictCompat(anchor)
-	looseCompatResult := tree.LooseCompat(anchor)
 
 	assert.Equal(t, "1.0.8.1011", rawVersionOfEntry(strictCompatResult.CanUpdateVersion()))
 	assert.Equal(t, "1.0.8.1011", rawVersionOfEntry(strictCompatResult.LatestVersion()))
-	assert.Equal(t, "1.0.8.1011", rawVersionOfEntry(looseCompatResult.CanUpdateVersion()))
-	assert.Equal(t, "1.0.8.1011", rawVersionOfEntry(looseCompatResult.LatestVersion()))
 
 	anchor = &testCompatQueryAnchor{ver: parseVersion("1.0.1-beta.3")}
 	strictCompatResult = tree.StrictCompat(anchor)
-	looseCompatResult = tree.LooseCompat(anchor)
 
 	assert.Equal(t, "1.0.6.2011", rawVersionOfEntry(strictCompatResult.CanUpdateVersion()))
 	assert.Equal(t, "1.0.6.2011", rawVersionOfEntry(strictCompatResult.LatestVersion()))
-	assert.Equal(t, "1.0.8.1011", rawVersionOfEntry(looseCompatResult.CanUpdateVersion()))
-	assert.Equal(t, "1.0.8.1011", rawVersionOfEntry(looseCompatResult.LatestVersion()))
 
 	anchor = &testCompatQueryAnchor{ver: parseVersion("1.0.1-rc.3")}
 	strictCompatResult = tree.StrictCompat(anchor)
-	looseCompatResult = tree.LooseCompat(anchor)
 
 	assert.Equal(t, "1.0.4.3011", rawVersionOfEntry(strictCompatResult.CanUpdateVersion()))
 	assert.Equal(t, "1.0.4.3011", rawVersionOfEntry(strictCompatResult.LatestVersion()))
-	assert.Equal(t, "1.0.8.1011", rawVersionOfEntry(looseCompatResult.CanUpdateVersion()))
-	assert.Equal(t, "1.0.8.1011", rawVersionOfEntry(looseCompatResult.LatestVersion()))
 
 	anchor = &testCompatQueryAnchor{ver: parseVersion("1.0.1-release.3")}
 	strictCompatResult = tree.StrictCompat(anchor)
-	looseCompatResult = tree.LooseCompat(anchor)
 
 	assert.Equal(t, "1.0.2.4011", rawVersionOfEntry(strictCompatResult.CanUpdateVersion()))
 	assert.Equal(t, "1.0.2.4011", rawVersionOfEntry(strictCompatResult.LatestVersion()))
-	assert.Equal(t, "1.0.8.1011", rawVersionOfEntry(looseCompatResult.CanUpdateVersion()))
-	assert.Equal(t, "1.0.8.1011", rawVersionOfEntry(looseCompatResult.LatestVersion()))
 
 	anchor = &testCompatQueryAnchor{ver: parseVersion("1.0.6-release.3")}
 	strictCompatResult = tree.StrictCompat(anchor)
-	looseCompatResult = tree.LooseCompat(anchor)
 
 	assert.Nil(t, strictCompatResult.CanUpdateVersion())
 	assert.Nil(t, strictCompatResult.LatestVersion())
-	assert.Equal(t, "1.0.8.1011", rawVersionOfEntry(looseCompatResult.CanUpdateVersion()))
-	assert.Equal(t, "1.0.8.1011", rawVersionOfEntry(looseCompatResult.LatestVersion()))
 
 	anchor = &testCompatQueryAnchor{ver: parseVersion("1.0.10")}
 	strictCompatResult = tree.StrictCompat(anchor)
-	looseCompatResult = tree.LooseCompat(anchor)
 
 	assert.Nil(t, strictCompatResult.CanUpdateVersion())
 	assert.Nil(t, strictCompatResult.LatestVersion())
-	assert.Nil(t, looseCompatResult.CanUpdateVersion())
-	assert.Nil(t, looseCompatResult.LatestVersion())
 }
 
 func TestMultiCompatRanges(t *testing.T) {
@@ -133,7 +115,7 @@ func TestMultiCompatRanges(t *testing.T) {
 	t.Run("intersect", func(t *testing.T) {
 		tree := NewVersionCompatTree(nil)
 
-		tree.Add(Entries{
+		tree.Publish(Entries{
 			&testEntry{
 				compatVer: parseVersion("v1.0.0"),
 				appVer:    parseVersion("v1.0.0"),
@@ -152,7 +134,7 @@ func TestMultiCompatRanges(t *testing.T) {
 			},
 		}...)
 
-		tree.Add(Entries{
+		tree.Publish(Entries{
 			&testEntry{
 				compatVer: parseVersion("v1.0.4"),
 				appVer:    parseVersion("v1.1.0"),
@@ -167,7 +149,7 @@ func TestMultiCompatRanges(t *testing.T) {
 			},
 		}...)
 
-		tree.Add(Entries{
+		tree.Publish(Entries{
 			&testEntry{
 				compatVer: parseVersion("v1.1.4"),
 				appVer:    parseVersion("v1.2.0"),
@@ -221,14 +203,14 @@ func TestMultiCompatRanges(t *testing.T) {
 	t.Run("contain", func(t *testing.T) {
 		tree := NewVersionCompatTree(nil)
 
-		tree.Add(Entries{
+		tree.Publish(Entries{
 			&testEntry{
 				compatVer: parseVersion("v1.0.0"),
 				appVer:    parseVersion("v1.0.8"),
 			},
 		}...)
 
-		tree.Add(Entries{
+		tree.Publish(Entries{
 			&testEntry{
 				compatVer: parseVersion("v1.0.4"),
 				appVer:    parseVersion("v1.0.6"),
@@ -262,14 +244,14 @@ func TestMultiCompatRanges(t *testing.T) {
 	t.Run("disjoint", func(t *testing.T) {
 		tree := NewVersionCompatTree(nil)
 
-		tree.Add(Entries{
+		tree.Publish(Entries{
 			&testEntry{
 				compatVer: parseVersion("v1.0.0"),
 				appVer:    parseVersion("v1.0.8"),
 			},
 		}...)
 
-		tree.Add(Entries{
+		tree.Publish(Entries{
 			&testEntry{
 				compatVer: parseVersion("v1.0.10"),
 				appVer:    parseVersion("v1.0.20"),
