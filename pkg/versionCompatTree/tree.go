@@ -1,4 +1,4 @@
-package version_compat_tree
+package versionCompatTree
 
 type versionRangeTree struct {
 	compatVersionBranchMap
@@ -34,15 +34,11 @@ func (v *versionRangeTree) StrictCompat(anchor ICompatQueryAnchor) ICompatQueryR
 	return queryResult
 }
 
-func NewVersionCompatTree(entries []IEntry) ITree {
+func NewVersionCompatTree() ITree {
 	tree := &versionRangeTree{
 		compatVersionBranchMap:  newCompatVersionBranchMap(),
 		latestVersionBranch:     newLatestVersionBranch(),
 		strictCompatQueryBranch: newStrictCompatQueryBranch(),
-	}
-
-	if entries != nil {
-		tree.Publish(entries...)
 	}
 
 	return tree

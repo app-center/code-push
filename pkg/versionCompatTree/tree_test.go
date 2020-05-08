@@ -1,4 +1,4 @@
-package version_compat_tree
+package versionCompatTree
 
 import (
 	"github.com/funnyecho/code-push/pkg/semver"
@@ -45,7 +45,9 @@ func rawVersionOfEntry(entry IEntry) (raw string) {
 }
 
 func TestSingleCompatRange(t *testing.T) {
-	tree := NewVersionCompatTree(Entries{
+	tree := NewVersionCompatTree()
+
+	tree.Publish(Entries{
 		&testEntry{
 			compatVer: parseVersion("v1.0.0"),
 			appVer:    parseVersion("v1.0.0"),
@@ -66,7 +68,7 @@ func TestSingleCompatRange(t *testing.T) {
 			compatVer: parseVersion("v1.0.0"),
 			appVer:    parseVersion("v1.0.8-alpha.1"),
 		},
-	})
+	}...)
 
 	anchor := &testCompatQueryAnchor{ver: parseVersion("1.0.1-alpha.3")}
 	strictCompatResult := tree.StrictCompat(anchor)
@@ -113,7 +115,7 @@ func TestMultiCompatRanges(t *testing.T) {
 				   |---|
 	*/
 	t.Run("intersect", func(t *testing.T) {
-		tree := NewVersionCompatTree(nil)
+		tree := NewVersionCompatTree()
 
 		tree.Publish(Entries{
 			&testEntry{
@@ -201,7 +203,7 @@ func TestMultiCompatRanges(t *testing.T) {
 			  |--|
 	*/
 	t.Run("contain", func(t *testing.T) {
-		tree := NewVersionCompatTree(nil)
+		tree := NewVersionCompatTree()
 
 		tree.Publish(Entries{
 			&testEntry{
@@ -242,7 +244,7 @@ func TestMultiCompatRanges(t *testing.T) {
 				  |---|
 	*/
 	t.Run("disjoint", func(t *testing.T) {
-		tree := NewVersionCompatTree(nil)
+		tree := NewVersionCompatTree()
 
 		tree.Publish(Entries{
 			&testEntry{

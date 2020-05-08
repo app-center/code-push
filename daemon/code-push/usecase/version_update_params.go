@@ -1,26 +1,16 @@
 package usecase
 
-import (
-	"github.com/funnyecho/code-push/pkg/semver"
-)
-
 type IVersionUpdateParams interface {
-	SetCompatAppVersion(compatAppVersion string) IVersionUpdateParams
 	SetChangelog(changelog string) IVersionUpdateParams
 	SetPackageUri(packageUri string) IVersionUpdateParams
 	SetMustUpdate(mustUpdate bool) IVersionUpdateParams
 
-	CompatAppVersion() (set bool, val string)
-	CompatAppSemVersion() (set bool, val *semver.SemVer, err error)
 	Changelog() (set bool, val string)
 	PackageUri() (set bool, val string)
 	MustUpdate() (set, val bool)
 }
 
 type versionUpdateParams struct {
-	compatAppVersionSet bool
-	compatAppVersion    string
-
 	changelogSet bool
 	changelog    string
 
@@ -29,13 +19,6 @@ type versionUpdateParams struct {
 
 	mustUpdateSet bool
 	mustUpdate    bool
-}
-
-func (v *versionUpdateParams) SetCompatAppVersion(compatAppVersion string) IVersionUpdateParams {
-	v.compatAppVersionSet = true
-	v.compatAppVersion = compatAppVersion
-
-	return v
 }
 
 func (v *versionUpdateParams) SetChangelog(changelog string) IVersionUpdateParams {
@@ -57,20 +40,6 @@ func (v *versionUpdateParams) SetMustUpdate(mustUpdate bool) IVersionUpdateParam
 	v.mustUpdate = mustUpdate
 
 	return v
-}
-
-func (v *versionUpdateParams) CompatAppVersion() (set bool, val string) {
-	return v.compatAppVersionSet, v.compatAppVersion
-}
-
-func (v *versionUpdateParams) CompatAppSemVersion() (set bool, val *semver.SemVer, err error) {
-	set = v.compatAppVersionSet
-
-	if set {
-		val, err = semver.ParseVersion(v.compatAppVersion)
-	}
-
-	return
 }
 
 func (v *versionUpdateParams) Changelog() (set bool, val string) {

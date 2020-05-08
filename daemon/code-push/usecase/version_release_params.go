@@ -8,9 +8,7 @@ import (
 type IVersionReleaseParams interface {
 	EnvId() string
 	AppVersion() string
-	AppSemVersion() (*semver.SemVer, error)
 	CompatAppVersion() string
-	CompatAppSemVersion() (*semver.SemVer, error)
 	Changelog() string
 	PackageUri() string
 	MustUpdate() bool
@@ -109,4 +107,15 @@ func NewVersionReleaseParams(config VersionReleaseParamsConfig) (IVersionRelease
 		packageUri:       config.PackageUri,
 		mustUpdate:       config.MustUpdate,
 	}, nil
+}
+
+func BoxingVersionReleaseParams(params IVersionReleaseParams) map[string]interface{} {
+	return map[string]interface{}{
+		"envId":            params.EnvId(),
+		"appVersion":       params.AppVersion(),
+		"compatAppVersion": params.CompatAppVersion(),
+		"changelog":        params.Changelog(),
+		"packageUri":       params.PackageUri(),
+		"mustUpdate":       params.MustUpdate(),
+	}
 }

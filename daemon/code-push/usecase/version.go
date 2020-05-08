@@ -35,11 +35,10 @@ func toVersion(ver *model.Version) *Version {
 
 type IVersionUseCase interface {
 	ReleaseVersion(params IVersionReleaseParams) error
-	RollbackVersion(envId, appVersion string) (*Version, error)
 	UpdateVersion(envId, appVersion string, params IVersionUpdateParams) error
 	GetVersion(envId, appVersion string) (*Version, error)
 	ListVersions(envId string) (VersionList, error)
-	VersionCompatQuery(envId, appVersion string) (IVersionCompatQueryResult, error)
+	VersionStrictCompatQuery(envId, appVersion string) (IVersionCompatQueryResult, error)
 }
 
 type versionUseCase struct {
@@ -60,16 +59,6 @@ func (v *versionUseCase) ReleaseVersion(params IVersionReleaseParams) error {
 	}
 
 	return collection.ReleaseVersion(params)
-}
-
-func (v *versionUseCase) RollbackVersion(envId, appVersion string) (*Version, error) {
-	collection, collectionErr := v.getEnvVersionCollection(envId)
-
-	if collectionErr != nil {
-		return nil, collectionErr
-	}
-
-	return collection.RollbackVersion(appVersion)
 }
 
 func (v *versionUseCase) UpdateVersion(envId, appVersion string, params IVersionUpdateParams) error {
@@ -102,14 +91,14 @@ func (v *versionUseCase) ListVersions(envId string) (VersionList, error) {
 	return collection.ListVersions()
 }
 
-func (v *versionUseCase) VersionCompatQuery(envId, appVersion string) (IVersionCompatQueryResult, error) {
+func (v *versionUseCase) VersionStrictCompatQuery(envId, appVersion string) (IVersionCompatQueryResult, error) {
 	collection, collectionErr := v.getEnvVersionCollection(envId)
 
 	if collectionErr != nil {
 		return nil, collectionErr
 	}
 
-	return collection.VersionCompatQuery(appVersion)
+	return collection.VersionStrictCompatQuery(appVersion)
 }
 
 func (v *versionUseCase) init() error {

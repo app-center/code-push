@@ -12,6 +12,18 @@ type Version struct {
 	createTime       time.Time `json:"create_time"`
 }
 
+func (v *Version) SetMustUpdate(mustUpdate bool) {
+	v.mustUpdate = mustUpdate
+}
+
+func (v *Version) SetPackageUri(packageUri string) {
+	v.packageUri = packageUri
+}
+
+func (v *Version) SetChangelog(changelog string) {
+	v.changelog = changelog
+}
+
 func (v Version) EnvId() string {
 	return v.envId
 }

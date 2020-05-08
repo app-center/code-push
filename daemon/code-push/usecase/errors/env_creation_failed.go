@@ -10,8 +10,9 @@ func ThrowEnvCreationFailedError(err error, code string, env interface{}) EnvCre
 	}
 
 	return errors.Throw(errors.CtorConfig{
-		Code: code,
-		Msg:  "env creation failed",
-		Meta: errors.MetaFields{"err": err, "env": env},
+		Error: err,
+		Code:  code,
+		Msg:   "env creation failed",
+		Meta:  errors.MetaFields{"env": env},
 	})
 }

@@ -1,4 +1,4 @@
-package version_compat_tree
+package versionCompatTree
 
 import "github.com/funnyecho/code-push/pkg/semver"
 

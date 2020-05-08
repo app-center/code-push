@@ -45,7 +45,7 @@ func (c *Cache) Query(key KeyType) (value ValueType, ok bool) {
 
 // 查询缓存中是否存在 key，
 // 存在则 ok = true，并返回 value
-// 不存在，则尝试调用初始化函数生成 value 并存入缓存中
+// 不存在，则尝试调用初始化函数生成 value 并存入缓存中，存入成功，也会返回 true
 func (c *Cache) Get(key KeyType) (ValueType, bool) {
 	c.mu.RLock()
 
