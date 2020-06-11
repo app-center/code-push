@@ -3,25 +3,32 @@ package internal
 import (
 	"github.com/funnyecho/code-push/daemon/code-push/domain"
 	"github.com/gogo/protobuf/proto"
+	"github.com/pkg/errors"
 	"time"
 )
 
 //go:generate protoc --gogofaster_out=. internal.proto
 
-func MarshalBranch(b *domain.Branch) ([]byte, error) {
-	return proto.Marshal(&Branch{
+func MarshalBranch(b *domain.Branch) (bytes []byte, err error) {
+	bytes, err = proto.Marshal(&Branch{
 		ID:         b.ID,
 		Name:       b.Name,
 		AuthHost:   b.AuthHost,
 		EncToken:   b.EncToken,
 		CreateTime: b.CreateTime.UnixNano(),
 	})
+
+	if err != nil {
+		err = errors.Wrap(err, "protobuf marshal failed")
+	}
+
+	return
 }
 
 func UnmarshalBranch(data []byte, b *domain.Branch) error {
 	var pb Branch
 	if err := proto.Unmarshal(data, &pb); err != nil {
-		return err
+		return errors.Wrap(err, "protobuf unmarshal failed")
 	}
 
 	b.ID = pb.GetID()
@@ -33,20 +40,26 @@ func UnmarshalBranch(data []byte, b *domain.Branch) error {
 	return nil
 }
 
-func MarshalEnv(e *domain.Env) ([]byte, error) {
-	return proto.Marshal(&Env{
+func MarshalEnv(e *domain.Env) (bytes []byte, err error) {
+	bytes, err = proto.Marshal(&Env{
 		BranchId:   e.BranchId,
 		ID:         e.ID,
 		Name:       e.Name,
 		EncToken:   e.EncToken,
 		CreateTime: e.CreateTime.UnixNano(),
 	})
+
+	if err != nil {
+		err = errors.Wrap(err, "protobuf marshal failed")
+	}
+
+	return
 }
 
 func UnmarshalEnv(data []byte, e *domain.Env) error {
 	var pb Env
 	if err := proto.Unmarshal(data, &pb); err != nil {
-		return err
+		return errors.Wrap(err, "protobuf unmarshal failed")
 	}
 
 	e.BranchId = pb.GetBranchId()
@@ -58,8 +71,8 @@ func UnmarshalEnv(data []byte, e *domain.Env) error {
 	return nil
 }
 
-func MarshalVersion(v *domain.Version) ([]byte, error) {
-	return proto.Marshal(&Version{
+func MarshalVersion(v *domain.Version) (bytes []byte, err error) {
+	bytes, err = proto.Marshal(&Version{
 		EnvId:            v.EnvId,
 		AppVersion:       v.AppVersion,
 		CompatAppVersion: v.CompatAppVersion,
@@ -68,12 +81,18 @@ func MarshalVersion(v *domain.Version) ([]byte, error) {
 		PackageUri:       v.PackageUri,
 		CreateTime:       v.CreateTime.UnixNano(),
 	})
+
+	if err != nil {
+		err = errors.Wrap(err, "protobuf marshal failed")
+	}
+
+	return
 }
 
 func UnmarshalVersion(data []byte, v *domain.Version) error {
 	var pb Version
 	if err := proto.Unmarshal(data, &pb); err != nil {
-		return err
+		return errors.Wrap(err, "protobuf unmarshal failed")
 	}
 
 	v.EnvId = pb.GetEnvId()
