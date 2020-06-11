@@ -2,6 +2,8 @@ package internal
 
 import "github.com/funnyecho/code-push/daemon/code-push/domain"
 
+//go:generate protoc --gogofaster_out=. internal.proto
+
 func MarshalBranch(b *domain.Branch) ([]byte, error) {
 	return nil, nil
 }

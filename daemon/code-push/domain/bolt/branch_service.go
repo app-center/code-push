@@ -1,6 +1,8 @@
 package bolt
 
-import "github.com/funnyecho/code-push/daemon/code-push/domain"
+import (
+	"github.com/funnyecho/code-push/daemon/code-push/domain"
+)
 
 var _ domain.IBranchService = &BranchService{}
 

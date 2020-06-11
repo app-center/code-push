@@ -15,4 +15,7 @@ test-version-compat-tree:
 benchmark:
 	go test -count=1 -cpu 1 -bench . ./pkg/...
 
-@phony: fmt vet test benchmark
+generate:
+	@go generate ./...
+
+@phony: fmt vet test benchmark generate

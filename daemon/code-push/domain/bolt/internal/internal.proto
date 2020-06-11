@@ -1,5 +1,3 @@
-//go:generate protoc --gogofaster_out=. internal.proto
-
 syntax = "proto3";
 package internal;
 
@@ -9,5 +7,23 @@ message Branch {
   string AuthHost = 3;
   string EncToken = 4;
   int64 CreateTime = 5;
+}
+
+message Env {
+  string BranchId = 1;
+  string Id = 2;
+  string Name = 3;
+  string EncToken = 4;
+  int64 CreateTime = 5;
+}
+
+message Version {
+  string EnvId = 1;
+  string AppVersion = 2;
+  string CompatAppVersion = 3;
+  bool MustUpdate = 4;
+  string Changelog = 5;
+  string PackageUri = 6;
+  int64 CreateTime = 7;
 }
 
