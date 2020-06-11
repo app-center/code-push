@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"github.com/funnyecho/code-push/daemon/code-push/domain"
-	"github.com/funnyecho/code-push/daemon/code-push/domain/repository"
 	"github.com/funnyecho/code-push/daemon/code-push/usecase/errors"
 	"github.com/funnyecho/code-push/pkg/cache"
 	"time"
@@ -133,16 +132,12 @@ func (v *versionUseCase) getEnvVersionCollection(envId string) (*envVersionColle
 }
 
 type VersionUseCaseConfig struct {
-	VersionRepo    repository.IVersion
 	VersionService domain.IVersionService
-	EnvRepo        repository.IEnv
 	EnvService     domain.IEnvService
 }
 
 func NewVersionUseCase(config VersionUseCaseConfig) (IVersionUseCase, error) {
-	if config.VersionRepo == nil ||
-		config.VersionService == nil ||
-		config.EnvRepo == nil ||
+	if config.VersionService == nil ||
 		config.EnvService == nil {
 		return nil, errors.ThrowVersionOperationForbiddenError(
 			nil,
