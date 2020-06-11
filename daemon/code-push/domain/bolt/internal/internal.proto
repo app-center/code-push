@@ -11,7 +11,7 @@ message Branch {
 
 message Env {
   string BranchId = 1;
-  string Id = 2;
+  string ID = 2;
   string Name = 3;
   string EncToken = 4;
   int64 CreateTime = 5;
