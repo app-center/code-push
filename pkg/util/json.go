@@ -76,3 +76,29 @@ func JsonParseFromFile(path string, dist interface{}) error {
 
 	return nil
 }
+
+func JsonStringify(data interface{}) ([]byte, error) {
+	plainData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return nil, errors.Throw(errors.CtorConfig{
+			Error: err,
+			Msg:   "failed to json.stringify data",
+			Meta:  errors.MetaFields{"data": data},
+		})
+	}
+
+	return plainData, nil
+}
+
+func JsonParse(data []byte, dist interface{}) error {
+	err := json.Unmarshal(data, dist)
+	if err != nil {
+		return errors.Throw(errors.CtorConfig{
+			Error: err,
+			Msg:   "failed to json.parse",
+			Meta:  errors.MetaFields{"data": data},
+		})
+	}
+
+	return nil
+}

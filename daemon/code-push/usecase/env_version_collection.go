@@ -1,9 +1,7 @@
 package usecase
 
 import (
-	"github.com/funnyecho/code-push/daemon/code-push/domain/model"
-	"github.com/funnyecho/code-push/daemon/code-push/domain/repository"
-	"github.com/funnyecho/code-push/daemon/code-push/domain/service"
+	"github.com/funnyecho/code-push/daemon/code-push/domain"
 	"github.com/funnyecho/code-push/daemon/code-push/usecase/errors"
 	"github.com/funnyecho/code-push/pkg/semver"
 	"github.com/funnyecho/code-push/pkg/versionCompatTree"
@@ -13,13 +11,10 @@ import (
 type envVersionCollection struct {
 	envId string
 
-	versionRepo    repository.IVersion
-	versionService service.IVersionService
+	versionService domain.IVersionService
+	envService     domain.IEnvService
 
-	envRepo    repository.IEnv
-	envService service.IEnvService
-
-	versionList       model.VersionList
+	versionList       domain.VersionList
 	versionCompatTree versionCompatTree.ITree
 }
 
@@ -65,7 +60,7 @@ func (c *envVersionCollection) ReleaseVersion(params IVersionReleaseParams) erro
 		})
 	}
 
-	newVersion, saveErr := c.versionRepo.SaveVersion(model.NewVersion(model.VersionConfig{
+	newVersion := &domain.Version{
 		EnvId:            c.envId,
 		AppVersion:       appVersion.String(),
 		CompatAppVersion: compatAppVersion.String(),
@@ -73,53 +68,14 @@ func (c *envVersionCollection) ReleaseVersion(params IVersionReleaseParams) erro
 		Changelog:        changelog,
 		PackageUri:       packageUri,
 		CreateTime:       time.Now(),
-	}))
-	if saveErr != nil {
-		return errors.ThrowVersionReleaseFailedError(saveErr, errors.FA_VERSION_RELEASE_FAILED, BoxingVersionReleaseParams(params))
+	}
+
+	releaseErr := c.versionService.CreateVersion(newVersion)
+	if releaseErr != nil {
+		return errors.ThrowVersionReleaseFailedError(releaseErr, errors.FA_VERSION_RELEASE_FAILED, BoxingVersionReleaseParams(params))
 	}
 
 	c.versionCompatTree.Publish(newVersionCompatEntry(newVersion))
-
-	return nil
-}
-
-func (c *envVersionCollection) UpdateVersion(rawAppVersion string, params IVersionUpdateParams) error {
-	appVersion, appVersionErr := semver.ParseVersion(rawAppVersion)
-	if appVersionErr != nil {
-		return errors.ThrowVersionSaveError(appVersionErr, "invalid app version", errors.MetaFields{
-			"appVersion": rawAppVersion,
-		})
-	}
-
-	version, versionErr := c.versionRepo.FirstVersion(c.envId, appVersion.String())
-	if versionErr != nil {
-		return errors.ThrowVersionSaveError(versionErr, "can not get version model", errors.MetaFields{
-			"envId":      c.envId,
-			"appVersion": appVersion.String(),
-		})
-	}
-
-	updateChangelog, changelog := params.Changelog()
-	if updateChangelog {
-		version.SetChangelog(changelog)
-	}
-
-	updatePackageUri, packageUri := params.PackageUri()
-	if updatePackageUri {
-		version.SetPackageUri(packageUri)
-	}
-
-	updateMustUpdate, mustUpdate := params.MustUpdate()
-	if updateMustUpdate {
-		version.SetMustUpdate(mustUpdate)
-	}
-
-	_, updateErr := c.versionRepo.SaveVersion(*version)
-	if updateErr != nil {
-		return errors.ThrowVersionSaveError(versionErr, "", errors.MetaFields{
-			"version": version,
-		})
-	}
 
 	return nil
 }
@@ -134,7 +90,7 @@ func (c *envVersionCollection) GetVersion(rawAppVersion string) (*Version, error
 		})
 	}
 
-	version, versionErr := c.versionRepo.FirstVersion(c.envId, appVersion.String())
+	version, versionErr := c.versionService.Version(c.envId, appVersion.String())
 	if versionErr != nil {
 		return nil, errors.ThrowVersionNotFoundError(c.envId, appVersion.String(), versionErr)
 	}
@@ -143,7 +99,7 @@ func (c *envVersionCollection) GetVersion(rawAppVersion string) (*Version, error
 }
 
 func (c *envVersionCollection) ListVersions() (VersionList, error) {
-	versionList, versionListErr := c.versionRepo.FindVersionWithEnvId(c.envId)
+	versionList, versionListErr := c.versionService.VersionsWithEnvId(c.envId)
 	if versionListErr != nil {
 		return nil, errors.ThrowVersionOperationForbiddenError(versionListErr, "fetch version list failed", errors.MetaFields{"envId": c.envId})
 	}
@@ -184,7 +140,7 @@ func (c *envVersionCollection) VersionStrictCompatQuery(rawAppVersion string) (I
 		if canUpdateAppVersionModelErr != nil {
 			return nil, errors.ThrowVersionOperationForbiddenError(
 				canUpdateAppVersionModelErr,
-				"failed to get canUpdateAppVersion model",
+				"failed to get canUpdateAppVersion scheme",
 				errors.MetaFields{"canUpdateAppVersion": canUpdateAppVersion.String()},
 			)
 		}
@@ -203,7 +159,7 @@ func (c *envVersionCollection) VersionStrictCompatQuery(rawAppVersion string) (I
 }
 
 func (c *envVersionCollection) init() error {
-	versionList, fetchErr := c.versionRepo.FindVersionWithEnvId(c.envId)
+	versionList, fetchErr := c.versionService.VersionsWithEnvId(c.envId)
 
 	if fetchErr != nil {
 		return fetchErr
@@ -227,16 +183,12 @@ func (c *envVersionCollection) resetSource() error {
 
 type envVersionCollectionConfig struct {
 	EnvId          string
-	VersionRepo    repository.IVersion
-	VersionService service.IVersionService
-	EnvRepo        repository.IEnv
-	EnvService     service.IEnvService
+	EnvService     domain.IEnvService
+	VersionService domain.IVersionService
 }
 
 func newEnvVersionCollection(config envVersionCollectionConfig) (*envVersionCollection, error) {
-	if config.VersionRepo == nil ||
-		config.VersionService == nil ||
-		config.EnvRepo == nil ||
+	if config.VersionService == nil ||
 		config.EnvService == nil ||
 		len(config.EnvId) == 0 {
 		return nil, errors.ThrowVersionOperationForbiddenError(
@@ -247,11 +199,8 @@ func newEnvVersionCollection(config envVersionCollectionConfig) (*envVersionColl
 	}
 
 	collection := &envVersionCollection{
-		envId:          config.EnvId,
-		versionRepo:    config.VersionRepo,
-		versionService: config.VersionService,
-
-		envRepo:           config.EnvRepo,
+		envId:             config.EnvId,
+		versionService:    config.VersionService,
 		envService:        config.EnvService,
 		versionCompatTree: versionCompatTree.NewVersionCompatTree(),
 	}
@@ -264,23 +213,23 @@ func newEnvVersionCollection(config envVersionCollectionConfig) (*envVersionColl
 }
 
 type versionCompatEntry struct {
-	version *model.Version
+	version *domain.Version
 }
 
-func newVersionCompatEntry(version *model.Version) *versionCompatEntry {
+func newVersionCompatEntry(version *domain.Version) *versionCompatEntry {
 	return &versionCompatEntry{
 		version: version,
 	}
 }
 
 func (e *versionCompatEntry) CompatVersion() *semver.SemVer {
-	ver, _ := semver.ParseVersion(e.version.CompatAppVersion())
+	ver, _ := semver.ParseVersion(e.version.CompatAppVersion)
 
 	return ver
 }
 
 func (e *versionCompatEntry) Version() *semver.SemVer {
-	ver, _ := semver.ParseVersion(e.version.AppVersion())
+	ver, _ := semver.ParseVersion(e.version.AppVersion)
 
 	return ver
 }

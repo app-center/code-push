@@ -1,9 +1,8 @@
 package usecase
 
 import (
-	"github.com/funnyecho/code-push/daemon/code-push/domain/model"
+	"github.com/funnyecho/code-push/daemon/code-push/domain"
 	"github.com/funnyecho/code-push/daemon/code-push/domain/repository"
-	"github.com/funnyecho/code-push/daemon/code-push/domain/service"
 	"github.com/funnyecho/code-push/daemon/code-push/usecase/errors"
 	"github.com/funnyecho/code-push/pkg/cache"
 	"time"
@@ -21,33 +20,28 @@ type Version struct {
 
 type VersionList = []*Version
 
-func toVersion(ver *model.Version) *Version {
+func toVersion(ver *domain.Version) *Version {
 	return &Version{
-		EnvId:            ver.EnvId(),
-		AppVersion:       ver.AppVersion(),
-		CompatAppVersion: ver.CompatAppVersion(),
-		MustUpdate:       ver.MustUpdate(),
-		Changelog:        ver.Changelog(),
-		PackageUri:       ver.PackageUri(),
-		CreateTime:       ver.CreateTime(),
+		EnvId:            ver.EnvId,
+		AppVersion:       ver.AppVersion,
+		CompatAppVersion: ver.CompatAppVersion,
+		MustUpdate:       ver.MustUpdate,
+		Changelog:        ver.Changelog,
+		PackageUri:       ver.PackageUri,
+		CreateTime:       ver.CreateTime,
 	}
 }
 
 type IVersionUseCase interface {
 	ReleaseVersion(params IVersionReleaseParams) error
-	UpdateVersion(envId, appVersion string, params IVersionUpdateParams) error
 	GetVersion(envId, appVersion string) (*Version, error)
 	ListVersions(envId string) (VersionList, error)
 	VersionStrictCompatQuery(envId, appVersion string) (IVersionCompatQueryResult, error)
 }
 
 type versionUseCase struct {
-	versionRepo    repository.IVersion
-	versionService service.IVersionService
-
-	envRepo    repository.IEnv
-	envService service.IEnvService
-
+	envService                domain.IEnvService
+	versionService            domain.IVersionService
 	envVersionCollectionCache *cache.Cache
 }
 
@@ -59,16 +53,6 @@ func (v *versionUseCase) ReleaseVersion(params IVersionReleaseParams) error {
 	}
 
 	return collection.ReleaseVersion(params)
-}
-
-func (v *versionUseCase) UpdateVersion(envId, appVersion string, params IVersionUpdateParams) error {
-	collection, collectionErr := v.getEnvVersionCollection(envId)
-
-	if collectionErr != nil {
-		return collectionErr
-	}
-
-	return collection.UpdateVersion(appVersion, params)
 }
 
 func (v *versionUseCase) GetVersion(envId, appVersion string) (*Version, error) {
@@ -111,15 +95,13 @@ func (v *versionUseCase) init() error {
 				return nil, false
 			}
 
-			if !v.envService.IsEnvExisted(envId) {
+			if env, envErr := v.envService.Env(envId); envErr != nil || env == nil {
 				return nil, false
 			}
 
 			collection, collectionErr := newEnvVersionCollection(envVersionCollectionConfig{
 				EnvId:          envId,
-				VersionRepo:    v.versionRepo,
 				VersionService: v.versionService,
-				EnvRepo:        v.envRepo,
 				EnvService:     v.envService,
 			})
 
@@ -133,7 +115,7 @@ func (v *versionUseCase) init() error {
 }
 
 func (v *versionUseCase) getEnvVersionCollection(envId string) (*envVersionCollection, error) {
-	if !v.envService.IsEnvExisted(envId) {
+	if env, envErr := v.envService.Env(envId); envErr != nil || env == nil {
 		return nil, errors.ThrowEnvNotFoundError(envId, nil)
 	}
 
@@ -152,9 +134,9 @@ func (v *versionUseCase) getEnvVersionCollection(envId string) (*envVersionColle
 
 type VersionUseCaseConfig struct {
 	VersionRepo    repository.IVersion
-	VersionService service.IVersionService
+	VersionService domain.IVersionService
 	EnvRepo        repository.IEnv
-	EnvService     service.IEnvService
+	EnvService     domain.IEnvService
 }
 
 func NewVersionUseCase(config VersionUseCaseConfig) (IVersionUseCase, error) {
@@ -170,11 +152,8 @@ func NewVersionUseCase(config VersionUseCaseConfig) (IVersionUseCase, error) {
 	}
 
 	userCase := &versionUseCase{
-		versionRepo:    config.VersionRepo,
 		versionService: config.VersionService,
-
-		envRepo:    config.EnvRepo,
-		envService: config.EnvService,
+		envService:     config.EnvService,
 	}
 
 	if initErr := userCase.init(); initErr != nil {
