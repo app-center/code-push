@@ -8,6 +8,16 @@ import (
 	"time"
 )
 
+func NewBranchUseCase(config BranchUseCaseConfig) (IBranchUseCase, error) {
+	if config.BranchService == nil {
+		panic("invalid branch use case params")
+	}
+
+	return &branchUseCase{
+		branchService: config.BranchService,
+	}, nil
+}
+
 type Branch struct {
 	BranchId   string
 	BranchName string
@@ -48,20 +58,11 @@ func (b *branchUseCase) CreateBranch(branchName, branchAuthHost string) (*Branch
 		return nil, errors.ThrowBranchInvalidEncTokenError(encTokenErr)
 	}
 
-	//branchToCreate := model.NewBranch(model.BranchConfig{
-	//	Id:         generateBranchId(branchName),
-	//	Name:       branchName,
-	//	AuthHost:   branchAuthHost,
-	//	EncToken:   encToken,
-	//	CreateTime: time.Now(),
-	//})
-
 	branchToCreate := &domain.Branch{
-		ID:         generateBranchId(branchName),
-		Name:       branchName,
-		AuthHost:   branchAuthHost,
-		EncToken:   encToken,
-		CreateTime: time.Now(),
+		ID:       generateBranchId(branchName),
+		Name:     branchName,
+		AuthHost: branchAuthHost,
+		EncToken: encToken,
 	}
 
 	createErr := b.branchService.CreateBranch(branchToCreate)
@@ -128,16 +129,6 @@ func (b *branchUseCase) GetBranchEncToken(branchId string) (string, error) {
 
 type BranchUseCaseConfig struct {
 	BranchService domain.IBranchService
-}
-
-func NewBranchUseCase(config BranchUseCaseConfig) (IBranchUseCase, error) {
-	if config.BranchService == nil {
-		panic("invalid branch use case params")
-	}
-
-	return &branchUseCase{
-		branchService: config.BranchService,
-	}, nil
 }
 
 func generateBranchEncToken() (string, error) {

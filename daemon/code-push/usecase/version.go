@@ -7,6 +7,28 @@ import (
 	"time"
 )
 
+func NewVersionUseCase(config VersionUseCaseConfig) (IVersionUseCase, error) {
+	if config.VersionService == nil ||
+		config.EnvService == nil {
+		return nil, errors.ThrowVersionOperationForbiddenError(
+			nil,
+			"invalid version use case params",
+			nil,
+		)
+	}
+
+	userCase := &versionUseCase{
+		versionService: config.VersionService,
+		envService:     config.EnvService,
+	}
+
+	if initErr := userCase.init(); initErr != nil {
+		return nil, initErr
+	} else {
+		return userCase, nil
+	}
+}
+
 type Version struct {
 	EnvId            string
 	AppVersion       string
@@ -134,26 +156,4 @@ func (v *versionUseCase) getEnvVersionCollection(envId string) (*envVersionColle
 type VersionUseCaseConfig struct {
 	VersionService domain.IVersionService
 	EnvService     domain.IEnvService
-}
-
-func NewVersionUseCase(config VersionUseCaseConfig) (IVersionUseCase, error) {
-	if config.VersionService == nil ||
-		config.EnvService == nil {
-		return nil, errors.ThrowVersionOperationForbiddenError(
-			nil,
-			"invalid version use case params",
-			nil,
-		)
-	}
-
-	userCase := &versionUseCase{
-		versionService: config.VersionService,
-		envService:     config.EnvService,
-	}
-
-	if initErr := userCase.init(); initErr != nil {
-		return nil, initErr
-	} else {
-		return userCase, nil
-	}
 }

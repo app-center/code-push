@@ -5,7 +5,6 @@ import (
 	"github.com/funnyecho/code-push/daemon/code-push/usecase/errors"
 	"github.com/funnyecho/code-push/pkg/semver"
 	"github.com/funnyecho/code-push/pkg/versionCompatTree"
-	"time"
 )
 
 type envVersionCollection struct {
@@ -67,7 +66,6 @@ func (c *envVersionCollection) ReleaseVersion(params IVersionReleaseParams) erro
 		MustUpdate:       mustUpdate,
 		Changelog:        changelog,
 		PackageUri:       packageUri,
-		CreateTime:       time.Now(),
 	}
 
 	releaseErr := c.versionService.CreateVersion(newVersion)

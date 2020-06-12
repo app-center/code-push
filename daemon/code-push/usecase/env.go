@@ -8,6 +8,18 @@ import (
 	"time"
 )
 
+func NewEnvUseCase(config EnvUseCaseConfig) (IEnvUserCase, error) {
+	if config.BranchService == nil ||
+		config.EnvService == nil {
+		panic("invalid env use case params")
+	}
+
+	return &envUseCase{
+		envService:    config.EnvService,
+		branchService: config.BranchService,
+	}, nil
+}
+
 type Env struct {
 	BranchId   string
 	EnvId      string
@@ -55,11 +67,10 @@ func (e envUseCase) CreateEnv(branchId, envName string) (*Env, error) {
 	}
 
 	envToCreate := &domain.Env{
-		BranchId:   branchId,
-		ID:         envId,
-		Name:       envName,
-		EncToken:   encToken,
-		CreateTime: time.Now(),
+		BranchId: branchId,
+		ID:       envId,
+		Name:     envName,
+		EncToken: encToken,
 	}
 
 	createErr := e.envService.CreateEnv(envToCreate)
@@ -153,18 +164,6 @@ func (e envUseCase) GetEnvAuthHost(envId string) (string, error) {
 type EnvUseCaseConfig struct {
 	BranchService domain.IBranchService
 	EnvService    domain.IEnvService
-}
-
-func NewEnvUseCase(config EnvUseCaseConfig) (IEnvUserCase, error) {
-	if config.BranchService == nil ||
-		config.EnvService == nil {
-		panic("invalid env use case params")
-	}
-
-	return &envUseCase{
-		envService:    config.EnvService,
-		branchService: config.BranchService,
-	}, nil
 }
 
 func generateEnvEncToken() (string, error) {
