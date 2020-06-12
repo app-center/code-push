@@ -21,7 +21,7 @@ func (s *BranchService) Branch(branchId string) (*domain.Branch, error) {
 	defer tx.Rollback()
 
 	var b domain.Branch
-	if v := tx.Bucket([]byte("Branches")).Get([]byte(branchId)); v == nil {
+	if v := tx.Bucket(bucketBranch).Get([]byte(branchId)); v == nil {
 		return nil, nil
 	} else if err := internal.UnmarshalBranch(v, &b); err != nil {
 		return nil, err
@@ -35,19 +35,19 @@ func (s *BranchService) CreateBranch(branch *domain.Branch) error {
 		len(branch.Name) == 0 ||
 		len(branch.AuthHost) == 0 ||
 		len(branch.EncToken) == 0 {
-		return ErrBranchCreationParamsInvalid
+		return domain.ErrBranchCreationParamsInvalid
 	}
 
 	tx, err := s.client.db.Begin(true)
 	if err != nil {
-		return errors.Wrap(err, "begin write tx failed")
+		return errors.Wrap(err, "begin writable tx failed")
 	}
 	defer tx.Rollback()
 
-	b := tx.Bucket([]byte("Branches"))
+	b := tx.Bucket(bucketBranch)
 	if v := b.Get([]byte(branch.ID)); v != nil {
 		return errors.WithMessagef(
-			ErrBranchExists,
+			domain.ErrBranchExists,
 			"branchId: %s",
 			branch.ID,
 		)
@@ -70,7 +70,7 @@ func (s *BranchService) CreateBranch(branch *domain.Branch) error {
 
 func (s *BranchService) DeleteBranch(branchId string) error {
 	if len(branchId) == 0 {
-		return errors.WithMessagef(ErrBranchCreationParamsInvalid, "branchId: %s", branchId)
+		return errors.WithMessage(domain.ErrParamsInvalid, "branchId required")
 	}
 
 	tx, err := s.client.db.Begin(true)
@@ -79,7 +79,7 @@ func (s *BranchService) DeleteBranch(branchId string) error {
 	}
 	defer tx.Rollback()
 
-	b := tx.Bucket([]byte("Branches"))
+	b := tx.Bucket(bucketBranch)
 	if err := b.Delete([]byte(branchId)); err != nil {
 		return errors.WithMessagef(
 			err,
@@ -93,4 +93,10 @@ func (s *BranchService) DeleteBranch(branchId string) error {
 	}
 
 	return nil
+}
+
+func (s *BranchService) IsBranchAvailable(branchId string) bool {
+	branch, err := s.Branch(branchId)
+
+	return err == nil && branch != nil
 }

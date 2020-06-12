@@ -35,16 +35,16 @@ type VersionList = []*Version
 type IBranchService interface {
 	Branch(branchId string) (*Branch, error)
 	CreateBranch(branch *Branch) error
-
 	DeleteBranch(branchId string) error
+
+	IsBranchAvailable(branchId string) bool
 }
 
 type IEnvService interface {
 	Env(envId string) (*Env, error)
-	EnvWithBranchIdAndEnvName(branchId, envName string) (*Env, error)
 	CreateEnv(env *Env) error
-	SetEnvName(envId, newEnvName string) error
 	DeleteEnv(envId string) error
+	IsEnvAvailable(envId string) bool
 }
 
 type IVersionService interface {
