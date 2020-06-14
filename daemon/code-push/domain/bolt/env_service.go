@@ -1,6 +1,7 @@
 package bolt
 
 import (
+	"github.com/funnyecho/code-push/daemon/code-push"
 	"github.com/funnyecho/code-push/daemon/code-push/domain"
 	"github.com/funnyecho/code-push/daemon/code-push/domain/bolt/internal"
 	"github.com/pkg/errors"
@@ -35,11 +36,11 @@ func (s *EnvService) CreateEnv(env *domain.Env) error {
 		len(env.Name) == 0 ||
 		len(env.EncToken) == 0 ||
 		len(env.BranchId) == 0 {
-		return domain.ErrEnvCreationParamsInvalid
+		return code_push.ErrParamsInvalid
 	}
 
 	if !s.client.BranchService().IsBranchAvailable(env.BranchId) {
-		return domain.ErrBranchNotFound
+		return code_push.ErrBranchNotFound
 	}
 
 	tx, err := s.client.db.Begin(true)
@@ -51,7 +52,7 @@ func (s *EnvService) CreateEnv(env *domain.Env) error {
 	b := tx.Bucket(bucketEnv)
 	if v := b.Get([]byte(env.ID)); v != nil {
 		return errors.WithMessagef(
-			domain.ErrEnvExists,
+			code_push.ErrEnvExisted,
 			"envId: %s",
 			env.ID,
 		)
@@ -73,7 +74,7 @@ func (s *EnvService) CreateEnv(env *domain.Env) error {
 
 func (s *EnvService) DeleteEnv(envId string) error {
 	if len(envId) == 0 {
-		return errors.WithMessage(domain.ErrParamsInvalid, "envId required")
+		return errors.WithMessage(code_push.ErrParamsInvalid, "envId required")
 	}
 
 	tx, err := s.client.db.Begin(true)

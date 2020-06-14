@@ -1,6 +1,7 @@
 package bolt
 
 import (
+	"github.com/funnyecho/code-push/daemon/code-push"
 	"github.com/funnyecho/code-push/daemon/code-push/domain"
 	"github.com/funnyecho/code-push/daemon/code-push/domain/bolt/internal"
 	"github.com/pkg/errors"
@@ -35,7 +36,7 @@ func (s *BranchService) CreateBranch(branch *domain.Branch) error {
 		len(branch.Name) == 0 ||
 		len(branch.AuthHost) == 0 ||
 		len(branch.EncToken) == 0 {
-		return domain.ErrBranchCreationParamsInvalid
+		return code_push.ErrParamsInvalid
 	}
 
 	tx, err := s.client.db.Begin(true)
@@ -47,7 +48,7 @@ func (s *BranchService) CreateBranch(branch *domain.Branch) error {
 	b := tx.Bucket(bucketBranch)
 	if v := b.Get([]byte(branch.ID)); v != nil {
 		return errors.WithMessagef(
-			domain.ErrBranchExists,
+			code_push.ErrBranchExisted,
 			"branchId: %s",
 			branch.ID,
 		)
@@ -70,7 +71,7 @@ func (s *BranchService) CreateBranch(branch *domain.Branch) error {
 
 func (s *BranchService) DeleteBranch(branchId string) error {
 	if len(branchId) == 0 {
-		return errors.WithMessage(domain.ErrParamsInvalid, "branchId required")
+		return errors.WithMessage(code_push.ErrParamsInvalid, "branchId required")
 	}
 
 	tx, err := s.client.db.Begin(true)

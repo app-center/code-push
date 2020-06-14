@@ -1,6 +1,7 @@
 package bolt
 
 import (
+	"github.com/funnyecho/code-push/daemon/code-push"
 	"github.com/funnyecho/code-push/daemon/code-push/domain"
 	"github.com/funnyecho/code-push/daemon/code-push/domain/bolt/internal"
 	"github.com/pkg/errors"
@@ -65,11 +66,11 @@ func (s *VersionService) VersionsWithEnvId(envId string) (domain.VersionList, er
 func (s *VersionService) CreateVersion(version *domain.Version) error {
 	if len(version.EnvId) == 0 ||
 		len(version.AppVersion) == 0 {
-		return domain.ErrVersionCreationParamsInvalid
+		return code_push.ErrParamsInvalid
 	}
 
 	if !s.client.EnvService().IsEnvAvailable(version.EnvId) {
-		return domain.ErrEnvNotFound
+		return code_push.ErrEnvNotFound
 	}
 
 	tx, err := s.client.db.Begin(true)
@@ -85,7 +86,7 @@ func (s *VersionService) CreateVersion(version *domain.Version) error {
 
 	if v := b.Get([]byte(version.AppVersion)); v != nil {
 		return errors.WithMessagef(
-			domain.ErrVersionExisted,
+			code_push.ErrVersionExisted,
 			"envId: %s, appVersion: %s",
 			version.EnvId,
 			version.AppVersion,
