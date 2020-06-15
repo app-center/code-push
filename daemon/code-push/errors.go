@@ -1,6 +1,8 @@
 package code_push
 
 const (
+	ErrInternalError = Error("FA_INTERNAL_ERROR")
+
 	ErrParamsInvalid = Error("FA_PARAMS_INVALID")
 
 	ErrBranchExisted  = Error("FA_BRANCH_EXISTED")

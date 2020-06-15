@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package code_push_pb;
+package pb;
 
 message PlainResponse {
   string code = 1;

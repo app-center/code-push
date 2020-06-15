@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func NewBranchUseCase(config BranchUseCaseConfig) (IBranchUseCase, error) {
+func NewBranchUseCase(config BranchUseCaseConfig) (IBranch, error) {
 	if config.BranchService == nil {
 		panic("invalid branch use case params")
 	}
@@ -32,7 +32,7 @@ func toBranch(branch *domain.Branch) *Branch {
 	}
 }
 
-type IBranchUseCase interface {
+type IBranch interface {
 	CreateBranch(branchName, branchAuthHost string) (*Branch, error)
 	GetBranch(branchId string) (*Branch, error)
 	DeleteBranch(branchId string) error

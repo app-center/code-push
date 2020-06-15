@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func NewVersionUseCase(config VersionUseCaseConfig) (IVersionUseCase, error) {
+func NewVersionUseCase(config VersionUseCaseConfig) (IVersion, error) {
 	if config.VersionService == nil ||
 		config.EnvService == nil {
 		return nil, errors.ThrowVersionOperationForbiddenError(
@@ -53,7 +53,7 @@ func toVersion(ver *domain.Version) *Version {
 	}
 }
 
-type IVersionUseCase interface {
+type IVersion interface {
 	ReleaseVersion(params IVersionReleaseParams) error
 	GetVersion(envId, appVersion string) (*Version, error)
 	ListVersions(envId string) (VersionList, error)

@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func NewEnvUseCase(config EnvUseCaseConfig) (IEnvUserCase, error) {
+func NewEnvUseCase(config EnvUseCaseConfig) (IEnv, error) {
 	if config.BranchService == nil ||
 		config.EnvService == nil {
 		panic("invalid env use case params")
@@ -36,7 +36,7 @@ func toEnv(env *domain.Env) *Env {
 	}
 }
 
-type IEnvUserCase interface {
+type IEnv interface {
 	CreateEnv(branchId, envName string) (*Env, error)
 	GetEnv(envId string) (*Env, error)
 	DeleteEnv(envId string) error
