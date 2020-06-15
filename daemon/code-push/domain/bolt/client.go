@@ -1,6 +1,7 @@
 package bolt
 
 import (
+	"fmt"
 	"github.com/funnyecho/code-push/daemon/code-push/domain"
 	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
@@ -29,6 +30,10 @@ func NewClient() *Client {
 }
 
 func (c *Client) Open() error {
+	if len(c.Path) == 0 {
+		return fmt.Errorf("no database path provided")
+	}
+
 	// Open database file.
 	db, err := bbolt.Open(c.Path, 0666, &bbolt.Options{Timeout: 1 * time.Second})
 	if err != nil {

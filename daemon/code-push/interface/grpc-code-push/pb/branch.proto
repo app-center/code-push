@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package code_push_pb;
+import "common.proto";
+
+service IBranch {
+  rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse) {}
+  rpc GetBranch(GetBranchRequest) returns (GetBranchResponse) {}
+  rpc DeleteBranch(DeleteBranchRequest) returns (PlainResponse) {}
+  rpc GetBranchEncToken(GetBranchEncTokenRequest) returns (StringResponse) {}
+}
+
+message Branch {
+  string BranchId = 1;
+  string BranchName = 2;
+  int64 CreateTime = 3;
+}
+
+message CreateBranchRequest {
+  string BranchName = 1;
+  string BranchAuthHost = 2;
+}
+
+message CreateBranchResponse {
+  string code = 1;
+  Branch data = 2;
+}
+
+message GetBranchRequest {
+  string BranchId = 1;
+}
+
+message GetBranchResponse {
+  string code = 1;
+  Branch data = 2;
+}
+
+message DeleteBranchRequest {
+  string BranchId = 1;
+}
+
+message GetBranchEncTokenRequest {
+  string branchId = 1;
+}

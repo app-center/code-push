@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package code_push_pb;
+import "common.proto";
+
+service IVersion {
+  rpc ReleaseVersion(VersionReleaseRequest) returns (PlainResponse) {}
+  rpc GetVersion(GetVersionRequest) returns (VersionResponse) {}
+  rpc ListVersions(ListVersionsRequest) returns (VersionListResponse) {}
+  rpc VersionStrictCompatQuery(VersionStrictCompatQueryRequest) returns (VersionStrictCompatQueryResponse) {}
+}
+
+message Version {
+  string EnvId = 1;
+  string AppVersion = 2;
+  string CompatAppVersion = 3;
+  string Changelog = 4;
+  string PackageUri = 5;
+  bool MustUpdate = 6;
+  int64 CreateTime = 7;
+}
+
+message VersionResponse {
+  string code = 1;
+  Version data = 2;
+}
+
+message VersionListResponse {
+  string code = 1;
+  repeated Version data = 2;
+}
+
+message VersionReleaseRequest {
+  string EnvId = 1;
+  string AppVersion = 2;
+  string CompatAppVersion = 3;
+  string Changelog = 4;
+  string PackageUri = 5;
+  bool MustUpdate = 6;
+}
+
+message GetVersionRequest {
+  string EnvId = 1;
+  string AppVersion = 2;
+}
+
+message ListVersionsRequest {
+  string EnvId = 1;
+}
+
+message VersionStrictCompatQueryRequest {
+  string EnvId = 1;
+  string AppVersion = 2;
+}
+
+message VersionStrictCompatQueryResponse {
+  string code = 1;
+  VersionCompatQueryResult data = 2;
+}
+
+message VersionCompatQueryResult {
+  string AppVersion = 1;
+  string LatestAppVersion = 2;
+  string CanUpdateAppVersion = 3;
+  bool MustUpdate = 4;
+}
