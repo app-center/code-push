@@ -11,7 +11,8 @@ const (
 	ErrEnvExisted  = Error("FA_ENV_EXISTED")
 	ErrEnvNotFound = Error("FA_ENV_NOT_FOUND")
 
-	ErrVersionExisted = Error("FA_VERSION_EXISTED")
+	ErrVersionExisted  = Error("FA_VERSION_EXISTED")
+	ErrVersionNotFound = Error("FA_VERSION_NOT_FOUND")
 )
 
 // Error represents a WTF error.

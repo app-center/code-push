@@ -1,20 +1,17 @@
 package usecase
 
 import (
+	code_push "github.com/funnyecho/code-push/daemon/code-push"
 	"github.com/funnyecho/code-push/daemon/code-push/domain"
-	"github.com/funnyecho/code-push/daemon/code-push/usecase/errors"
 	"github.com/funnyecho/code-push/pkg/cache"
+	"github.com/pkg/errors"
 	"time"
 )
 
-func NewVersionUseCase(config VersionUseCaseConfig) (IVersion, error) {
+func NewVersionUseCase(config VersionUseCaseConfig) IVersion {
 	if config.VersionService == nil ||
 		config.EnvService == nil {
-		return nil, errors.ThrowVersionOperationForbiddenError(
-			nil,
-			"invalid version use case params",
-			nil,
-		)
+		panic("invalid version use case params")
 	}
 
 	userCase := &versionUseCase{
@@ -22,11 +19,8 @@ func NewVersionUseCase(config VersionUseCaseConfig) (IVersion, error) {
 		envService:     config.EnvService,
 	}
 
-	if initErr := userCase.init(); initErr != nil {
-		return nil, initErr
-	} else {
-		return userCase, nil
-	}
+	userCase.init()
+	return userCase
 }
 
 type Version struct {
@@ -106,7 +100,7 @@ func (v *versionUseCase) VersionStrictCompatQuery(envId, appVersion string) (IVe
 	return collection.VersionStrictCompatQuery(appVersion)
 }
 
-func (v *versionUseCase) init() error {
+func (v *versionUseCase) init() {
 	v.envVersionCollectionCache = cache.New(cache.CtorConfig{
 		Capacity: 10,
 		AllocFunc: func(key cache.KeyType) (collection cache.ValueType, ok bool) {
@@ -131,13 +125,11 @@ func (v *versionUseCase) init() error {
 			return
 		},
 	})
-
-	return nil
 }
 
 func (v *versionUseCase) getEnvVersionCollection(envId string) (*envVersionCollection, error) {
 	if env, envErr := v.envService.Env(envId); envErr != nil || env == nil {
-		return nil, errors.ThrowEnvNotFoundError(envId, nil)
+		return nil, errors.Wrapf(code_push.ErrEnvNotFound, "envId: %s", envId)
 	}
 
 	collection, hasCollection := v.envVersionCollectionCache.Get(envId)
@@ -145,11 +137,7 @@ func (v *versionUseCase) getEnvVersionCollection(envId string) (*envVersionColle
 	if hasCollection {
 		return collection.(*envVersionCollection), nil
 	} else {
-		return nil, errors.ThrowVersionOperationForbiddenError(
-			nil,
-			"can not find version collection",
-			errors.MetaFields{"envId": envId},
-		)
+		return nil, errors.Wrapf(code_push.ErrEnvNotFound, "can not find version collection, envId: %s", envId)
 	}
 }
 

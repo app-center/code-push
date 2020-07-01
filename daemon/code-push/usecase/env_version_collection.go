@@ -1,10 +1,11 @@
 package usecase
 
 import (
+	code_push "github.com/funnyecho/code-push/daemon/code-push"
 	"github.com/funnyecho/code-push/daemon/code-push/domain"
-	"github.com/funnyecho/code-push/daemon/code-push/usecase/errors"
 	"github.com/funnyecho/code-push/pkg/semver"
 	"github.com/funnyecho/code-push/pkg/versionCompatTree"
+	"github.com/pkg/errors"
 )
 
 type envVersionCollection struct {
@@ -27,36 +28,17 @@ func (c *envVersionCollection) ReleaseVersion(params IVersionReleaseParams) erro
 	if len(rawAppVersion) == 0 ||
 		len(rawCompatAppVersion) == 0 ||
 		len(packageUri) == 0 {
-		return errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
-			Msg: "invalid release params",
-			Params: errors.MetaFields{
-				"appVersion":       rawAppVersion,
-				"compatAppVersion": rawCompatAppVersion,
-				"packageUri":       packageUri,
-			},
-		})
+		return errors.Wrapf(code_push.ErrParamsInvalid, "appVersion, compatAppVersion nor packageUri can't be empty")
 	}
 
 	appVersion, appVersionErr := semver.ParseVersion(rawAppVersion)
 	if appVersionErr != nil {
-		return errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
-			Err: appVersionErr,
-			Msg: "invalid app version",
-			Params: errors.MetaFields{
-				"appVersion": rawAppVersion,
-			},
-		})
+		return errors.Wrapf(code_push.ErrParamsInvalid, "parse appVersion failed")
 	}
 
 	compatAppVersion, compatVersionErr := semver.ParseVersion(rawCompatAppVersion)
 	if compatVersionErr != nil {
-		return errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
-			Err: appVersionErr,
-			Msg: "invalid compat app version",
-			Params: errors.MetaFields{
-				"compatAppVersion": compatAppVersion,
-			},
-		})
+		return errors.Wrapf(code_push.ErrParamsInvalid, "parse compatAppVersion failed")
 	}
 
 	newVersion := &domain.Version{
@@ -70,7 +52,7 @@ func (c *envVersionCollection) ReleaseVersion(params IVersionReleaseParams) erro
 
 	releaseErr := c.versionService.CreateVersion(newVersion)
 	if releaseErr != nil {
-		return errors.ThrowVersionReleaseFailedError(releaseErr, errors.FA_VERSION_RELEASE_FAILED, BoxingVersionReleaseParams(params))
+		return errors.WithStack(releaseErr)
 	}
 
 	c.versionCompatTree.Publish(newVersionCompatEntry(newVersion))
@@ -81,16 +63,15 @@ func (c *envVersionCollection) ReleaseVersion(params IVersionReleaseParams) erro
 func (c *envVersionCollection) GetVersion(rawAppVersion string) (*Version, error) {
 	appVersion, appVersionErr := semver.ParseVersion(rawAppVersion)
 	if appVersionErr != nil {
-		return nil, errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
-			Err:    appVersionErr,
-			Msg:    "invalid appVersion",
-			Params: errors.MetaFields{"envId": c.envId, "appVersion": rawAppVersion},
-		})
+		return nil, errors.Wrapf(appVersionErr, "failed to parse version, rawAppVersion: %s", rawAppVersion)
 	}
 
 	version, versionErr := c.versionService.Version(c.envId, appVersion.String())
 	if versionErr != nil {
-		return nil, errors.ThrowVersionNotFoundError(c.envId, appVersion.String(), versionErr)
+		return nil, errors.WithStack(versionErr)
+	}
+	if version == nil {
+		return nil, errors.Wrapf(code_push.ErrVersionNotFound, "envId: %s, version: %s", c.envId, appVersion.String())
 	}
 
 	return toVersion(version), nil
@@ -99,7 +80,7 @@ func (c *envVersionCollection) GetVersion(rawAppVersion string) (*Version, error
 func (c *envVersionCollection) ListVersions() (VersionList, error) {
 	versionList, versionListErr := c.versionService.VersionsWithEnvId(c.envId)
 	if versionListErr != nil {
-		return nil, errors.ThrowVersionOperationForbiddenError(versionListErr, "fetch version list failed", errors.MetaFields{"envId": c.envId})
+		return nil, errors.Wrapf(versionListErr, "fetch version list failed, envId: %s", c.envId)
 	}
 
 	versionListOutput := make(VersionList, len(versionList))
@@ -113,11 +94,7 @@ func (c *envVersionCollection) ListVersions() (VersionList, error) {
 func (c *envVersionCollection) VersionStrictCompatQuery(rawAppVersion string) (IVersionCompatQueryResult, error) {
 	appVersion, appVersionErr := semver.ParseVersion(rawAppVersion)
 	if appVersionErr != nil {
-		return nil, errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
-			Err:    appVersionErr,
-			Msg:    "invalid appVersion",
-			Params: errors.MetaFields{"envId": c.envId, "appVersion": rawAppVersion},
-		})
+		return nil, errors.Wrapf(code_push.ErrParamsInvalid, "invalid version: %s", rawAppVersion)
 	}
 
 	r := c.versionCompatTree.StrictCompat(newVersionCompatQueryAnchor(appVersion))
@@ -136,11 +113,7 @@ func (c *envVersionCollection) VersionStrictCompatQuery(rawAppVersion string) (I
 		canUpdateAppVersion = canUpdateAppVersionEntry.Version()
 		canUpdateAppVersionModel, canUpdateAppVersionModelErr := c.GetVersion(canUpdateAppVersion.String())
 		if canUpdateAppVersionModelErr != nil {
-			return nil, errors.ThrowVersionOperationForbiddenError(
-				canUpdateAppVersionModelErr,
-				"failed to get canUpdateAppVersion scheme",
-				errors.MetaFields{"canUpdateAppVersion": canUpdateAppVersion.String()},
-			)
+			return nil, errors.Wrapf(canUpdateAppVersionModelErr, "failed to get canUpdateAppVersion: %s", canUpdateAppVersion.String())
 		}
 
 		mustUpdate = canUpdateAppVersionModel.MustUpdate
@@ -189,11 +162,7 @@ func newEnvVersionCollection(config envVersionCollectionConfig) (*envVersionColl
 	if config.VersionService == nil ||
 		config.EnvService == nil ||
 		len(config.EnvId) == 0 {
-		return nil, errors.ThrowVersionOperationForbiddenError(
-			nil,
-			"invalid version collection params",
-			nil,
-		)
+		return nil, errors.Wrap(code_push.ErrParamsInvalid, "invalid version collection params")
 	}
 
 	collection := &envVersionCollection{

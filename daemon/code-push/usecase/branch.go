@@ -1,9 +1,10 @@
 package usecase
 
 import (
+	code_push "github.com/funnyecho/code-push/daemon/code-push"
 	"github.com/funnyecho/code-push/daemon/code-push/domain"
-	"github.com/funnyecho/code-push/daemon/code-push/usecase/errors"
 	"github.com/funnyecho/code-push/pkg/util"
+	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 	"time"
 )
@@ -45,17 +46,20 @@ type branchUseCase struct {
 
 func (b *branchUseCase) CreateBranch(branchName, branchAuthHost string) (*Branch, error) {
 	if len(branchName) == 0 || len(branchAuthHost) == 0 {
-		return nil, errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
-			Params: errors.MetaFields{
-				"branchName":     branchName,
-				"branchAuthHost": branchAuthHost,
-			},
-		})
+		return nil, errors.Wrapf(
+			code_push.ErrParamsInvalid,
+			"branchName: %s, branchAuthHost: %s",
+			branchName,
+			branchAuthHost,
+		)
 	}
 
 	encToken, encTokenErr := generateBranchEncToken()
 	if encTokenErr != nil {
-		return nil, errors.ThrowBranchInvalidEncTokenError(encTokenErr)
+		return nil, errors.Wrapf(
+			encTokenErr,
+			"generate branch enc token failed",
+		)
 	}
 
 	branchToCreate := &domain.Branch{
@@ -67,7 +71,7 @@ func (b *branchUseCase) CreateBranch(branchName, branchAuthHost string) (*Branch
 
 	createErr := b.branchService.CreateBranch(branchToCreate)
 	if createErr != nil {
-		return nil, errors.ThrowBranchSaveError(createErr, branchToCreate)
+		return nil, errors.WithStack(createErr)
 	}
 
 	return toBranch(branchToCreate), nil
@@ -75,17 +79,15 @@ func (b *branchUseCase) CreateBranch(branchName, branchAuthHost string) (*Branch
 
 func (b *branchUseCase) GetBranch(branchId string) (*Branch, error) {
 	if len(branchId) == 0 {
-		return nil, errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
-			Msg: "branchId is empty",
-			Params: errors.MetaFields{
-				"branchId": branchId,
-			},
-		})
+		return nil, errors.Wrapf(code_push.ErrParamsInvalid, "branchId is empty")
 	}
 
 	branchEntity, fetchErr := b.branchService.Branch(branchId)
 	if fetchErr != nil {
-		return nil, errors.ThrowBranchNotFoundError(branchId, fetchErr)
+		return nil, errors.WithStack(fetchErr)
+	}
+	if branchEntity == nil {
+		return nil, errors.WithMessagef(code_push.ErrBranchNotFound, "branchId: %v", branchId)
 	}
 
 	return toBranch(branchEntity), nil
@@ -93,17 +95,12 @@ func (b *branchUseCase) GetBranch(branchId string) (*Branch, error) {
 
 func (b *branchUseCase) DeleteBranch(branchId string) error {
 	if len(branchId) == 0 {
-		return errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
-			Msg: "branchId is empty",
-			Params: errors.MetaFields{
-				"branchId": branchId,
-			},
-		})
+		return errors.Wrapf(code_push.ErrParamsInvalid, "branchId is empty")
 	}
 
 	deleteErr := b.branchService.DeleteBranch(branchId)
 	if deleteErr != nil {
-		return errors.ThrowBranchDeleteFailedError(branchId, "")
+		return errors.WithStack(deleteErr)
 	}
 
 	return nil
@@ -111,17 +108,12 @@ func (b *branchUseCase) DeleteBranch(branchId string) error {
 
 func (b *branchUseCase) GetBranchEncToken(branchId string) (string, error) {
 	if len(branchId) == 0 {
-		return "", errors.ThrowInvalidParamsError(errors.InvalidParamsErrorConfig{
-			Msg: "branchId is empty",
-			Params: errors.MetaFields{
-				"branchId": branchId,
-			},
-		})
+		return "", errors.Wrapf(code_push.ErrParamsInvalid, "branchId is empty")
 	}
 
 	branchEntity, fetchErr := b.branchService.Branch(branchId)
 	if fetchErr != nil {
-		return "", errors.ThrowBranchNotFoundError(branchId, fetchErr)
+		return "", errors.WithStack(fetchErr)
 	}
 
 	return branchEntity.EncToken, nil
