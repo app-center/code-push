@@ -22,13 +22,13 @@ func (c *envVersionCollection) ReleaseVersion(params IVersionReleaseParams) erro
 	rawAppVersion := params.AppVersion()
 	rawCompatAppVersion := params.CompatAppVersion()
 	changelog := params.Changelog()
-	packageUri := params.PackageUri()
+	packageFileKey := params.PackageFileKey()
 	mustUpdate := params.MustUpdate()
 
 	if len(rawAppVersion) == 0 ||
 		len(rawCompatAppVersion) == 0 ||
-		len(packageUri) == 0 {
-		return errors.Wrapf(code_push.ErrParamsInvalid, "appVersion, compatAppVersion nor packageUri can't be empty")
+		len(packageFileKey) == 0 {
+		return errors.Wrapf(code_push.ErrParamsInvalid, "appVersion, compatAppVersion nor packageFileKey can't be empty")
 	}
 
 	appVersion, appVersionErr := semver.ParseVersion(rawAppVersion)
@@ -47,7 +47,7 @@ func (c *envVersionCollection) ReleaseVersion(params IVersionReleaseParams) erro
 		CompatAppVersion: compatAppVersion.String(),
 		MustUpdate:       mustUpdate,
 		Changelog:        changelog,
-		PackageUri:       packageUri,
+		PackageFileKey:   packageFileKey,
 	}
 
 	releaseErr := c.versionService.CreateVersion(newVersion)

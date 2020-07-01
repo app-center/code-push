@@ -78,7 +78,7 @@ func MarshalVersion(v *domain.Version) (bytes []byte, err error) {
 		CompatAppVersion: v.CompatAppVersion,
 		MustUpdate:       v.MustUpdate,
 		Changelog:        v.Changelog,
-		PackageUri:       v.PackageUri,
+		PackageFileKey:   v.PackageFileKey,
 		CreateTime:       v.CreateTime.UnixNano(),
 	})
 
@@ -100,7 +100,7 @@ func UnmarshalVersion(data []byte, v *domain.Version) error {
 	v.CompatAppVersion = pb.GetCompatAppVersion()
 	v.MustUpdate = pb.GetMustUpdate()
 	v.Changelog = pb.GetChangelog()
-	v.PackageUri = pb.GetPackageUri()
+	v.PackageFileKey = pb.GetPackageFileKey()
 
 	v.CreateTime = time.Unix(0, pb.GetCreateTime()).UTC()
 

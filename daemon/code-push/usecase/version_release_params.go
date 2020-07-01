@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"github.com/funnyecho/code-push/daemon/code-push/usecase/errors"
 	"github.com/funnyecho/code-push/pkg/semver"
 )
 
@@ -10,7 +9,7 @@ type IVersionReleaseParams interface {
 	AppVersion() string
 	CompatAppVersion() string
 	Changelog() string
-	PackageUri() string
+	PackageFileKey() string
 	MustUpdate() bool
 }
 
@@ -19,7 +18,7 @@ type versionReleaseParams struct {
 	appVersion       string
 	compatAppVersion string
 	changelog        string
-	packageUri       string
+	packageFileKey   string
 	mustUpdate       bool
 }
 
@@ -47,8 +46,8 @@ func (v versionReleaseParams) Changelog() string {
 	return v.changelog
 }
 
-func (v versionReleaseParams) PackageUri() string {
-	return v.packageUri
+func (v versionReleaseParams) PackageFileKey() string {
+	return v.packageFileKey
 }
 
 func (v versionReleaseParams) MustUpdate() bool {
@@ -60,7 +59,7 @@ type VersionReleaseParamsConfig struct {
 	AppVersion       string
 	CompatAppVersion string
 	Changelog        string
-	PackageUri       string
+	PackageFileKey   string
 	MustUpdate       bool
 }
 
@@ -83,9 +82,9 @@ func NewVersionReleaseParams(config VersionReleaseParamsConfig) (IVersionRelease
 		missFields["changelog"] = config.Changelog
 	}
 
-	if len(config.PackageUri) == 0 {
+	if len(config.PackageFileKey) == 0 {
 		hasMissField = true
-		missFields["packageUri"] = config.PackageUri
+		missFields["packageFileKey"] = config.PackageFileKey
 	}
 
 	if hasMissField {
@@ -104,7 +103,7 @@ func NewVersionReleaseParams(config VersionReleaseParamsConfig) (IVersionRelease
 		appVersion:       config.AppVersion,
 		compatAppVersion: config.CompatAppVersion,
 		changelog:        config.Changelog,
-		packageUri:       config.PackageUri,
+		packageFileKey:   config.PackageFileKey,
 		mustUpdate:       config.MustUpdate,
 	}, nil
 }
@@ -115,7 +114,7 @@ func BoxingVersionReleaseParams(params IVersionReleaseParams) map[string]interfa
 		"appVersion":       params.AppVersion(),
 		"compatAppVersion": params.CompatAppVersion(),
 		"changelog":        params.Changelog(),
-		"packageUri":       params.PackageUri(),
+		"packageFileKey":   params.PackageFileKey(),
 		"mustUpdate":       params.MustUpdate(),
 	}
 }

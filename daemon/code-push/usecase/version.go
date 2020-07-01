@@ -29,7 +29,7 @@ type Version struct {
 	CompatAppVersion string
 	MustUpdate       bool
 	Changelog        string
-	PackageUri       string
+	PackageFileKey   string
 	CreateTime       time.Time
 }
 
@@ -42,7 +42,7 @@ func toVersion(ver *domain.Version) *Version {
 		CompatAppVersion: ver.CompatAppVersion,
 		MustUpdate:       ver.MustUpdate,
 		Changelog:        ver.Changelog,
-		PackageUri:       ver.PackageUri,
+		PackageFileKey:   ver.PackageFileKey,
 		CreateTime:       ver.CreateTime,
 	}
 }

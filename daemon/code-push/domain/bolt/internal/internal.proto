@@ -23,7 +23,7 @@ message Version {
   string CompatAppVersion = 3;
   bool MustUpdate = 4;
   string Changelog = 5;
-  string PackageUri = 6;
+  string PackageFileKey = 6;
   int64 CreateTime = 7;
 }
 

@@ -24,7 +24,7 @@ type Version struct {
 	CompatAppVersion string
 	MustUpdate       bool
 	Changelog        string
-	PackageUri       string
+	PackageFileKey   string
 	CreateTime       time.Time
 }
 

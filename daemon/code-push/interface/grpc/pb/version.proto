@@ -15,7 +15,7 @@ message Version {
   string AppVersion = 2;
   string CompatAppVersion = 3;
   string Changelog = 4;
-  string PackageUri = 5;
+  string PackageFileKey = 5;
   bool MustUpdate = 6;
   int64 CreateTime = 7;
 }
@@ -35,7 +35,7 @@ message VersionReleaseRequest {
   string AppVersion = 2;
   string CompatAppVersion = 3;
   string Changelog = 4;
-  string PackageUri = 5;
+  string PackageFileKey = 5;
   bool MustUpdate = 6;
 }
 

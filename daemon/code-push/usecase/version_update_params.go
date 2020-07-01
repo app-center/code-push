@@ -2,11 +2,11 @@ package usecase
 
 type IVersionUpdateParams interface {
 	SetChangelog(changelog string) IVersionUpdateParams
-	SetPackageUri(packageUri string) IVersionUpdateParams
+	SetPackageFileKey(packageFileKey string) IVersionUpdateParams
 	SetMustUpdate(mustUpdate bool) IVersionUpdateParams
 
 	Changelog() (set bool, val string)
-	PackageUri() (set bool, val string)
+	PackageFileKey() (set bool, val string)
 	MustUpdate() (set, val bool)
 }
 
@@ -14,8 +14,8 @@ type versionUpdateParams struct {
 	changelogSet bool
 	changelog    string
 
-	packageUriSet bool
-	packageUri    string
+	packageFileKeySet bool
+	packageFileKey    string
 
 	mustUpdateSet bool
 	mustUpdate    bool
@@ -28,9 +28,9 @@ func (v *versionUpdateParams) SetChangelog(changelog string) IVersionUpdateParam
 	return v
 }
 
-func (v *versionUpdateParams) SetPackageUri(packageUri string) IVersionUpdateParams {
-	v.packageUriSet = true
-	v.packageUri = packageUri
+func (v *versionUpdateParams) SetPackageFileKey(packageFileKey string) IVersionUpdateParams {
+	v.packageFileKeySet = true
+	v.packageFileKey = packageFileKey
 
 	return v
 }
@@ -46,8 +46,8 @@ func (v *versionUpdateParams) Changelog() (set bool, val string) {
 	return v.changelogSet, v.changelog
 }
 
-func (v *versionUpdateParams) PackageUri() (set bool, val string) {
-	return v.packageUriSet, v.packageUri
+func (v *versionUpdateParams) PackageFileKey() (set bool, val string) {
+	return v.packageFileKeySet, v.packageFileKey
 }
 
 func (v *versionUpdateParams) MustUpdate() (set, val bool) {

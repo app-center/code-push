@@ -89,7 +89,7 @@ func (s *codePushServer) ReleaseVersion(ctx context.Context, request *pb.Version
 		AppVersion:       request.AppVersion,
 		CompatAppVersion: request.CompatAppVersion,
 		Changelog:        request.Changelog,
-		PackageUri:       request.PackageUri,
+		PackageFileKey:   request.PackageFileKey,
 		MustUpdate:       request.MustUpdate,
 	})
 
@@ -173,7 +173,7 @@ func MarshalVersion(v *usecase.Version) *pb.Version {
 		CompatAppVersion: v.CompatAppVersion,
 		MustUpdate:       v.MustUpdate,
 		Changelog:        v.Changelog,
-		PackageUri:       v.PackageUri,
+		PackageFileKey:   v.PackageFileKey,
 		CreateTime:       v.CreateTime.UnixNano(),
 	}
 }
