@@ -87,7 +87,7 @@ func (b *branchUseCase) GetBranch(branchId string) (*Branch, error) {
 		return nil, errors.WithStack(fetchErr)
 	}
 	if branchEntity == nil {
-		return nil, errors.WithMessagef(code_push.ErrBranchNotFound, "branchId: %v", branchId)
+		return nil, errors.Wrapf(code_push.ErrBranchNotFound, "branchId: %v", branchId)
 	}
 
 	return toBranch(branchEntity), nil

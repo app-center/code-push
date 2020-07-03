@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package pb;
+import "common.proto";
+
+service Scheme {
+  rpc UpdateAliOssScheme(AliOssSchemeConfig) returns (PlainResponse) {}
+}
+
+message AliOssSchemeConfig {
+  string Endpoint = 1;
+  string AccessKeyId = 2;
+  string AccessKeySecret = 3;
+}

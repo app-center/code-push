@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package pb;
+import "common.proto";
+
+service Upload {
+  rpc UploadToAliOss(stream UploadToAliOssRequest) returns (StringResponse) {}
+}
+
+message UploadToAliOssRequest {
+  uint32 Data = 1;
+}

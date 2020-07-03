@@ -1,22 +1,17 @@
 package code_push
 
+import "github.com/funnyecho/code-push/pkg/errors"
+
 const (
-	ErrInternalError = Error("FA_INTERNAL_ERROR")
+	ErrInternalError = errors.Error("FA_INTERNAL_ERROR")
+	ErrParamsInvalid = errors.Error("FA_PARAMS_INVALID")
 
-	ErrParamsInvalid = Error("FA_PARAMS_INVALID")
+	ErrBranchExisted  = errors.Error("FA_BRANCH_EXISTED")
+	ErrBranchNotFound = errors.Error("FA_BRANCH_NOT_FOUND")
 
-	ErrBranchExisted  = Error("FA_BRANCH_EXISTED")
-	ErrBranchNotFound = Error("FA_BRANCH_NOT_FOUND")
+	ErrEnvExisted  = errors.Error("FA_ENV_EXISTED")
+	ErrEnvNotFound = errors.Error("FA_ENV_NOT_FOUND")
 
-	ErrEnvExisted  = Error("FA_ENV_EXISTED")
-	ErrEnvNotFound = Error("FA_ENV_NOT_FOUND")
-
-	ErrVersionExisted  = Error("FA_VERSION_EXISTED")
-	ErrVersionNotFound = Error("FA_VERSION_NOT_FOUND")
+	ErrVersionExisted  = errors.Error("FA_VERSION_EXISTED")
+	ErrVersionNotFound = errors.Error("FA_VERSION_NOT_FOUND")
 )
-
-// Error represents a WTF error.
-type Error string
-
-// Error returns the error message.
-func (e Error) Error() string { return string(e) }

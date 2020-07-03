@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package pb;
+import "common.proto";
+
+service File {
+  rpc GetSource(GetSourceRequest) returns (StringResponse) {}
+  rpc InsertSource(InsertSourceRequest) returns (StringResponse) {}
+}
+
+message GetSourceRequest {
+  string Key = 1;
+}
+
+message InsertSourceRequest {
+  string Value = 1;
+  string Desc = 2;
+}

@@ -5,6 +5,8 @@ import (
 	code_push "github.com/funnyecho/code-push/daemon/code-push"
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
 	"github.com/funnyecho/code-push/daemon/code-push/usecase"
+	cpErrors "github.com/funnyecho/code-push/pkg/errors"
+	"github.com/pkg/errors"
 )
 
 type codePushServer struct {
@@ -130,10 +132,13 @@ func MarshalErrorCode(err error) string {
 		return "S_OK"
 	}
 
-	if codePushErr := err.(code_push.Error); codePushErr == "" {
+	var cpErr cpErrors.Error
+
+	if !errors.As(err, &cpErr) {
+		// FIXME: log err
 		return code_push.ErrInternalError.Error()
 	} else {
-		return codePushErr.Error()
+		return cpErr.Error()
 	}
 }
 

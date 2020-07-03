@@ -1,0 +1,16 @@
+syntax = "proto3";
+package internal;
+
+message File {
+  string Key = 1;
+  string Value = 2;
+  string Desc = 3;
+  int64 CreateTime = 4;
+}
+
+message AliOssScheme {
+  string Endpoint = 1;
+  string AccessKeyId = 2;
+  string AccessKeySecret = 3;
+  int64 UpdateTime = 4;
+}
