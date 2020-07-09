@@ -19,3 +19,6 @@ vendor/
 
 # auto-generated files
 *.pb.go
+
+build/
+release/

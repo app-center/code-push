@@ -1,21 +1,46 @@
-PROJECT := Code Push
+Project := Code Push
+BuildDist = build
+ReleaseDist = release
 
-fmt:
-	@gofmt -s -w ./{cmd,daemon,gateway,pkg}/
+Platforms = linux darwin windows
 
-vet:
-	@go vet ./{cmd,daemon,gateway,pkg}/...
+Cmds := $(foreach n,$(shell go list ./cmd/*),$(notdir $(n)))
 
-test:
-	go test -count=1 ./pkg/...
+Version := $(shell git describe --tags --dirty --match="v*" 2> /dev/null || echo v0.0.0-dev)
+Date := $(shell date -u '+%Y-%m-%d-%H%M UTC')
 
-test-version-compat-tree:
-	go test ./daemon/code-push/usecase/version_compat_tree/
+ReleaseDistribution = $(foreach p,$(Platforms),$(foreach c,$(Cmds),$(ReleaseDist)/$(Version)/$(p)-amd64/$(c)))
+BuildDistribution = $(foreach c,$(Cmds),$(BuildDist)/$(c))
 
-benchmark:
-	go test -count=1 -cpu 1 -bench . ./pkg/...
+go-clean:
+	go clean ./cmd/...
+.PHONY: go-clean
 
-generate:
-	@go generate ./...
+go-get:
+	go get
+	go mod download
+.PHONY: go-get
 
-@phony: fmt vet test benchmark generate
+clean: go-clean
+	rm -rf $(BuildDist)/$(Version)
+.PHONY: clean
+
+$(ReleaseDistribution): platform = $(shell $(foreach p,$(Platforms),echo $@ | grep -oh $(p);))
+$(ReleaseDistribution): cmd = $(notdir $@)
+$(ReleaseDistribution):
+	@-rm $@
+	@cd cmd/$(cmd); CGO_ENABLED=0 GOOS=$(platform) GOARCH=amd64 go build -o ../../$@;
+.PHONY: $(ReleaseDistribution)
+
+$(BuildDistribution): cmd = $(notdir $@)
+$(BuildDistribution):
+	@-rm $@
+	@cd cmd/$(cmd); CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=amd64 go build -o ../../$@;
+
+.PHONY: $(BuildDistribution)
+
+build: $(BuildDistribution)
+.PHONY: build
+
+release: $(ReleaseDistribution)
+.PHONY: release

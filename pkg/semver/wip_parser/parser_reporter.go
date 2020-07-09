@@ -7,7 +7,7 @@ import (
 
 type segReporter func(err error, chars []rune) error
 
-func noopSegReporter (err error, chars []rune) error {
+func noopSegReporter(err error, chars []rune) error {
 	if err != nil {
 		return err
 	}

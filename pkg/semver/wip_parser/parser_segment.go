@@ -3,7 +3,7 @@ package wip_parser
 import "fmt"
 
 type iSegment interface {
-	walk(c rune)(hit bool)
+	walk(c rune) (hit bool)
 	report() error
 }
 
@@ -13,6 +13,7 @@ type segmentConfig struct {
 }
 
 type switchSegmentCases func(c rune) iSegment
+
 var switchSegmentDefaultCase = func(c rune) iSegment {
 	return nil
 }
@@ -97,7 +98,7 @@ func (s *switchSegment) report() error {
 }
 
 type chainSegment struct {
-	queueSegments []iSegment
+	queueSegments  []iSegment
 	walkedSegments []iSegment
 	walkingSegment iSegment
 
@@ -196,7 +197,7 @@ func newSwitchSegment(config switchSegmentConfig) *switchSegment {
 	}
 
 	return &switchSegment{
-		cases:   config.cases,
+		cases:    config.cases,
 		reporter: config.reporter,
 	}
 }
@@ -207,8 +208,8 @@ func newChainSegment(config chainSegmentConfig) *chainSegment {
 	}
 
 	return &chainSegment{
-		queueSegments:  config.chains,
-		reporter:       config.reporter,
+		queueSegments: config.chains,
+		reporter:      config.reporter,
 	}
 }
 

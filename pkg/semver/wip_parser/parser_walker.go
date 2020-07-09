@@ -2,7 +2,7 @@ package wip_parser
 
 type iWalker func(c rune) (hit bool)
 
-func noopWalker (c rune) (hit bool) {
+func noopWalker(c rune) (hit bool) {
 	return false
 }
 

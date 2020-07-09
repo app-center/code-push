@@ -3,10 +3,9 @@ package wip_parser
 type stringCandidateNode struct {
 	char rune
 
-	left *stringCandidateNode
+	left  *stringCandidateNode
 	right *stringCandidateNode
 }
-
 
 type stringCandidateTree struct {
 	head *stringCandidateNode
