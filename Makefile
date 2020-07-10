@@ -29,13 +29,13 @@ $(ReleaseDistribution): platform = $(shell $(foreach p,$(Platforms),echo $@ | gr
 $(ReleaseDistribution): cmd = $(notdir $@)
 $(ReleaseDistribution):
 	@-rm $@
-	@cd cmd/$(cmd); CGO_ENABLED=0 GOOS=$(platform) GOARCH=amd64 go build -o ../../$@;
+	@cd cmd/$(cmd); CGO_ENABLED=0 GOOS=$(platform) GOARCH=amd64 go build -ldflags="-X 'main.Version=$(Version)' 'main.BuildTime=$(BuildTime)'" -o ../../$@;
 .PHONY: $(ReleaseDistribution)
 
 $(BuildDistribution): cmd = $(notdir $@)
 $(BuildDistribution):
 	@-rm $@
-	@cd cmd/$(cmd); CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=amd64 go build -o ../../$@;
+	@cd cmd/$(cmd); CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=amd64 go build -ldflags="-X 'main.Version=$(Version)' 'main.BuildTime=$(BuildTime)'" -o ../../$@;
 
 .PHONY: $(BuildDistribution)
 
