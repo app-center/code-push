@@ -1,44 +1,37 @@
 package main
 
 import (
-	"github.com/funnyecho/code-push/cmd/filer.d/cmd_serve"
-	"github.com/funnyecho/code-push/cmd/filer.d/internal"
-	"github.com/urfave/cli/v2"
+	"fmt"
+	"github.com/spf13/cobra"
 	"os"
-	"time"
 )
 
 var (
-	Version   = "development"
-	BuildTime = time.Now()
+	Version   string
+	BuildTime string
 )
 
-func main() {
-	app := &cli.App{
-		Name:                   "Filer",
-		Usage:                  "Filer for uploading file and file management",
-		Version:                Version,
-		Commands:               nil,
-		Flags:                  nil,
-		EnableBashCompletion:   true,
-		Action:                 nil,
-		OnUsageError:           nil,
-		Compiled:               BuildTime,
-		Authors:                nil,
-		Copyright:              "",
-		Writer:                 nil,
-		ErrWriter:              nil,
-		ExitErrHandler:         nil,
-		Metadata:               nil,
-		ExtraInfo:              nil,
-		CustomAppHelpTemplate:  "",
-		UseShortOptionHandling: false,
+var (
+	port int
+)
+
+var (
+	cmd = &cobra.Command{
+		Use:     "Filer",
+		Short:   "Filer daemon of Code-Push service",
+		Long:    fmt.Sprintf("Filer daemon of Code-Push service. Build at %s", BuildTime),
+		Version: Version,
+		Run:     nil,
 	}
+)
 
-	internal.UseCommands(app, cmd_serve.UseCommand)
+func init() {
+	cmd.PersistentFlags().IntVarP(&port, "port", "p", 7981, "grpc server port")
+}
 
-	err := app.Run(os.Args)
-	if err != nil {
-		panic(err)
+func main() {
+	if err := cmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }

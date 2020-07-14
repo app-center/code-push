@@ -22,21 +22,20 @@ go-get:
 .PHONY: go-get
 
 clean: go-clean
-	rm -rf $(BuildDist)/$(Version)
+	rm -rf $(ReleaseDist)/$(Version)
 .PHONY: clean
 
 $(ReleaseDistribution): platform = $(shell $(foreach p,$(Platforms),echo $@ | grep -oh $(p);))
 $(ReleaseDistribution): cmd = $(notdir $@)
 $(ReleaseDistribution):
 	@-rm $@
-	@cd cmd/$(cmd); CGO_ENABLED=0 GOOS=$(platform) GOARCH=amd64 go build -ldflags="-X 'main.Version=$(Version)' 'main.BuildTime=$(BuildTime)'" -o ../../$@;
+	@cd cmd/$(cmd); CGO_ENABLED=0 GOOS=$(platform) GOARCH=amd64 go build -ldflags="-X 'main.Version=$(Version)' -X 'main.BuildTime=$(Date)'" -o ../../$@;
 .PHONY: $(ReleaseDistribution)
 
 $(BuildDistribution): cmd = $(notdir $@)
 $(BuildDistribution):
 	@-rm $@
-	@cd cmd/$(cmd); CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=amd64 go build -ldflags="-X 'main.Version=$(Version)' 'main.BuildTime=$(BuildTime)'" -o ../../$@;
-
+	cd cmd/$(cmd); CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=amd64 go build -ldflags="-X 'main.Version=$(Version)' -X 'main.BuildTime=$(Date)'" -o ../../$@;
 .PHONY: $(BuildDistribution)
 
 build: $(BuildDistribution)
@@ -44,3 +43,7 @@ build: $(BuildDistribution)
 
 release: $(ReleaseDistribution)
 .PHONY: release
+
+test:
+	echo $(Cmds)
+.PHONY: test
