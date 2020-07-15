@@ -1,6 +1,6 @@
 package errors
 
-import "github.com/funnyecho/code-push/pkg/errors"
+import "github.com/pkg/errors"
 
 type PermissionDeniedError error
 
@@ -10,11 +10,5 @@ type PermissionDeniedConfig struct {
 }
 
 func NewPermissionDeniedError(config PermissionDeniedConfig) PermissionDeniedError {
-	return errors.Throw(errors.CtorConfig{
-		Error: config.Err,
-		Msg:   "permission denied",
-		Meta: errors.MetaFields{
-			"Path": config.Path,
-		},
-	})
+	return errors.WithMessagef(config.Err, "permission denied, path: %s", config.Path)
 }

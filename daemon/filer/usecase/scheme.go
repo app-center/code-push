@@ -10,11 +10,13 @@ type IScheme interface {
 }
 
 func NewSchemeUseCase(config SchemeUseCaseConfig) IScheme {
-	return &schemeUseCase{aliOssClient: config.AliOssClient}
+	return &schemeUseCase{
+		aliOssClient: internal.NewAliOssClient(config.SchemeService),
+	}
 }
 
 type schemeUseCase struct {
-	aliOssClient internal.AliOssClient
+	aliOssClient *internal.AliOssClient
 }
 
 func (s *schemeUseCase) UpdateAliOssScheme(config *AliOssSchemeConfig) error {
@@ -36,7 +38,6 @@ func (s *schemeUseCase) UpdateAliOssScheme(config *AliOssSchemeConfig) error {
 }
 
 type SchemeUseCaseConfig struct {
-	AliOssClient  internal.AliOssClient
 	SchemeService domain.ISchemeService
 }
 

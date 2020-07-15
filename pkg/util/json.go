@@ -2,8 +2,8 @@ package util
 
 import (
 	"encoding/json"
-	"github.com/funnyecho/code-push/pkg/errors"
 	"github.com/funnyecho/code-push/pkg/fs"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 )
@@ -11,20 +11,12 @@ import (
 func JsonStringifyToFile(path string, data interface{}) error {
 	plainData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
-		return errors.Throw(errors.CtorConfig{
-			Error: err,
-			Msg:   "failed to json.stringify data",
-			Meta:  errors.MetaFields{"data": data},
-		})
+		return errors.Wrapf(err, "failed to json.stringify data: %v", data)
 	} else {
 		file, fileErr := fs.File(fs.FileConfig{FilePath: path})
 
 		if fileErr != nil {
-			return errors.Throw(errors.CtorConfig{
-				Error: fileErr,
-				Msg:   "invalid file",
-				Meta:  errors.MetaFields{"path": path},
-			})
+			return errors.Wrapf(fileErr, "invalid file, path:%s", path)
 		}
 
 		err := ioutil.WriteFile(
@@ -34,11 +26,7 @@ func JsonStringifyToFile(path string, data interface{}) error {
 		)
 
 		if err != nil {
-			return errors.Throw(errors.CtorConfig{
-				Error: err,
-				Msg:   "failed to write json to path",
-				Meta:  errors.MetaFields{"path": file.Path(), "plainData": plainData},
-			})
+			return errors.Wrapf(err, "failed to write json to path, path:%s, plainData:%s", path, plainData)
 		}
 	}
 
@@ -49,29 +37,17 @@ func JsonParseFromFile(path string, dist interface{}) error {
 	file, fileErr := fs.File(fs.FileConfig{FilePath: path})
 
 	if fileErr != nil {
-		return errors.Throw(errors.CtorConfig{
-			Error: fileErr,
-			Msg:   "invalid file",
-			Meta:  errors.MetaFields{"path": path},
-		})
+		return errors.Wrapf(fileErr, "invalid file, path:%s", path)
 	}
 
 	plainIndex, err := ioutil.ReadFile(file.Path())
 	if err == nil {
 		err = json.Unmarshal(plainIndex, dist)
 		if err != nil {
-			return errors.Throw(errors.CtorConfig{
-				Error: err,
-				Msg:   "failed to json.parse from file",
-				Meta:  errors.MetaFields{"plainIndex": plainIndex, "path": file.Path()},
-			})
+			return errors.Wrapf(err, "failed to json.parse from file, path:%s, plainIndex:%s", path, plainIndex)
 		}
 	} else {
-		return errors.Throw(errors.CtorConfig{
-			Error: err,
-			Msg:   "failed to load json file",
-			Meta:  errors.MetaFields{"path": file.Path()},
-		})
+		return errors.Wrapf(err, "failed to load json file, path:%", path)
 	}
 
 	return nil
@@ -80,11 +56,7 @@ func JsonParseFromFile(path string, dist interface{}) error {
 func JsonStringify(data interface{}) ([]byte, error) {
 	plainData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
-		return nil, errors.Throw(errors.CtorConfig{
-			Error: err,
-			Msg:   "failed to json.stringify data",
-			Meta:  errors.MetaFields{"data": data},
-		})
+		return nil, errors.Wrapf(err, "failed to json.stringify data, data:%v", data)
 	}
 
 	return plainData, nil
@@ -93,11 +65,7 @@ func JsonStringify(data interface{}) ([]byte, error) {
 func JsonParse(data []byte, dist interface{}) error {
 	err := json.Unmarshal(data, dist)
 	if err != nil {
-		return errors.Throw(errors.CtorConfig{
-			Error: err,
-			Msg:   "failed to json.parse",
-			Meta:  errors.MetaFields{"data": data},
-		})
+		return errors.Wrapf(err, "failed to json.parse, data:%s", data)
 	}
 
 	return nil

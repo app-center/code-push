@@ -10,6 +10,7 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/mitchellh/mapstructure v1.3.2 // indirect
+	github.com/oklog/run v1.1.0
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0

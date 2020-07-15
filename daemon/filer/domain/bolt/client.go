@@ -2,6 +2,7 @@ package bolt
 
 import (
 	"fmt"
+	"github.com/funnyecho/code-push/daemon/filer/domain"
 	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
 	"time"
@@ -60,4 +61,12 @@ func (c *Client) Close() error {
 		return c.db.Close()
 	}
 	return nil
+}
+
+func (c *Client) FileService() domain.IFileService {
+	return &c.fileService
+}
+
+func (c *Client) SchemeService() domain.ISchemeService {
+	return &c.schemeService
 }

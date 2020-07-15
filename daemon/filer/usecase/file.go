@@ -17,13 +17,13 @@ type IFile interface {
 
 func NewFileUseCase(config FileUseCaseConfig) IFile {
 	return &fileUseCase{
-		aliOssClient: config.AliOssClient,
+		aliOssClient: internal.NewAliOssClient(config.SchemeService),
 		fileService:  config.FileService,
 	}
 }
 
 type fileUseCase struct {
-	aliOssClient internal.AliOssClient
+	aliOssClient *internal.AliOssClient
 	fileService  domain.IFileService
 }
 
@@ -97,8 +97,8 @@ func generateFileKey() string {
 }
 
 type FileUseCaseConfig struct {
-	AliOssClient internal.AliOssClient
-	FileService  domain.IFileService
+	FileService   domain.IFileService
+	SchemeService domain.ISchemeService
 }
 
 type FileKey []byte

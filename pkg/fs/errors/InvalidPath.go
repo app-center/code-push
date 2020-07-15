@@ -1,6 +1,6 @@
 package errors
 
-import "github.com/funnyecho/code-push/pkg/errors"
+import "github.com/pkg/errors"
 
 type InvalidPathError error
 
@@ -10,11 +10,5 @@ type InvalidPathConfig struct {
 }
 
 func NewInvalidPathError(config InvalidPathConfig) InvalidPathError {
-	return errors.Throw(errors.CtorConfig{
-		Error: config.Err,
-		Msg:   "invalid path",
-		Meta: errors.MetaFields{
-			"Path": config.Path,
-		},
-	})
+	return errors.WithMessagef(config.Err, "invalid path: %s", config.Path)
 }

@@ -3,8 +3,8 @@ package util
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"github.com/funnyecho/code-push/pkg/errors"
 	"github.com/funnyecho/code-push/pkg/fs"
+	"github.com/pkg/errors"
 	"io"
 	"os"
 )
@@ -20,11 +20,7 @@ func EncodeFileMD5(path string) (string, error) {
 	file, fileErr := fs.File(fs.FileConfig{FilePath: path})
 
 	if fileErr != nil {
-		return "", errors.Throw(errors.CtorConfig{
-			Error: fileErr,
-			Msg:   "invalid file",
-			Meta:  errors.MetaFields{"path": path},
-		})
+		return "", errors.Wrapf(fileErr, "invalid file, path:%s", path)
 	}
 
 	f, err := os.Open(file.Path())

@@ -1,44 +1,36 @@
 package usecase
 
 import (
-	"github.com/funnyecho/code-push/daemon/filer/interface/grpc"
-	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
+	"github.com/funnyecho/code-push/daemon/filer/domain"
 	"github.com/funnyecho/code-push/daemon/filer/usecase/internal"
-	"github.com/funnyecho/code-push/pkg/grpcStreamer"
+	"io"
 )
 
 type IUpload interface {
-	UploadToAliOss(server pb.Upload_UploadToAliOssServer) (FileValue, error)
+	UploadToAliOss(stream io.Reader) (FileValue, error)
 }
 
 func NewUploadUseCase(config UploadUseCaseConfig) IUpload {
-	return &uploadUseCase{aliOssClient: config.AliOssClient}
+	return &uploadUseCase{
+		aliOssClient: internal.NewAliOssClient(config.SchemeService),
+	}
 }
 
 type uploadUseCase struct {
-	aliOssClient internal.AliOssClient
+	aliOssClient *internal.AliOssClient
 }
 
-func (u *uploadUseCase) UploadToAliOss(server pb.Upload_UploadToAliOssServer) (FileValue, error) {
+func (u *uploadUseCase) UploadToAliOss(stream io.Reader) (FileValue, error) {
 	bucket, bucketErr := u.aliOssClient.GetPackageBucket()
 	if bucketErr != nil {
-		server.SendAndClose(&pb.StringResponse{
-			Code: grpc.MarshalErrorCode(bucketErr),
-			Data: "",
-		})
+		return nil, bucketErr
 	}
 
 	objectKey := u.aliOssClient.GeneratePackageObjectKey()
 
 	uploadErr := bucket.PutObject(
 		objectKey,
-		grpcStreamer.NewStreamReader(grpcStreamer.StreamReaderConfig{
-			RecvByte: func() (byte, error) {
-				var chunk pb.UploadToAliOssRequest
-				err := server.RecvMsg(&chunk)
-				return byte(chunk.Data), err
-			},
-		}),
+		stream,
 	)
 
 	if uploadErr != nil {
@@ -49,7 +41,7 @@ func (u *uploadUseCase) UploadToAliOss(server pb.Upload_UploadToAliOssServer) (F
 }
 
 type UploadUseCaseConfig struct {
-	AliOssClient internal.AliOssClient
+	SchemeService domain.ISchemeService
 }
 
 type IUploadChunk struct {

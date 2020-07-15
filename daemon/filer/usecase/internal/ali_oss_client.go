@@ -8,6 +8,12 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+func NewAliOssClient(schemeService domain.ISchemeService) *AliOssClient {
+	return &AliOssClient{
+		schemeService: schemeService,
+	}
+}
+
 type AliOssClient struct {
 	schemeService domain.ISchemeService
 	scheme        *domain.AliOssScheme
@@ -15,7 +21,12 @@ type AliOssClient struct {
 }
 
 func (c *AliOssClient) UpdateScheme(config *domain.AliOssScheme) error {
-	return c.schemeService.UpdateAliOssScheme(config)
+	err := c.schemeService.UpdateAliOssScheme(config)
+	if err == nil {
+		c.scheme = config
+	}
+
+	return err
 }
 
 func (c *AliOssClient) SignFetchURL(key []byte) ([]byte, error) {
