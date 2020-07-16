@@ -1,30 +1,13 @@
 package domain
 
-import "time"
+import "github.com/funnyecho/code-push/daemon/filer"
 
-type FileKey []byte
-
-type File struct {
-	Key        []byte
-	Value      []byte
-	Desc       []byte
-	CreateTime time.Time
+type Service struct {
+	FileService
 }
 
-type AliOssScheme struct {
-	Endpoint        []byte
-	AccessKeyId     []byte
-	AccessKeySecret []byte
-	UpdateTime      time.Time
-}
-
-type IFileService interface {
-	File(fileKey FileKey) (*File, error)
-	InsertFile(file *File) error
-	IsFileKeyExisted(fileKey FileKey) bool
-}
-
-type ISchemeService interface {
-	AliOssScheme() (*AliOssScheme, error)
-	UpdateAliOssScheme(scheme *AliOssScheme) error
+type FileService interface {
+	File(fileKey filer.FileKey) (*filer.File, error)
+	InsertFile(file *filer.File) error
+	IsFileKeyExisted(fileKey filer.FileKey) bool
 }

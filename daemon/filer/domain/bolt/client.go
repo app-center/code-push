@@ -12,7 +12,6 @@ func NewClient() *Client {
 	client := &Client{}
 
 	client.fileService.client = client
-	client.schemeService.client = client
 
 	return client
 }
@@ -20,8 +19,7 @@ func NewClient() *Client {
 type Client struct {
 	Path string
 
-	fileService   FileService
-	schemeService SchemeService
+	fileService FileService
 
 	db *bbolt.DB
 }
@@ -49,10 +47,6 @@ func (c *Client) Open() error {
 		return errors.Wrap(err, "create file bucket failed")
 	}
 
-	if _, err := tx.CreateBucketIfNotExists(bucketScheme); err != nil {
-		return errors.Wrap(err, "create scheme bucket failed")
-	}
-
 	return tx.Commit()
 }
 
@@ -63,10 +57,12 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func (c *Client) FileService() domain.IFileService {
+func (c *Client) FileService() domain.FileService {
 	return &c.fileService
 }
 
-func (c *Client) SchemeService() domain.ISchemeService {
-	return &c.schemeService
+func (c *Client) DomainService() *domain.Service {
+	return &domain.Service{
+		FileService: c.FileService(),
+	}
 }

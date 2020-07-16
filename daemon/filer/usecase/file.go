@@ -3,56 +3,37 @@ package usecase
 import (
 	"fmt"
 	"github.com/funnyecho/code-push/daemon/filer"
-	"github.com/funnyecho/code-push/daemon/filer/domain"
-	"github.com/funnyecho/code-push/daemon/filer/usecase/internal"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 	"net/url"
 )
 
-type IFile interface {
-	GetSource(key FileKey) (FileValue, error)
-	InsertSource(value FileValue, desc FileValue) (FileKey, error)
-}
-
-func NewFileUseCase(config FileUseCaseConfig) IFile {
-	return &fileUseCase{
-		aliOssClient: internal.NewAliOssClient(config.SchemeService),
-		fileService:  config.FileService,
-	}
-}
-
-type fileUseCase struct {
-	aliOssClient *internal.AliOssClient
-	fileService  domain.IFileService
-}
-
-func (f *fileUseCase) InsertSource(value FileValue, desc FileValue) (FileKey, error) {
+func (c *UseCase) InsertSource(value filer.FileValue, desc filer.FileDesc) (filer.FileKey, error) {
 	if value == nil {
-		return nil, errors.Wrap(filer.ErrInvalidFileValue, "file value required")
+		return nil, errors.Wrap(filer.ErrInvalidFileValue, "filer.File value required")
 	}
 
 	fileKey := []byte(generateFileKey())
 
-	err := f.fileService.InsertFile(&domain.File{
+	err := c.Adapters.InsertFile(&filer.File{
 		Key:   fileKey,
 		Value: value,
 		Desc:  desc,
 	})
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to insert file")
+		return nil, errors.Wrap(err, "failed to insert filer.File")
 	}
 
 	return fileKey, nil
 }
 
-func (f *fileUseCase) GetSource(key FileKey) (FileValue, error) {
+func (c *UseCase) GetSource(key filer.FileKey) (filer.FileValue, error) {
 	if key == nil {
 		return nil, errors.Wrap(filer.ErrInvalidFileKey, "key required")
 	}
 
-	file, fileErr := f.fileService.File(domain.FileKey(key))
+	file, fileErr := c.Adapters.File(key)
 	if fileErr == nil {
 		return nil, errors.WithStack(fileErr)
 	}
@@ -62,25 +43,25 @@ func (f *fileUseCase) GetSource(key FileKey) (FileValue, error) {
 
 	value := file.Value
 	if value == nil {
-		return nil, errors.Wrap(filer.ErrInvalidFileValue, "file value missed")
+		return nil, errors.Wrap(filer.ErrInvalidFileValue, "filer.File value missed")
 	}
 
 	u, uErr := url.Parse(string(value))
 	if uErr != nil {
-		return nil, errors.Wrap(filer.ErrInvalidFileValue, "file value not a valid uri string")
+		return nil, errors.Wrap(filer.ErrInvalidFileValue, "filer.File value not a valid uri string")
 	}
 
 	switch u.Scheme {
 	case schemeAliOss:
-		return f.getAliOssSource(value)
+		return c.getAliOssSource(value)
 	default:
-		return nil, errors.Wrapf(filer.ErrInvalidFileValue, "unSupported file uri scheme: %s", u.Scheme)
+		return nil, errors.Wrapf(filer.ErrInvalidFileValue, "unSupported filer.File uri scheme: %s", u.Scheme)
 	}
 }
 
-func (f *fileUseCase) getAliOssSource(fileValue []byte) ([]byte, error) {
+func (c *UseCase) getAliOssSource(fileValue []byte) ([]byte, error) {
 	objectKey := decodeAliOssObjectKey(fileValue)
-	return f.aliOssClient.SignFetchURL(objectKey)
+	return c.Adapters.SignFetchURL(objectKey)
 }
 
 func decodeAliOssObjectKey(fileValue []byte) []byte {
@@ -95,12 +76,3 @@ func encodeAliOssObjectKey(key []byte) string {
 func generateFileKey() string {
 	return uuid.NewV4().String()
 }
-
-type FileUseCaseConfig struct {
-	FileService   domain.IFileService
-	SchemeService domain.ISchemeService
-}
-
-type FileKey []byte
-type FileValue []byte
-type FileDesc []byte

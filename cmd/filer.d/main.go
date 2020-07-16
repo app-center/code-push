@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/funnyecho/code-push/daemon/filer/adapter/alioss"
 	"github.com/funnyecho/code-push/daemon/filer/domain/bolt"
 	interfacegrpc "github.com/funnyecho/code-push/daemon/filer/interface/grpc"
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
@@ -46,33 +47,27 @@ func main() {
 func onCmdAction(cmd *cobra.Command, args []string) {
 	var g run.Group
 
-	var (
-		client = bolt.NewClient()
-	)
-
-	client.Path = ""
-	domainOpenErr := client.Open()
-
-	if domainOpenErr != nil {
-		// FIXME: record log
+	aliOssAdapter, aliOssAdapterErr := alioss.NewAliOssAdapter(nil, nil, nil)
+	if aliOssAdapterErr != nil {
 		os.Exit(1)
+		return
 	}
 
-	var (
+	domainAdapter := bolt.NewClient()
+	domainAdapter.Path = ""
+	domainAdapterOpenErr := domainAdapter.Open()
+	if domainAdapterOpenErr != nil {
+		os.Exit(1)
+		return
+	}
+	defer domainAdapter.Close()
 
-		fileUseCase = usecase.NewFileUseCase(usecase.FileUseCaseConfig{
-			SchemeService: client.SchemeService(),
-			FileService:   client.FileService(),
-		})
+	endpoints := &usecase.UseCase{Adapters: usecase.Adapters{
+		DomainAdapter: domainAdapter.DomainService(),
+		AliOssAdapter: aliOssAdapter,
+	}}
 
-		schemeUseCase = usecase.NewSchemeUseCase(usecase.SchemeUseCaseConfig{
-			SchemeService: client.SchemeService(),
-		})
-
-		uploadUseCase = usecase.NewUploadUseCase(usecase.UploadUseCaseConfig{
-			SchemeService: client.SchemeService(),
-		})
-	)
+	grpcServer := &interfacegrpc.FilerServer{Endpoints: endpoints}
 
 	{
 		grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
@@ -84,11 +79,6 @@ func onCmdAction(cmd *cobra.Command, args []string) {
 		// Create gRPC server
 		g.Add(func() error {
 			baseServer := grpc.NewServer()
-			grpcServer := interfacegrpc.NewFilerServer(interfacegrpc.FilerServerConfig{
-				FileUseCase:   fileUseCase,
-				SchemeUseCase: schemeUseCase,
-				UploadUseCase: uploadUseCase,
-			})
 			pb.RegisterFileServer(baseServer, grpcServer)
 			return baseServer.Serve(grpcListener)
 		}, func(err error) {
@@ -96,5 +86,9 @@ func onCmdAction(cmd *cobra.Command, args []string) {
 		})
 	}
 
-	g.Run()
+	err := g.Run()
+	if err != nil {
+		os.Exit(1)
+		return
+	}
 }

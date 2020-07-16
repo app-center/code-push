@@ -1,49 +1,17 @@
 package usecase
 
 import (
-	"github.com/funnyecho/code-push/daemon/filer/domain"
-	"github.com/funnyecho/code-push/daemon/filer/usecase/internal"
+	"github.com/funnyecho/code-push/daemon/filer"
+	"github.com/pkg/errors"
 	"io"
 )
 
-type IUpload interface {
-	UploadToAliOss(stream io.Reader) (FileValue, error)
-}
-
-func NewUploadUseCase(config UploadUseCaseConfig) IUpload {
-	return &uploadUseCase{
-		aliOssClient: internal.NewAliOssClient(config.SchemeService),
-	}
-}
-
-type uploadUseCase struct {
-	aliOssClient *internal.AliOssClient
-}
-
-func (u *uploadUseCase) UploadToAliOss(stream io.Reader) (FileValue, error) {
-	bucket, bucketErr := u.aliOssClient.GetPackageBucket()
-	if bucketErr != nil {
-		return nil, bucketErr
-	}
-
-	objectKey := u.aliOssClient.GeneratePackageObjectKey()
-
-	uploadErr := bucket.PutObject(
-		objectKey,
-		stream,
-	)
+func (c *UseCase) UploadToAliOss(stream io.Reader) (filer.FileValue, error) {
+	ossKey, uploadErr := c.Adapters.Upload(stream)
 
 	if uploadErr != nil {
-		return nil, uploadErr
+		return nil, errors.WithStack(uploadErr)
 	}
 
-	return []byte(encodeAliOssObjectKey([]byte(objectKey))), nil
-}
-
-type UploadUseCaseConfig struct {
-	SchemeService domain.ISchemeService
-}
-
-type IUploadChunk struct {
-	Data uint32
+	return []byte(encodeAliOssObjectKey(ossKey)), nil
 }

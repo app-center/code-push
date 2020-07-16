@@ -7,10 +7,3 @@ message File {
   string Desc = 3;
   int64 CreateTime = 4;
 }
-
-message AliOssScheme {
-  string Endpoint = 1;
-  string AccessKeyId = 2;
-  string AccessKeySecret = 3;
-  int64 UpdateTime = 4;
-}

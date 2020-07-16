@@ -2,7 +2,6 @@ package bolt
 
 import (
 	"github.com/funnyecho/code-push/daemon/filer"
-	"github.com/funnyecho/code-push/daemon/filer/domain"
 	"github.com/funnyecho/code-push/daemon/filer/domain/bolt/internal"
 	"github.com/pkg/errors"
 	"time"
@@ -12,7 +11,7 @@ type FileService struct {
 	client *Client
 }
 
-func (s *FileService) File(fileKey domain.FileKey) (*domain.File, error) {
+func (s *FileService) File(fileKey filer.FileKey) (*filer.File, error) {
 	if fileKey == nil {
 		return nil, filer.ErrInvalidFileKey
 	}
@@ -23,7 +22,7 @@ func (s *FileService) File(fileKey domain.FileKey) (*domain.File, error) {
 	}
 	defer tx.Rollback()
 
-	var f domain.File
+	var f filer.File
 	if v := tx.Bucket(bucketFile).Get(fileKey); v == nil {
 		return nil, nil
 	} else if err := internal.UnmarshalFile(v, &f); err != nil {
@@ -33,7 +32,7 @@ func (s *FileService) File(fileKey domain.FileKey) (*domain.File, error) {
 	return &f, nil
 }
 
-func (s *FileService) InsertFile(file *domain.File) error {
+func (s *FileService) InsertFile(file *filer.File) error {
 	if file == nil {
 		return filer.ErrParamsInvalid
 	}
@@ -76,7 +75,7 @@ func (s *FileService) InsertFile(file *domain.File) error {
 	return nil
 }
 
-func (s *FileService) IsFileKeyExisted(fileKey domain.FileKey) bool {
+func (s *FileService) IsFileKeyExisted(fileKey filer.FileKey) bool {
 	f, err := s.File(fileKey)
 
 	return err == nil && f != nil
