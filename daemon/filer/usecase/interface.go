@@ -5,11 +5,6 @@ import (
 	"io"
 )
 
-type Adapters struct {
-	DomainAdapter
-	AliOssAdapter
-}
-
 type DomainAdapter interface {
 	File(fileKey filer.FileKey) (*filer.File, error)
 	InsertFile(file *filer.File) error

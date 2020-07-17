@@ -6,12 +6,18 @@ import (
 	"io"
 )
 
-func (c *UseCase) UploadToAliOss(stream io.Reader) (filer.FileValue, error) {
-	ossKey, uploadErr := c.Adapters.Upload(stream)
+func (c *UseCase) UploadToAliOss(stream io.Reader) (filer.FileKey, error) {
+	if stream == nil {
+		return nil, errors.Wrap(filer.ErrParamsInvalid, "upload stream required")
+	}
+
+	ossKey, uploadErr := c.adapters.aliOss.Upload(stream)
 
 	if uploadErr != nil {
 		return nil, errors.WithStack(uploadErr)
 	}
 
-	return []byte(encodeAliOssObjectKey(ossKey)), nil
+	fileValue := []byte(encodeAliOssObjectKey(ossKey))
+
+	return c.InsertSource(fileValue, nil)
 }

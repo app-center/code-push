@@ -62,10 +62,10 @@ func onCmdAction(cmd *cobra.Command, args []string) {
 	}
 	defer domainAdapter.Close()
 
-	endpoints := &usecase.UseCase{Adapters: usecase.Adapters{
+	endpoints := usecase.NewUseCase(usecase.CtorConfig{
 		DomainAdapter: domainAdapter.DomainService(),
 		AliOssAdapter: aliOssAdapter,
-	}}
+	})
 
 	grpcServer := &interfacegrpc.FilerServer{Endpoints: endpoints}
 

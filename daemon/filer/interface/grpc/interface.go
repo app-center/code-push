@@ -11,10 +11,10 @@ type Endpoints interface {
 }
 
 type File interface {
-	GetSource(key filer.FileKey) (filer.FileValue, error)
+	GetSource(key filer.FileKey) ([]byte, error)
 	InsertSource(value filer.FileValue, desc filer.FileDesc) (filer.FileKey, error)
 }
 
 type Upload interface {
-	UploadToAliOss(stream io.Reader) (filer.FileValue, error)
+	UploadToAliOss(stream io.Reader) (filer.FileKey, error)
 }

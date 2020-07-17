@@ -13,9 +13,25 @@ func (c *UseCase) InsertSource(value filer.FileValue, desc filer.FileDesc) (file
 		return nil, errors.Wrap(filer.ErrInvalidFileValue, "filer.File value required")
 	}
 
+	u, uErr := url.Parse(string(value))
+	if uErr != nil {
+		return nil, errors.Wrap(filer.ErrInvalidFileValue, "filer.File value not a valid uri string")
+	}
+
+	switch u.Scheme {
+	case schemeAliOss:
+		fallthrough
+	case schemeHttp:
+		fallthrough
+	case schemeHttps:
+		break
+	default:
+		return nil, errors.Wrapf(filer.ErrInvalidFileValue, "unSupported filer.File uri scheme: %s", u.Scheme)
+	}
+
 	fileKey := []byte(generateFileKey())
 
-	err := c.Adapters.InsertFile(&filer.File{
+	err := c.adapters.domain.InsertFile(&filer.File{
 		Key:   fileKey,
 		Value: value,
 		Desc:  desc,
@@ -28,13 +44,13 @@ func (c *UseCase) InsertSource(value filer.FileValue, desc filer.FileDesc) (file
 	return fileKey, nil
 }
 
-func (c *UseCase) GetSource(key filer.FileKey) (filer.FileValue, error) {
+func (c *UseCase) GetSource(key filer.FileKey) ([]byte, error) {
 	if key == nil {
 		return nil, errors.Wrap(filer.ErrInvalidFileKey, "key required")
 	}
 
-	file, fileErr := c.Adapters.File(key)
-	if fileErr == nil {
+	file, fileErr := c.adapters.domain.File(key)
+	if fileErr != nil {
 		return nil, errors.WithStack(fileErr)
 	}
 	if file == nil {
@@ -54,6 +70,10 @@ func (c *UseCase) GetSource(key filer.FileKey) (filer.FileValue, error) {
 	switch u.Scheme {
 	case schemeAliOss:
 		return c.getAliOssSource(value)
+	case schemeHttp:
+		fallthrough
+	case schemeHttps:
+		return value, nil
 	default:
 		return nil, errors.Wrapf(filer.ErrInvalidFileValue, "unSupported filer.File uri scheme: %s", u.Scheme)
 	}
@@ -61,7 +81,7 @@ func (c *UseCase) GetSource(key filer.FileKey) (filer.FileValue, error) {
 
 func (c *UseCase) getAliOssSource(fileValue []byte) ([]byte, error) {
 	objectKey := decodeAliOssObjectKey(fileValue)
-	return c.Adapters.SignFetchURL(objectKey)
+	return c.adapters.aliOss.SignFetchURL(objectKey)
 }
 
 func decodeAliOssObjectKey(fileValue []byte) []byte {

@@ -1,5 +1,22 @@
 package usecase
 
+func NewUseCase(config CtorConfig) *UseCase {
+	return &UseCase{adapters{
+		domain: config.DomainAdapter,
+		aliOss: config.AliOssAdapter,
+	}}
+}
+
 type UseCase struct {
-	Adapters
+	adapters
+}
+
+type CtorConfig struct {
+	DomainAdapter DomainAdapter
+	AliOssAdapter AliOssAdapter
+}
+
+type adapters struct {
+	domain DomainAdapter
+	aliOss AliOssAdapter
 }
