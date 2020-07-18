@@ -8,21 +8,21 @@ import (
 	"time"
 )
 
-var _ domain.IEnvService = &EnvService{}
+var _ domain.EnvService = &EnvService{}
 
 type EnvService struct {
 	client *Client
 }
 
-func (s *EnvService) Env(envId string) (*domain.Env, error) {
+func (s *EnvService) Env(envId []byte) (*code_push.Env, error) {
 	tx, err := s.client.db.Begin(false)
 	if err != nil {
 		return nil, errors.Wrap(err, "begin read-only tx failed")
 	}
 	defer tx.Rollback()
 
-	var e domain.Env
-	if v := tx.Bucket(bucketEnv).Get([]byte(envId)); v == nil {
+	var e code_push.Env
+	if v := tx.Bucket(bucketEnv).Get(envId); v == nil {
 		return nil, nil
 	} else if err := internal.UnmarshalEnv(v, &e); err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (s *EnvService) Env(envId string) (*domain.Env, error) {
 	return &e, nil
 }
 
-func (s *EnvService) CreateEnv(env *domain.Env) error {
+func (s *EnvService) CreateEnv(env *code_push.Env) error {
 	if len(env.ID) == 0 ||
 		len(env.Name) == 0 ||
 		len(env.EncToken) == 0 ||
@@ -39,7 +39,7 @@ func (s *EnvService) CreateEnv(env *domain.Env) error {
 		return code_push.ErrParamsInvalid
 	}
 
-	if !s.client.BranchService().IsBranchAvailable(env.BranchId) {
+	if !s.client.BranchService().IsBranchAvailable([]byte(env.BranchId)) {
 		return code_push.ErrBranchNotFound
 	}
 
@@ -72,7 +72,7 @@ func (s *EnvService) CreateEnv(env *domain.Env) error {
 	return nil
 }
 
-func (s *EnvService) DeleteEnv(envId string) error {
+func (s *EnvService) DeleteEnv(envId []byte) error {
 	if len(envId) == 0 {
 		return errors.WithMessage(code_push.ErrParamsInvalid, "envId required")
 	}
@@ -84,7 +84,7 @@ func (s *EnvService) DeleteEnv(envId string) error {
 	defer tx.Rollback()
 
 	b := tx.Bucket(bucketEnv)
-	if err := b.Delete([]byte(envId)); err != nil {
+	if err := b.Delete(envId); err != nil {
 		return errors.WithMessagef(
 			err,
 			"delete env failed, envId: %s",
@@ -99,12 +99,12 @@ func (s *EnvService) DeleteEnv(envId string) error {
 	return nil
 }
 
-func (s *EnvService) IsEnvAvailable(envId string) bool {
+func (s *EnvService) IsEnvAvailable(envId []byte) bool {
 	env, err := s.Env(envId)
 
 	if err != nil || env == nil {
 		return false
 	}
 
-	return s.client.BranchService().IsBranchAvailable(env.BranchId)
+	return s.client.BranchService().IsBranchAvailable([]byte(env.BranchId))
 }

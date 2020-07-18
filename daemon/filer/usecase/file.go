@@ -31,7 +31,7 @@ func (c *UseCase) InsertSource(value filer.FileValue, desc filer.FileDesc) (file
 
 	fileKey := []byte(generateFileKey())
 
-	err := c.adapters.domain.InsertFile(&filer.File{
+	err := c.domain.InsertFile(&filer.File{
 		Key:   fileKey,
 		Value: value,
 		Desc:  desc,
@@ -49,7 +49,7 @@ func (c *UseCase) GetSource(key filer.FileKey) ([]byte, error) {
 		return nil, errors.Wrap(filer.ErrInvalidFileKey, "key required")
 	}
 
-	file, fileErr := c.adapters.domain.File(key)
+	file, fileErr := c.domain.File(key)
 	if fileErr != nil {
 		return nil, errors.WithStack(fileErr)
 	}
@@ -81,7 +81,7 @@ func (c *UseCase) GetSource(key filer.FileKey) ([]byte, error) {
 
 func (c *UseCase) getAliOssSource(fileValue []byte) ([]byte, error) {
 	objectKey := decodeAliOssObjectKey(fileValue)
-	return c.adapters.aliOss.SignFetchURL(objectKey)
+	return c.aliOss.SignFetchURL(objectKey)
 }
 
 func decodeAliOssObjectKey(fileValue []byte) []byte {

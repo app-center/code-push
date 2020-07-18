@@ -8,21 +8,21 @@ import (
 	"time"
 )
 
-var _ domain.IBranchService = &BranchService{}
+var _ domain.BranchService = &BranchService{}
 
 type BranchService struct {
 	client *Client
 }
 
-func (s *BranchService) Branch(branchId string) (*domain.Branch, error) {
+func (s *BranchService) Branch(branchId []byte) (*code_push.Branch, error) {
 	tx, err := s.client.db.Begin(false)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to begin tx")
 	}
 	defer tx.Rollback()
 
-	var b domain.Branch
-	if v := tx.Bucket(bucketBranch).Get([]byte(branchId)); v == nil {
+	var b code_push.Branch
+	if v := tx.Bucket(bucketBranch).Get(branchId); v == nil {
 		return nil, nil
 	} else if err := internal.UnmarshalBranch(v, &b); err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (s *BranchService) Branch(branchId string) (*domain.Branch, error) {
 	return &b, nil
 }
 
-func (s *BranchService) CreateBranch(branch *domain.Branch) error {
+func (s *BranchService) CreateBranch(branch *code_push.Branch) error {
 	if len(branch.ID) == 0 ||
 		len(branch.Name) == 0 ||
 		len(branch.AuthHost) == 0 ||
@@ -69,7 +69,7 @@ func (s *BranchService) CreateBranch(branch *domain.Branch) error {
 	return nil
 }
 
-func (s *BranchService) DeleteBranch(branchId string) error {
+func (s *BranchService) DeleteBranch(branchId []byte) error {
 	if len(branchId) == 0 {
 		return errors.WithMessage(code_push.ErrParamsInvalid, "branchId required")
 	}
@@ -81,7 +81,7 @@ func (s *BranchService) DeleteBranch(branchId string) error {
 	defer tx.Rollback()
 
 	b := tx.Bucket(bucketBranch)
-	if err := b.Delete([]byte(branchId)); err != nil {
+	if err := b.Delete(branchId); err != nil {
 		return errors.WithMessagef(
 			err,
 			"delete branch failed, branchId: %s",
@@ -96,7 +96,7 @@ func (s *BranchService) DeleteBranch(branchId string) error {
 	return nil
 }
 
-func (s *BranchService) IsBranchAvailable(branchId string) bool {
+func (s *BranchService) IsBranchAvailable(branchId []byte) bool {
 	branch, err := s.Branch(branchId)
 
 	return err == nil && branch != nil

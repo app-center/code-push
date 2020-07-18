@@ -1,51 +1,14 @@
 package usecase
 
 import (
-	code_push "github.com/funnyecho/code-push/daemon/code-push"
-	"github.com/funnyecho/code-push/daemon/code-push/domain"
+	"github.com/funnyecho/code-push/daemon/code-push"
 	"github.com/funnyecho/code-push/pkg/util"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
-	"time"
 )
 
-func NewBranchUseCase(config BranchUseCaseConfig) (IBranch, error) {
-	if config.BranchService == nil {
-		panic("invalid branch use case params")
-	}
-
-	return &branchUseCase{
-		branchService: config.BranchService,
-	}, nil
-}
-
-type Branch struct {
-	BranchId   string
-	BranchName string
-	CreateTime time.Time
-}
-
-func toBranch(branch *domain.Branch) *Branch {
-	return &Branch{
-		BranchId:   branch.ID,
-		BranchName: branch.Name,
-		CreateTime: branch.CreateTime,
-	}
-}
-
-type IBranch interface {
-	CreateBranch(branchName, branchAuthHost string) (*Branch, error)
-	GetBranch(branchId string) (*Branch, error)
-	DeleteBranch(branchId string) error
-	GetBranchEncToken(branchId string) (string, error)
-}
-
-type branchUseCase struct {
-	branchService domain.IBranchService
-}
-
-func (b *branchUseCase) CreateBranch(branchName, branchAuthHost string) (*Branch, error) {
-	if len(branchName) == 0 || len(branchAuthHost) == 0 {
+func (c *UseCase) CreateBranch(branchName, branchAuthHost []byte) (*code_push.Branch, error) {
+	if branchName == nil || branchAuthHost == nil {
 		return nil, errors.Wrapf(
 			code_push.ErrParamsInvalid,
 			"branchName: %s, branchAuthHost: %s",
@@ -62,27 +25,27 @@ func (b *branchUseCase) CreateBranch(branchName, branchAuthHost string) (*Branch
 		)
 	}
 
-	branchToCreate := &domain.Branch{
-		ID:       generateBranchId(branchName),
-		Name:     branchName,
-		AuthHost: branchAuthHost,
+	branchToCreate := &code_push.Branch{
+		ID:       generateBranchId(string(branchName)),
+		Name:     string(branchName),
+		AuthHost: string(branchAuthHost),
 		EncToken: encToken,
 	}
 
-	createErr := b.branchService.CreateBranch(branchToCreate)
+	createErr := c.domain.CreateBranch(branchToCreate)
 	if createErr != nil {
 		return nil, errors.WithStack(createErr)
 	}
 
-	return toBranch(branchToCreate), nil
+	return branchToCreate, nil
 }
 
-func (b *branchUseCase) GetBranch(branchId string) (*Branch, error) {
-	if len(branchId) == 0 {
+func (c *UseCase) GetBranch(branchId []byte) (*code_push.Branch, error) {
+	if branchId == nil {
 		return nil, errors.Wrapf(code_push.ErrParamsInvalid, "branchId is empty")
 	}
 
-	branchEntity, fetchErr := b.branchService.Branch(branchId)
+	branchEntity, fetchErr := c.domain.Branch(branchId)
 	if fetchErr != nil {
 		return nil, errors.WithStack(fetchErr)
 	}
@@ -90,15 +53,15 @@ func (b *branchUseCase) GetBranch(branchId string) (*Branch, error) {
 		return nil, errors.Wrapf(code_push.ErrBranchNotFound, "branchId: %v", branchId)
 	}
 
-	return toBranch(branchEntity), nil
+	return branchEntity, nil
 }
 
-func (b *branchUseCase) DeleteBranch(branchId string) error {
-	if len(branchId) == 0 {
+func (c *UseCase) DeleteBranch(branchId []byte) error {
+	if branchId == nil {
 		return errors.Wrapf(code_push.ErrParamsInvalid, "branchId is empty")
 	}
 
-	deleteErr := b.branchService.DeleteBranch(branchId)
+	deleteErr := c.domain.DeleteBranch(branchId)
 	if deleteErr != nil {
 		return errors.WithStack(deleteErr)
 	}
@@ -106,21 +69,17 @@ func (b *branchUseCase) DeleteBranch(branchId string) error {
 	return nil
 }
 
-func (b *branchUseCase) GetBranchEncToken(branchId string) (string, error) {
-	if len(branchId) == 0 {
-		return "", errors.Wrapf(code_push.ErrParamsInvalid, "branchId is empty")
+func (c *UseCase) GetBranchEncToken(branchId []byte) ([]byte, error) {
+	if branchId == nil {
+		return nil, errors.Wrapf(code_push.ErrParamsInvalid, "branchId is empty")
 	}
 
-	branchEntity, fetchErr := b.branchService.Branch(branchId)
+	branchEntity, fetchErr := c.domain.Branch(branchId)
 	if fetchErr != nil {
-		return "", errors.WithStack(fetchErr)
+		return nil, errors.WithStack(fetchErr)
 	}
 
-	return branchEntity.EncToken, nil
-}
-
-type BranchUseCaseConfig struct {
-	BranchService domain.IBranchService
+	return []byte(branchEntity.EncToken), nil
 }
 
 func generateBranchEncToken() (string, error) {

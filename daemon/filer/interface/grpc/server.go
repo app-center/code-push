@@ -9,12 +9,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-type FilerServer struct {
-	Endpoints Endpoints
+func NewFilerServer(endpoints Endpoints) *filerServer {
+	return &filerServer{endpoints: endpoints}
 }
 
-func (f *FilerServer) UploadToAliOss(stream pb.Upload_UploadToAliOssServer) error {
-	fileKey, err := f.Endpoints.UploadToAliOss(grpcStreamer.NewStreamReader(grpcStreamer.StreamReaderConfig{
+type filerServer struct {
+	endpoints Endpoints
+}
+
+func (f *filerServer) UploadToAliOss(stream pb.Upload_UploadToAliOssServer) error {
+	fileKey, err := f.endpoints.UploadToAliOss(grpcStreamer.NewStreamReader(grpcStreamer.StreamReaderConfig{
 		RecvByte: func() (byte, error) {
 			var chunk pb.UploadToAliOssRequest
 			err := stream.RecvMsg(&chunk)
@@ -24,24 +28,24 @@ func (f *FilerServer) UploadToAliOss(stream pb.Upload_UploadToAliOssServer) erro
 
 	return stream.SendAndClose(&pb.StringResponse{
 		Code: marshalErrorCode(err),
-		Data: string(fileKey),
+		Data: fileKey,
 	})
 }
 
-func (f *FilerServer) GetSource(ctx context.Context, request *pb.GetSourceRequest) (*pb.StringResponse, error) {
-	source, err := f.Endpoints.GetSource([]byte(request.GetKey()))
+func (f *filerServer) GetSource(ctx context.Context, request *pb.GetSourceRequest) (*pb.StringResponse, error) {
+	source, err := f.endpoints.GetSource(request.GetKey())
 
 	return &pb.StringResponse{
 		Code: marshalErrorCode(err),
-		Data: string(source),
+		Data: source,
 	}, nil
 }
 
-func (f *FilerServer) InsertSource(ctx context.Context, request *pb.InsertSourceRequest) (*pb.StringResponse, error) {
-	key, err := f.Endpoints.InsertSource([]byte(request.GetValue()), []byte(request.GetDesc()))
+func (f *filerServer) InsertSource(ctx context.Context, request *pb.InsertSourceRequest) (*pb.StringResponse, error) {
+	key, err := f.endpoints.InsertSource(request.GetValue(), request.GetDesc())
 	return &pb.StringResponse{
 		Code: marshalErrorCode(err),
-		Data: string(key),
+		Data: key,
 	}, nil
 }
 

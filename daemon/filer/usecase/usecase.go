@@ -12,8 +12,8 @@ type UseCase struct {
 }
 
 type CtorConfig struct {
-	DomainAdapter DomainAdapter
-	AliOssAdapter AliOssAdapter
+	DomainAdapter
+	AliOssAdapter
 }
 
 type adapters struct {

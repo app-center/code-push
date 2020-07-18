@@ -1,88 +1,46 @@
 package usecase
 
 import (
-	code_push "github.com/funnyecho/code-push/daemon/code-push"
+	"github.com/funnyecho/code-push/daemon/code-push"
 	"github.com/funnyecho/code-push/daemon/code-push/domain"
 	"github.com/funnyecho/code-push/pkg/util"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
-	"time"
 )
 
-func NewEnvUseCase(config EnvUseCaseConfig) (IEnv, error) {
-	if config.BranchService == nil ||
-		config.EnvService == nil {
-		panic("invalid env use case params")
-	}
-
-	return &envUseCase{
-		envService:    config.EnvService,
-		branchService: config.BranchService,
-	}, nil
-}
-
-type Env struct {
-	BranchId   string
-	EnvId      string
-	Name       string
-	CreateTime time.Time
-}
-
-func toEnv(env *domain.Env) *Env {
-	return &Env{
-		BranchId:   env.BranchId,
-		EnvId:      env.ID,
-		Name:       env.Name,
-		CreateTime: env.CreateTime,
-	}
-}
-
-type IEnv interface {
-	CreateEnv(branchId, envName string) (*Env, error)
-	GetEnv(envId string) (*Env, error)
-	DeleteEnv(envId string) error
-	GetEnvEncToken(envId string) (string, error)
-	GetEnvAuthHost(envId string) (string, error)
-}
-
-type envUseCase struct {
-	branchService domain.IBranchService
-	envService    domain.IEnvService
-}
-
-func (e envUseCase) CreateEnv(branchId, envName string) (*Env, error) {
-	if len(branchId) == 0 || len(envName) == 0 {
+func (c *UseCase) CreateEnv(branchId, envName []byte) (*code_push.Env, error) {
+	if branchId == nil || envName == nil {
 		return nil, errors.Wrapf(code_push.ErrParamsInvalid, "branchId or envName can't not be empty")
 	}
 
-	envId := generateEnvId(branchId)
+	envId := generateEnvId(string(branchId))
 	encToken, encTokenErr := generateEnvEncToken()
 
 	if encTokenErr != nil {
 		return nil, errors.Wrapf(encTokenErr, "generate env enc token failed")
 	}
 
-	envToCreate := &domain.Env{
-		BranchId: branchId,
+	envToCreate := &code_push.Env{
+		BranchId: string(branchId),
 		ID:       envId,
-		Name:     envName,
+		Name:     string(envName),
 		EncToken: encToken,
 	}
 
-	createErr := e.envService.CreateEnv(envToCreate)
+	createErr := c.domain.CreateEnv(envToCreate)
 	if createErr != nil {
 		return nil, errors.WithStack(createErr)
 	}
 
-	return toEnv(envToCreate), nil
+	return envToCreate, nil
 }
 
-func (e envUseCase) GetEnv(envId string) (*Env, error) {
-	if len(envId) == 0 {
+func (c *UseCase) GetEnv(envId []byte) (*code_push.Env, error) {
+	if envId == nil {
 		return nil, errors.Wrapf(code_push.ErrParamsInvalid, "envId is empty")
 	}
 
-	envEntity, fetchErr := e.envService.Env(envId)
+	envEntity, fetchErr := c.domain.Env(envId)
 	if fetchErr != nil {
 		return nil, errors.WithStack(fetchErr)
 	}
@@ -90,15 +48,15 @@ func (e envUseCase) GetEnv(envId string) (*Env, error) {
 		return nil, errors.WithMessagef(code_push.ErrEnvNotFound, "envId: %s", envId)
 	}
 
-	return toEnv(envEntity), nil
+	return envEntity, nil
 }
 
-func (e envUseCase) DeleteEnv(envId string) error {
-	if len(envId) == 0 {
+func (c *UseCase) DeleteEnv(envId []byte) error {
+	if envId == nil {
 		return errors.Wrapf(code_push.ErrParamsInvalid, "envId is empty")
 	}
 
-	deleteErr := e.envService.DeleteEnv(envId)
+	deleteErr := c.domain.DeleteEnv(envId)
 	if deleteErr != nil {
 		return errors.WithStack(deleteErr)
 	}
@@ -106,49 +64,49 @@ func (e envUseCase) DeleteEnv(envId string) error {
 	return nil
 }
 
-func (e envUseCase) GetEnvEncToken(envId string) (string, error) {
-	if len(envId) == 0 {
-		return "", errors.Wrapf(code_push.ErrParamsInvalid, "envId is empty")
+func (c *UseCase) GetEnvEncToken(envId []byte) ([]byte, error) {
+	if envId == nil {
+		return nil, errors.Wrapf(code_push.ErrParamsInvalid, "envId is empty")
 	}
 
-	envEntity, fetchErr := e.envService.Env(envId)
+	envEntity, fetchErr := c.domain.Env(envId)
 	if fetchErr != nil {
-		return "", errors.WithStack(fetchErr)
+		return nil, errors.WithStack(fetchErr)
 	}
 	if envEntity == nil {
-		return "", errors.Wrapf(code_push.ErrEnvNotFound, "envId: %s", envId)
+		return nil, errors.Wrapf(code_push.ErrEnvNotFound, "envId: %s", envId)
 	}
 
-	return envEntity.EncToken, nil
+	return []byte(envEntity.EncToken), nil
 }
 
-func (e envUseCase) GetEnvAuthHost(envId string) (string, error) {
-	if len(envId) == 0 {
-		return "", errors.Wrapf(code_push.ErrParamsInvalid, "envId is empty")
+func (c *UseCase) GetEnvAuthHost(envId []byte) ([]byte, error) {
+	if envId == nil {
+		return nil, errors.Wrapf(code_push.ErrParamsInvalid, "envId is empty")
 	}
 
-	envEntity, fetchErr := e.envService.Env(envId)
+	envEntity, fetchErr := c.domain.Env(envId)
 	if fetchErr != nil {
-		return "", errors.WithStack(fetchErr)
+		return nil, errors.WithStack(fetchErr)
 	}
 	if envEntity == nil {
-		return "", errors.Wrapf(code_push.ErrEnvNotFound, "envId: %s", envId)
+		return nil, errors.Wrapf(code_push.ErrEnvNotFound, "envId: %s", envId)
 	}
 
-	branchEntity, branchFetchErr := e.branchService.Branch(envEntity.BranchId)
+	branchEntity, branchFetchErr := c.domain.Branch([]byte(envEntity.BranchId))
 	if branchFetchErr != nil {
-		return "", errors.WithStack(fetchErr)
+		return nil, errors.WithStack(fetchErr)
 	}
 	if branchEntity == nil {
-		return "", errors.Wrapf(code_push.ErrBranchNotFound, "envId: %s, branchId: %s", envId, envEntity.BranchId)
+		return nil, errors.Wrapf(code_push.ErrBranchNotFound, "envId: %s, branchId: %s", envId, envEntity.BranchId)
 	}
 
-	return branchEntity.EncToken, nil
+	return []byte(branchEntity.EncToken), nil
 }
 
 type EnvUseCaseConfig struct {
-	BranchService domain.IBranchService
-	EnvService    domain.IEnvService
+	BranchService domain.BranchService
+	EnvService    domain.EnvService
 }
 
 func generateEnvEncToken() (string, error) {

@@ -9,14 +9,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+func NewCodePushServer(endpoints Endpoints) *codePushServer {
+	return &codePushServer{endpoints: endpoints}
+}
+
 type codePushServer struct {
-	branchUseCase  usecase.IBranch
-	envUseCase     usecase.IEnv
-	versionUseCase usecase.IVersion
+	endpoints Endpoints
 }
 
 func (s *codePushServer) CreateBranch(ctx context.Context, request *pb.CreateBranchRequest) (*pb.CreateBranchResponse, error) {
-	res, err := s.branchUseCase.CreateBranch(request.BranchName, request.BranchAuthHost)
+	res, err := s.endpoints.CreateBranch(request.GetBranchName(), request.GetBranchAuthHost())
 
 	return &pb.CreateBranchResponse{
 		Code: MarshalErrorCode(err),
@@ -25,7 +27,7 @@ func (s *codePushServer) CreateBranch(ctx context.Context, request *pb.CreateBra
 }
 
 func (s *codePushServer) GetBranch(ctx context.Context, request *pb.GetBranchRequest) (*pb.GetBranchResponse, error) {
-	res, err := s.branchUseCase.GetBranch(request.BranchId)
+	res, err := s.endpoints.GetBranch(request.BranchId)
 
 	return &pb.GetBranchResponse{
 		Code: MarshalErrorCode(err),
@@ -34,14 +36,14 @@ func (s *codePushServer) GetBranch(ctx context.Context, request *pb.GetBranchReq
 }
 
 func (s *codePushServer) DeleteBranch(ctx context.Context, request *pb.DeleteBranchRequest) (*pb.PlainResponse, error) {
-	err := s.branchUseCase.DeleteBranch(request.BranchId)
+	err := s.endpoints.DeleteBranch(request.BranchId)
 	return &pb.PlainResponse{
 		Code: MarshalErrorCode(err),
 	}, nil
 }
 
 func (s *codePushServer) GetBranchEncToken(ctx context.Context, request *pb.GetBranchEncTokenRequest) (*pb.StringResponse, error) {
-	res, err := s.branchUseCase.GetBranchEncToken(request.BranchId)
+	res, err := s.endpoints.GetBranchEncToken(request.BranchId)
 	return &pb.StringResponse{
 		Code: MarshalErrorCode(err),
 		Data: res,
@@ -49,7 +51,7 @@ func (s *codePushServer) GetBranchEncToken(ctx context.Context, request *pb.GetB
 }
 
 func (s *codePushServer) CreateEnv(ctx context.Context, request *pb.CreateEnvRequest) (*pb.EnvResponse, error) {
-	res, err := s.envUseCase.CreateEnv(request.BranchId, request.EnvName)
+	res, err := s.endpoints.CreateEnv(request.BranchId, request.EnvName)
 	return &pb.EnvResponse{
 		Code: MarshalErrorCode(err),
 		Data: MarshalEnv(res),
@@ -57,7 +59,7 @@ func (s *codePushServer) CreateEnv(ctx context.Context, request *pb.CreateEnvReq
 }
 
 func (s *codePushServer) GetEnv(ctx context.Context, request *pb.EnvIdRequest) (*pb.EnvResponse, error) {
-	res, err := s.envUseCase.GetEnv(request.EnvId)
+	res, err := s.endpoints.GetEnv(request.EnvId)
 	return &pb.EnvResponse{
 		Code: MarshalErrorCode(err),
 		Data: MarshalEnv(res),
@@ -65,12 +67,12 @@ func (s *codePushServer) GetEnv(ctx context.Context, request *pb.EnvIdRequest) (
 }
 
 func (s *codePushServer) DeleteEnv(ctx context.Context, request *pb.EnvIdRequest) (*pb.PlainResponse, error) {
-	err := s.envUseCase.DeleteEnv(request.EnvId)
+	err := s.endpoints.DeleteEnv(request.EnvId)
 	return &pb.PlainResponse{Code: MarshalErrorCode(err)}, nil
 }
 
 func (s *codePushServer) GetEnvEncToken(ctx context.Context, request *pb.EnvIdRequest) (*pb.StringResponse, error) {
-	res, err := s.envUseCase.GetEnvEncToken(request.EnvId)
+	res, err := s.endpoints.GetEnvEncToken(request.EnvId)
 	return &pb.StringResponse{
 		Code: MarshalErrorCode(err),
 		Data: res,
@@ -78,7 +80,7 @@ func (s *codePushServer) GetEnvEncToken(ctx context.Context, request *pb.EnvIdRe
 }
 
 func (s *codePushServer) GetEnvAuthHost(ctx context.Context, request *pb.EnvIdRequest) (*pb.StringResponse, error) {
-	res, err := s.envUseCase.GetEnvAuthHost(request.EnvId)
+	res, err := s.endpoints.GetEnvAuthHost(request.EnvId)
 	return &pb.StringResponse{
 		Code: MarshalErrorCode(err),
 		Data: res,
@@ -86,25 +88,12 @@ func (s *codePushServer) GetEnvAuthHost(ctx context.Context, request *pb.EnvIdRe
 }
 
 func (s *codePushServer) ReleaseVersion(ctx context.Context, request *pb.VersionReleaseRequest) (*pb.PlainResponse, error) {
-	params, err := usecase.NewVersionReleaseParams(usecase.VersionReleaseParamsConfig{
-		EnvId:            request.EnvId,
-		AppVersion:       request.AppVersion,
-		CompatAppVersion: request.CompatAppVersion,
-		Changelog:        request.Changelog,
-		PackageFileKey:   request.PackageFileKey,
-		MustUpdate:       request.MustUpdate,
-	})
-
-	if err != nil {
-		return &pb.PlainResponse{Code: MarshalErrorCode(err)}, nil
-	}
-
-	err = s.versionUseCase.ReleaseVersion(params)
+	err := s.endpoints.ReleaseVersion(UnmarshalVersionReleaseParams(request))
 	return &pb.PlainResponse{Code: MarshalErrorCode(err)}, nil
 }
 
 func (s *codePushServer) GetVersion(ctx context.Context, request *pb.GetVersionRequest) (*pb.VersionResponse, error) {
-	res, err := s.versionUseCase.GetVersion(request.EnvId, request.AppVersion)
+	res, err := s.endpoints.GetVersion(request.EnvId, request.AppVersion)
 	return &pb.VersionResponse{
 		Code: MarshalErrorCode(err),
 		Data: MarshalVersion(res),
@@ -112,7 +101,7 @@ func (s *codePushServer) GetVersion(ctx context.Context, request *pb.GetVersionR
 }
 
 func (s *codePushServer) ListVersions(ctx context.Context, request *pb.ListVersionsRequest) (*pb.VersionListResponse, error) {
-	res, err := s.versionUseCase.ListVersions(request.EnvId)
+	res, err := s.endpoints.ListVersions(request.EnvId)
 	return &pb.VersionListResponse{
 		Code: MarshalErrorCode(err),
 		Data: MarshalVersionList(res),
@@ -120,7 +109,7 @@ func (s *codePushServer) ListVersions(ctx context.Context, request *pb.ListVersi
 }
 
 func (s *codePushServer) VersionStrictCompatQuery(ctx context.Context, request *pb.VersionStrictCompatQueryRequest) (*pb.VersionStrictCompatQueryResponse, error) {
-	res, err := s.versionUseCase.VersionStrictCompatQuery(request.EnvId, request.AppVersion)
+	res, err := s.endpoints.VersionStrictCompatQuery(request.EnvId, request.AppVersion)
 	return &pb.VersionStrictCompatQueryResponse{
 		Code: MarshalErrorCode(err),
 		Data: MarshalVersionCompatQueryResult(res),
@@ -142,32 +131,32 @@ func MarshalErrorCode(err error) string {
 	}
 }
 
-func MarshalBranch(b *usecase.Branch) *pb.Branch {
+func MarshalBranch(b *code_push.Branch) *pb.Branch {
 	if b == nil {
 		return nil
 	}
 
 	return &pb.Branch{
-		BranchId:   b.BranchId,
-		BranchName: b.BranchId,
+		BranchId:   b.ID,
+		BranchName: b.Name,
 		CreateTime: b.CreateTime.UnixNano(),
 	}
 }
 
-func MarshalEnv(e *usecase.Env) *pb.Env {
+func MarshalEnv(e *code_push.Env) *pb.Env {
 	if e == nil {
 		return nil
 	}
 
 	return &pb.Env{
 		BranchId:   e.BranchId,
-		EnvId:      e.EnvId,
+		EnvId:      e.ID,
 		Name:       e.Name,
 		CreateTime: e.CreateTime.UnixNano(),
 	}
 }
 
-func MarshalVersion(v *usecase.Version) *pb.Version {
+func MarshalVersion(v *code_push.Version) *pb.Version {
 	if v == nil {
 		return nil
 	}
@@ -183,7 +172,7 @@ func MarshalVersion(v *usecase.Version) *pb.Version {
 	}
 }
 
-func MarshalVersionList(l usecase.VersionList) []*pb.Version {
+func MarshalVersionList(l code_push.VersionList) []*pb.Version {
 	if l == nil {
 		return nil
 	}
@@ -197,7 +186,7 @@ func MarshalVersionList(l usecase.VersionList) []*pb.Version {
 	return v
 }
 
-func MarshalVersionCompatQueryResult(r usecase.IVersionCompatQueryResult) *pb.VersionCompatQueryResult {
+func MarshalVersionCompatQueryResult(r usecase.VersionCompatQueryResult) *pb.VersionCompatQueryResult {
 	if r == nil {
 		return nil
 	}
@@ -208,4 +197,8 @@ func MarshalVersionCompatQueryResult(r usecase.IVersionCompatQueryResult) *pb.Ve
 		CanUpdateAppVersion: r.CanUpdateAppVersion(),
 		MustUpdate:          r.MustUpdate(),
 	}
+}
+
+func UnmarshalVersionReleaseParams(request *pb.VersionReleaseRequest) usecase.VersionReleaseParams {
+	return NewVersionReleaseParams(request)
 }

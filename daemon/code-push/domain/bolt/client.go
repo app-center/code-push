@@ -70,14 +70,22 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func (c *Client) BranchService() domain.IBranchService {
+func (c *Client) BranchService() domain.BranchService {
 	return &c.branchService
 }
 
-func (c *Client) EnvService() domain.IEnvService {
+func (c *Client) EnvService() domain.EnvService {
 	return &c.envService
 }
 
-func (c *Client) VersionService() domain.IVersionService {
+func (c *Client) VersionService() domain.VersionService {
 	return &c.versionService
+}
+
+func (c *Client) DomainService() *domain.Service {
+	return &domain.Service{
+		BranchService:  c.BranchService(),
+		EnvService:     c.EnvService(),
+		VersionService: c.VersionService(),
+	}
 }

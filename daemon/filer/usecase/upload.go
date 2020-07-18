@@ -11,7 +11,7 @@ func (c *UseCase) UploadToAliOss(stream io.Reader) (filer.FileKey, error) {
 		return nil, errors.Wrap(filer.ErrParamsInvalid, "upload stream required")
 	}
 
-	ossKey, uploadErr := c.adapters.aliOss.Upload(stream)
+	ossKey, uploadErr := c.aliOss.Upload(stream)
 
 	if uploadErr != nil {
 		return nil, errors.WithStack(uploadErr)

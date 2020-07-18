@@ -1,7 +1,8 @@
-package semver
+package semver_test
 
 import (
-	semverErrors "github.com/funnyecho/code-push/pkg/semver/errors"
+	"github.com/funnyecho/code-push/pkg/semver"
+	"github.com/pkg/errors"
 	assert "github.com/stretchr/testify/require"
 	"testing"
 )
@@ -24,7 +25,7 @@ func TestParseVersion(t *testing.T) {
 					"major.2.3",
 					".2.3",
 				},
-				semverErrors.NewInvalidMajorVersionError(semverErrors.InvalidMajorVersionErrorConfig{}),
+				semver.ErrInvalidMajorVersion,
 			},
 			{
 				"minorV shall be a natural number",
@@ -33,7 +34,7 @@ func TestParseVersion(t *testing.T) {
 					"1.minor.3",
 					"1..3",
 				},
-				semverErrors.NewInvalidMinorVersionError(semverErrors.InvalidMinorVersionErrorConfig{}),
+				semver.ErrInvalidMinorVersion,
 			},
 			{
 				"patchV shall be a natural number",
@@ -42,14 +43,14 @@ func TestParseVersion(t *testing.T) {
 					"1.2.patch",
 					"1.2.",
 				},
-				semverErrors.NewInvalidPatchVersionError(semverErrors.InvalidPatchVersionErrorConfig{}),
+				semver.ErrInvalidPatchVersion,
 			},
 			{
 				"0.0.0 is not meaningless",
 				[]string{
 					"0.0.0",
 				},
-				semverErrors.NewInvalidRawVersionFormatError(semverErrors.InvalidRawVersionFormatErrorConfig{}),
+				semver.ErrInvalidVersionFormat,
 			},
 			{
 				"divider must be a dot",
@@ -58,14 +59,14 @@ func TestParseVersion(t *testing.T) {
 					"1-2-3",
 					"1_2_3",
 				},
-				semverErrors.NewInvalidRawVersionFormatError(semverErrors.InvalidRawVersionFormatErrorConfig{}),
+				semver.ErrInvalidVersionFormat,
 			},
 		}
 
 		for _, data := range invalidTests {
 			for _, rawVersion := range data.input {
-				_, err := ParseVersion(rawVersion)
-				assert.IsType(t, data.errorType, err, data.message, rawVersion)
+				_, err := semver.ParseVersion(rawVersion)
+				assert.True(t, errors.Is(err, data.errorType), data.message, rawVersion)
 			}
 		}
 
@@ -78,17 +79,17 @@ func TestParseVersion(t *testing.T) {
 
 		for encodedVer, tests := range validTests {
 			for _, rawVersion := range tests {
-				ver, err := ParseVersion(rawVersion)
+				ver, err := semver.ParseVersion(rawVersion)
 				assert.Nil(t, err, rawVersion)
 				assert.Equal(t, encodedVer, ver.String())
-				assert.EqualValues(t, PRStageRelease, ver.PRStage())
+				assert.EqualValues(t, semver.PRStageRelease, ver.PRStage())
 				assert.EqualValues(t, 1, ver.PRVersion())
 				assert.EqualValues(t, 1, ver.PRBuild())
 			}
 		}
 
 		t.Run("majorV.minorV.patchV-prStage.prVersion[+prBuild]", func(t *testing.T) {
-			preReleaseError := semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{})
+			preReleaseError := semver.ErrInvalidPreReleaseVersion
 			invalidTests := InvalidVersionInputs{
 				{
 					`divider of patchV and pre-release is "-"`,
@@ -97,7 +98,7 @@ func TestParseVersion(t *testing.T) {
 						"1.2.3_beta.1",
 						"1.2.3?beta.1",
 					},
-					semverErrors.NewInvalidPatchVersionError(semverErrors.InvalidPatchVersionErrorConfig{}),
+					semver.ErrInvalidPatchVersion,
 				},
 				{
 					"prStage in:[release,rc,beta,alpha]",
@@ -158,8 +159,8 @@ func TestParseVersion(t *testing.T) {
 
 			for _, data := range invalidTests {
 				for _, rawVersion := range data.input {
-					_, err := ParseVersion(rawVersion)
-					assert.IsType(t, data.errorType, err, data.message, rawVersion)
+					_, err := semver.ParseVersion(rawVersion)
+					assert.True(t, errors.Is(err, data.errorType), data.message, rawVersion)
 				}
 			}
 
@@ -184,7 +185,7 @@ func TestParseVersion(t *testing.T) {
 
 			for encodedVer, tests := range validTests {
 				for _, rawVersion := range tests {
-					ver, err := ParseVersion(rawVersion)
+					ver, err := semver.ParseVersion(rawVersion)
 					assert.Nil(t, err, rawVersion)
 					assert.Equal(t, encodedVer, ver.String())
 				}
@@ -192,7 +193,7 @@ func TestParseVersion(t *testing.T) {
 		})
 
 		t.Run("majorV.minorV.patchV.numericPrVersion", func(t *testing.T) {
-			preReleaseError := semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{})
+			preReleaseError := semver.ErrInvalidPreReleaseVersion
 			invalidTests := InvalidVersionInputs{
 				{
 					"numericPrVersion must be a four-digit integer",
@@ -238,8 +239,8 @@ func TestParseVersion(t *testing.T) {
 
 			for _, data := range invalidTests {
 				for _, rawVersion := range data.input {
-					_, err := ParseVersion(rawVersion)
-					assert.IsType(t, data.errorType, err, data.message, rawVersion)
+					_, err := semver.ParseVersion(rawVersion)
+					assert.True(t, errors.Is(err, data.errorType), data.message, rawVersion)
 				}
 			}
 
@@ -264,7 +265,7 @@ func TestParseVersion(t *testing.T) {
 
 			for encodedVer, tests := range validTests {
 				for _, rawVersion := range tests {
-					ver, err := ParseVersion(rawVersion)
+					ver, err := semver.ParseVersion(rawVersion)
 					assert.Nil(t, err, rawVersion)
 					assert.Equal(t, encodedVer, ver.String())
 				}
@@ -274,8 +275,8 @@ func TestParseVersion(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	newVersionConfig := func() CtorConfig {
-		return CtorConfig{
+	newVersionConfig := func() semver.CtorConfig {
+		return semver.CtorConfig{
 			MajorV:    1,
 			MinorV:    2,
 			PatchV:    3,
@@ -286,7 +287,7 @@ func TestNew(t *testing.T) {
 	}
 
 	t.Run("0.0.0 is not meaningless", func(t *testing.T) {
-		tErr := semverErrors.NewInvalidRawVersionFormatError(semverErrors.InvalidRawVersionFormatErrorConfig{})
+		tErr := semver.ErrInvalidVersionFormat
 
 		verConfig := newVersionConfig()
 
@@ -294,53 +295,53 @@ func TestNew(t *testing.T) {
 		verConfig.MinorV = 0
 		verConfig.PatchV = 0
 
-		_, err := New(verConfig)
-		assert.IsType(t, tErr, err, verConfig.ToRawVersion())
+		_, err := semver.New(verConfig)
+		assert.True(t, errors.Is(err, tErr), verConfig.ToRawVersion())
 	})
 
 	t.Run("prStage in:1,2,3,4", func(t *testing.T) {
-		tErr := semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{})
+		tErr := semver.ErrInvalidPreReleaseVersion
 
 		verConfig := newVersionConfig()
 
 		for _, v := range []uint8{0, 5, 6, 7} {
 			verConfig.PRStage = v
 
-			_, err := New(verConfig)
-			assert.IsType(t, tErr, err, verConfig.ToRawVersion())
+			_, err := semver.New(verConfig)
+			assert.True(t, errors.Is(err, tErr), verConfig.ToRawVersion())
 		}
 	})
 
 	t.Run("prVersion in:[1,99]", func(t *testing.T) {
-		tErr := semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{})
+		tErr := semver.ErrInvalidPreReleaseVersion
 
 		verConfig := newVersionConfig()
 
 		for _, v := range []uint8{0, 100, 101} {
 			verConfig.PRStage = v
 
-			_, err := New(verConfig)
-			assert.IsType(t, tErr, err, verConfig.ToRawVersion())
+			_, err := semver.New(verConfig)
+			assert.True(t, errors.Is(err, tErr), verConfig.ToRawVersion())
 		}
 	})
 
 	t.Run("prBuild in:[1,9]", func(t *testing.T) {
-		tErr := semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{})
+		tErr := semver.ErrInvalidPreReleaseVersion
 
 		verConfig := newVersionConfig()
 
 		for _, v := range []uint8{0, 10, 11} {
 			verConfig.PRStage = v
 
-			_, err := New(verConfig)
-			assert.IsType(t, tErr, err, verConfig.ToRawVersion())
+			_, err := semver.New(verConfig)
+			assert.True(t, errors.Is(err, tErr), verConfig.ToRawVersion())
 		}
 	})
 }
 
 func TestCompare(t *testing.T) {
 	rawSemVer := "4.3.0-rc.1+2"
-	semVer, _ := ParseVersion(rawSemVer)
+	semVer, _ := semver.ParseVersion(rawSemVer)
 
 	tests := []struct {
 		in                       interface{}
@@ -349,63 +350,63 @@ func TestCompare(t *testing.T) {
 	}{
 		{
 			"invalid_version",
-			CompareLargeFlag,
-			CompareLargeFlag,
+			semver.CompareLargeFlag,
+			semver.CompareLargeFlag,
 		},
 		{
 			"4.2.0-beta.10",
-			CompareLargeFlag,
-			CompareLargeFlag,
+			semver.CompareLargeFlag,
+			semver.CompareLargeFlag,
 		},
 		{
 			"4.2.0-rc.3",
-			CompareLargeFlag,
-			CompareLargeFlag,
+			semver.CompareLargeFlag,
+			semver.CompareLargeFlag,
 		},
 		{
 			"4.2.0-release.1",
-			CompareLessFlag,
-			CompareLargeFlag,
+			semver.CompareLessFlag,
+			semver.CompareLargeFlag,
 		},
 		{
 			"4.3.0-rc.1+1",
-			CompareLargeFlag,
-			CompareEqualFlag,
+			semver.CompareLargeFlag,
+			semver.CompareEqualFlag,
 		},
 		{
 			"4.3.0-rc.1+2",
-			CompareEqualFlag,
-			CompareEqualFlag,
+			semver.CompareEqualFlag,
+			semver.CompareEqualFlag,
 		},
 		{
 			"4.3.0-rc.1+3",
-			CompareLessFlag,
-			CompareEqualFlag,
+			semver.CompareLessFlag,
+			semver.CompareEqualFlag,
 		},
 		{
 			"4.3.0-rc.2",
-			CompareLessFlag,
-			CompareEqualFlag,
+			semver.CompareLessFlag,
+			semver.CompareEqualFlag,
 		},
 		{
 			"4.3.1-beta.10",
-			CompareLargeFlag,
-			CompareLessFlag,
+			semver.CompareLargeFlag,
+			semver.CompareLessFlag,
 		},
 		{
 			"4.3.1-rc.1",
-			CompareLessFlag,
-			CompareLessFlag,
+			semver.CompareLessFlag,
+			semver.CompareLessFlag,
 		},
 		{
 			"100.1000.10000-alpha.1",
-			CompareLargeFlag,
-			CompareLessFlag,
+			semver.CompareLargeFlag,
+			semver.CompareLessFlag,
 		},
 		{
 			"100.1000.10000-rc.1",
-			CompareLessFlag,
-			CompareLessFlag,
+			semver.CompareLessFlag,
+			semver.CompareLessFlag,
 		},
 	}
 

@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"github.com/funnyecho/code-push/daemon/code-push/domain"
+	"github.com/funnyecho/code-push/daemon/code-push"
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 	"time"
@@ -9,7 +9,7 @@ import (
 
 //go:generate protoc --gogofaster_out=. internal.proto
 
-func MarshalBranch(b *domain.Branch) (bytes []byte, err error) {
+func MarshalBranch(b *code_push.Branch) (bytes []byte, err error) {
 	bytes, err = proto.Marshal(&Branch{
 		ID:         b.ID,
 		Name:       b.Name,
@@ -25,7 +25,7 @@ func MarshalBranch(b *domain.Branch) (bytes []byte, err error) {
 	return
 }
 
-func UnmarshalBranch(data []byte, b *domain.Branch) error {
+func UnmarshalBranch(data []byte, b *code_push.Branch) error {
 	var pb Branch
 	if err := proto.Unmarshal(data, &pb); err != nil {
 		return errors.Wrap(err, "protobuf unmarshal failed")
@@ -40,7 +40,7 @@ func UnmarshalBranch(data []byte, b *domain.Branch) error {
 	return nil
 }
 
-func MarshalEnv(e *domain.Env) (bytes []byte, err error) {
+func MarshalEnv(e *code_push.Env) (bytes []byte, err error) {
 	bytes, err = proto.Marshal(&Env{
 		BranchId:   e.BranchId,
 		ID:         e.ID,
@@ -56,7 +56,7 @@ func MarshalEnv(e *domain.Env) (bytes []byte, err error) {
 	return
 }
 
-func UnmarshalEnv(data []byte, e *domain.Env) error {
+func UnmarshalEnv(data []byte, e *code_push.Env) error {
 	var pb Env
 	if err := proto.Unmarshal(data, &pb); err != nil {
 		return errors.Wrap(err, "protobuf unmarshal failed")
@@ -71,7 +71,7 @@ func UnmarshalEnv(data []byte, e *domain.Env) error {
 	return nil
 }
 
-func MarshalVersion(v *domain.Version) (bytes []byte, err error) {
+func MarshalVersion(v *code_push.Version) (bytes []byte, err error) {
 	bytes, err = proto.Marshal(&Version{
 		EnvId:            v.EnvId,
 		AppVersion:       v.AppVersion,
@@ -89,7 +89,7 @@ func MarshalVersion(v *domain.Version) (bytes []byte, err error) {
 	return
 }
 
-func UnmarshalVersion(data []byte, v *domain.Version) error {
+func UnmarshalVersion(data []byte, v *code_push.Version) error {
 	var pb Version
 	if err := proto.Unmarshal(data, &pb); err != nil {
 		return errors.Wrap(err, "protobuf unmarshal failed")

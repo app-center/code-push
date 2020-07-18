@@ -1,54 +1,30 @@
 package domain
 
-import "time"
+import "github.com/funnyecho/code-push/daemon/code-push"
 
-type Branch struct {
-	ID         string
-	Name       string
-	AuthHost   string
-	EncToken   string
-	CreateTime time.Time
+type Service struct {
+	BranchService
+	EnvService
+	VersionService
 }
 
-type Env struct {
-	BranchId   string
-	ID         string
-	Name       string
-	EncToken   string
-	CreateTime time.Time
+type BranchService interface {
+	Branch(branchId []byte) (*code_push.Branch, error)
+	CreateBranch(branch *code_push.Branch) error
+	DeleteBranch(branchId []byte) error
+
+	IsBranchAvailable(branchId []byte) bool
 }
 
-type Version struct {
-	EnvId            string
-	AppVersion       string
-	CompatAppVersion string
-	MustUpdate       bool
-	Changelog        string
-	PackageFileKey   string
-	CreateTime       time.Time
+type EnvService interface {
+	Env(envId []byte) (*code_push.Env, error)
+	CreateEnv(env *code_push.Env) error
+	DeleteEnv(envId []byte) error
+	IsEnvAvailable(envId []byte) bool
 }
 
-type BranchList = []*Branch
-type EnvList = []*Env
-type VersionList = []*Version
-
-type IBranchService interface {
-	Branch(branchId string) (*Branch, error)
-	CreateBranch(branch *Branch) error
-	DeleteBranch(branchId string) error
-
-	IsBranchAvailable(branchId string) bool
-}
-
-type IEnvService interface {
-	Env(envId string) (*Env, error)
-	CreateEnv(env *Env) error
-	DeleteEnv(envId string) error
-	IsEnvAvailable(envId string) bool
-}
-
-type IVersionService interface {
-	Version(envId, appVersion string) (*Version, error)
-	VersionsWithEnvId(envId string) (VersionList, error)
-	CreateVersion(version *Version) error
+type VersionService interface {
+	Version(envId, appVersion []byte) (*code_push.Version, error)
+	VersionsWithEnvId(envId []byte) (code_push.VersionList, error)
+	CreateVersion(version *code_push.Version) error
 }

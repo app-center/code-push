@@ -31,26 +31,26 @@ message VersionListResponse {
 }
 
 message VersionReleaseRequest {
-  string EnvId = 1;
-  string AppVersion = 2;
-  string CompatAppVersion = 3;
-  string Changelog = 4;
-  string PackageFileKey = 5;
+  bytes EnvId = 1;
+  bytes AppVersion = 2;
+  bytes CompatAppVersion = 3;
+  bytes Changelog = 4;
+  bytes PackageFileKey = 5;
   bool MustUpdate = 6;
 }
 
 message GetVersionRequest {
-  string EnvId = 1;
-  string AppVersion = 2;
+  bytes EnvId = 1;
+  bytes AppVersion = 2;
 }
 
 message ListVersionsRequest {
-  string EnvId = 1;
+  bytes EnvId = 1;
 }
 
 message VersionStrictCompatQueryRequest {
-  string EnvId = 1;
-  string AppVersion = 2;
+  bytes EnvId = 1;
+  bytes AppVersion = 2;
 }
 
 message VersionStrictCompatQueryResponse {
@@ -59,8 +59,8 @@ message VersionStrictCompatQueryResponse {
 }
 
 message VersionCompatQueryResult {
-  string AppVersion = 1;
-  string LatestAppVersion = 2;
-  string CanUpdateAppVersion = 3;
+  bytes AppVersion = 1;
+  bytes LatestAppVersion = 2;
+  bytes CanUpdateAppVersion = 3;
   bool MustUpdate = 4;
 }

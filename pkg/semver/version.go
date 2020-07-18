@@ -3,7 +3,7 @@ package semver
 import (
 	"fmt"
 	"github.com/funnyecho/code-push/pkg/safemath"
-	semverErrors "github.com/funnyecho/code-push/pkg/semver/errors"
+	"github.com/pkg/errors"
 	"strconv"
 	"strings"
 )
@@ -237,7 +237,7 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr error) {
 	parts := strings.SplitN(rawVer, ".", 3)
 
 	if len(parts) < 3 {
-		return nil, semverErrors.NewInvalidRawVersionFormatError(semverErrors.InvalidRawVersionFormatErrorConfig{RawVersion: rawVer})
+		return nil, errors.Wrapf(ErrInvalidVersionFormat, "version: %s", rawVer)
 	}
 
 	rawMajorV = parts[0]
@@ -248,22 +248,14 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr error) {
 
 	v, err = strconv.ParseUint(rawMajorV, 10, 64)
 	if err != nil {
-		return nil, semverErrors.NewInvalidMajorVersionError(semverErrors.InvalidMajorVersionErrorConfig{
-			Err:          err,
-			RawVersion:   rawVer,
-			MajorVersion: rawMajorV,
-		})
+		return nil, errors.Wrapf(ErrInvalidMajorVersion, "version: %s, majorVer: %s", rawVer, rawMajorV)
 	} else {
 		majorV = uint(v)
 	}
 
 	v, err = strconv.ParseUint(rawMinorV, 10, 64)
 	if err != nil {
-		return nil, semverErrors.NewInvalidMinorVersionError(semverErrors.InvalidMinorVersionErrorConfig{
-			Err:          err,
-			RawVersion:   rawVer,
-			MinorVersion: rawMinorV,
-		})
+		return nil, errors.Wrapf(ErrInvalidMinorVersion, "version: %s, minorVer: %s", rawVer, rawMinorV)
 	} else {
 		minorV = uint(v)
 	}
@@ -280,11 +272,7 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr error) {
 
 	v, err = strconv.ParseUint(rawPatchV, 10, 64)
 	if err != nil {
-		return nil, semverErrors.NewInvalidPatchVersionError(semverErrors.InvalidPatchVersionErrorConfig{
-			Err:          err,
-			RawVersion:   rawVer,
-			PatchVersion: rawPatchV,
-		})
+		return nil, errors.Wrapf(ErrInvalidPatchVersion, "version:%s, patchVer:%s", rawVer, rawPatchV)
 	} else {
 		patchV = uint(v)
 	}
@@ -295,11 +283,7 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr error) {
 			numericRawPR := rawPR[1:]
 			v, err = strconv.ParseUint(numericRawPR, 10, 32)
 			if err != nil {
-				return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
-					Err:        err,
-					RawVersion: rawVer,
-					RawPR:      rawPR,
-				})
+				return nil, errors.Wrapf(ErrInvalidPreReleaseVersion, "version:%s, preReleaseVer:%s", rawVer, rawPR)
 			}
 
 			prStage = uint8(v / 1000)
@@ -315,11 +299,7 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr error) {
 			versionBound := strings.Index(strRawPR, ".")
 
 			if versionBound <= 0 || versionBound == len(strRawPR)-1 {
-				return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
-					Err:        err,
-					RawVersion: rawVer,
-					RawPR:      rawPR,
-				})
+				return nil, errors.Wrapf(ErrInvalidPreReleaseVersion, "version:%s, preReleaseVer:%s", rawVer, rawPR)
 			}
 
 			rawPRStage := strRawPR[0:versionBound]
@@ -334,11 +314,7 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr error) {
 			case "release":
 				prStage = PRStageRelease
 			default:
-				return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
-					RawVersion: rawVer,
-					RawPR:      strRawPR,
-					PRStage:    rawPRStage,
-				})
+				return nil, errors.Wrapf(ErrInvalidPreReleaseVersion, "version:%s, preReleaseVer:%s, prStage:%d", rawVer, strRawPR, prStage)
 			}
 
 			rawPRLeft := strRawPR[versionBound+1:]
@@ -352,11 +328,7 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr error) {
 
 				v, err = strconv.ParseUint(rawPRBuild, 10, 32)
 				if err != nil {
-					return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
-						Err:        err,
-						RawVersion: rawVer,
-						PRVersion:  rawPRVersion,
-					})
+					return nil, errors.Wrapf(ErrInvalidPreReleaseVersion, "version:%s, preReleaseVer:%s", rawVer, rawPRVersion)
 				} else {
 					prBuild = uint8(v)
 				}
@@ -368,19 +340,12 @@ func ParseVersion(rawVer string) (semVer *SemVer, parseErr error) {
 
 			v, err = strconv.ParseUint(rawPRVersion, 10, 32)
 			if err != nil {
-				return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
-					Err:        err,
-					RawVersion: rawVer,
-					PRVersion:  rawPRVersion,
-				})
+				return nil, errors.Wrapf(ErrInvalidPreReleaseVersion, "version:%s, preReleaseVer:%s", rawVer, rawPRVersion)
 			} else {
 				prVersion = uint8(v)
 			}
 		default:
-			return nil, semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
-				RawVersion: rawVer,
-				RawPR:      rawPR,
-			})
+			return nil, errors.Wrapf(ErrInvalidPreReleaseVersion, "version:%s, preReleaseVer:%s", rawVer, rawPR)
 		}
 	} else {
 		prStage = PRStageRelease
@@ -425,37 +390,17 @@ func New(config CtorConfig) (semVer *SemVer, err error) {
 
 	switch true {
 	case config.MajorV < 0:
-		err = semverErrors.NewInvalidMajorVersionError(semverErrors.InvalidMajorVersionErrorConfig{
-			Err:          nil,
-			RawVersion:   rawVersion,
-			MajorVersion: config.MajorV,
-		})
+		err = errors.Wrapf(ErrInvalidMajorVersion, "version: %s, majorVer: %d", rawVersion, config.MajorV)
 	case config.MinorV < 0:
-		err = semverErrors.NewInvalidMinorVersionError(semverErrors.InvalidMinorVersionErrorConfig{
-			Err:          nil,
-			RawVersion:   rawVersion,
-			MinorVersion: config.MinorV,
-		})
+		err = errors.Wrapf(ErrInvalidMinorVersion, "version: %s, minorVer: %d", rawVersion, config.MinorV)
 	case config.PatchV < 0:
-		err = semverErrors.NewInvalidPatchVersionError(semverErrors.InvalidPatchVersionErrorConfig{
-			Err:          nil,
-			RawVersion:   rawVersion,
-			PatchVersion: config.PatchV,
-		})
+		err = errors.Wrapf(ErrInvalidPatchVersion, "version: %s, patchVer: %d", rawVersion, config.PatchV)
 	case config.MajorV == 0 && config.MinorV == 0 && config.PatchV == 0:
-		err = semverErrors.NewInvalidRawVersionFormatError(semverErrors.InvalidRawVersionFormatErrorConfig{
-			RawVersion: rawVersion,
-		})
+		err = errors.Wrapf(ErrInvalidVersionFormat, "version: %s", rawVersion)
 	case (config.PRStage < PRStageAlpha || config.PRStage > PRStageRelease) ||
 		(config.PRVersion < 1 || config.PRVersion > 99) ||
 		(config.PRBuild < 1 || config.PRBuild > 9):
-		err = semverErrors.NewInvalidPreReleaseVersionError(semverErrors.InvalidPreReleaseVersionErrorConfig{
-			Err:        nil,
-			RawVersion: rawVersion,
-			PRStage:    config.PRStage,
-			PRVersion:  config.PRVersion,
-			PRBuild:    config.PRBuild,
-		})
+		err = errors.Wrapf(ErrInvalidPreReleaseVersion, "version:%s, prStage:%d, prVersion:%d, prBuild:%d", rawVersion, config.PRStage, config.PRVersion, config.PRBuild)
 	default:
 		semVer = &SemVer{
 			majorV:    config.MajorV,

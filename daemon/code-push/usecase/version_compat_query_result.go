@@ -2,36 +2,6 @@ package usecase
 
 import "github.com/funnyecho/code-push/pkg/semver"
 
-type IVersionCompatQueryResult interface {
-	AppVersion() string
-	LatestAppVersion() string
-	CanUpdateAppVersion() string
-	MustUpdate() bool
-}
-
-type versionCompatQueryResult struct {
-	appVersion          string
-	latestAppVersion    string
-	canUpdateAppVersion string
-	mustUpdate          bool
-}
-
-func (v *versionCompatQueryResult) AppVersion() string {
-	return v.appVersion
-}
-
-func (v *versionCompatQueryResult) LatestAppVersion() string {
-	return v.latestAppVersion
-}
-
-func (v *versionCompatQueryResult) CanUpdateAppVersion() string {
-	return v.canUpdateAppVersion
-}
-
-func (v *versionCompatQueryResult) MustUpdate() bool {
-	return v.mustUpdate
-}
-
 type VersionCompatQueryResultConfig struct {
 	AppVersion          *semver.SemVer
 	LatestAppVersion    *semver.SemVer
@@ -39,19 +9,19 @@ type VersionCompatQueryResultConfig struct {
 	MustUpdate          bool
 }
 
-func NewVersionCompatQueryResult(config VersionCompatQueryResultConfig) IVersionCompatQueryResult {
-	var appVersion, latestAppVersion, canUpdateAppVersion string
+func NewVersionCompatQueryResult(config VersionCompatQueryResultConfig) *versionCompatQueryResult {
+	var appVersion, latestAppVersion, canUpdateAppVersion []byte
 
 	if config.AppVersion != nil {
-		appVersion = config.AppVersion.String()
+		appVersion = []byte(config.AppVersion.String())
 	}
 
 	if config.LatestAppVersion != nil {
-		latestAppVersion = config.LatestAppVersion.String()
+		latestAppVersion = []byte(config.LatestAppVersion.String())
 	}
 
 	if config.CanUpdateAppVersion != nil {
-		canUpdateAppVersion = config.CanUpdateAppVersion.String()
+		canUpdateAppVersion = []byte(config.CanUpdateAppVersion.String())
 	}
 
 	return &versionCompatQueryResult{
@@ -60,4 +30,27 @@ func NewVersionCompatQueryResult(config VersionCompatQueryResultConfig) IVersion
 		canUpdateAppVersion: canUpdateAppVersion,
 		mustUpdate:          config.MustUpdate,
 	}
+}
+
+type versionCompatQueryResult struct {
+	appVersion          []byte
+	latestAppVersion    []byte
+	canUpdateAppVersion []byte
+	mustUpdate          bool
+}
+
+func (v *versionCompatQueryResult) AppVersion() []byte {
+	return v.appVersion
+}
+
+func (v *versionCompatQueryResult) LatestAppVersion() []byte {
+	return v.latestAppVersion
+}
+
+func (v *versionCompatQueryResult) CanUpdateAppVersion() []byte {
+	return v.canUpdateAppVersion
+}
+
+func (v *versionCompatQueryResult) MustUpdate() bool {
+	return v.mustUpdate
 }

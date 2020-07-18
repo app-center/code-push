@@ -8,26 +8,26 @@ import (
 	"time"
 )
 
-var _ domain.IVersionService = &VersionService{}
+var _ domain.VersionService = &VersionService{}
 
 type VersionService struct {
 	client *Client
 }
 
-func (s *VersionService) Version(envId, appVersion string) (*domain.Version, error) {
+func (s *VersionService) Version(envId, appVersion []byte) (*code_push.Version, error) {
 	tx, err := s.client.db.Begin(false)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to begin tx")
 	}
 	defer tx.Rollback()
 
-	bucket := tx.Bucket(bucketEnvVersions).Bucket([]byte(envId))
+	bucket := tx.Bucket(bucketEnvVersions).Bucket(envId)
 	if bucket == nil {
 		return nil, nil
 	}
 
-	var ver domain.Version
-	if v := bucket.Get([]byte(appVersion)); v == nil {
+	var ver code_push.Version
+	if v := bucket.Get(appVersion); v == nil {
 		return nil, nil
 	} else if err := internal.UnmarshalVersion(v, &ver); err != nil {
 		return nil, err
@@ -36,23 +36,23 @@ func (s *VersionService) Version(envId, appVersion string) (*domain.Version, err
 	return &ver, nil
 }
 
-func (s *VersionService) VersionsWithEnvId(envId string) (domain.VersionList, error) {
+func (s *VersionService) VersionsWithEnvId(envId []byte) (code_push.VersionList, error) {
 	tx, err := s.client.db.Begin(false)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to begin tx")
 	}
 	defer tx.Rollback()
 
-	bucket := tx.Bucket(bucketEnvVersions).Bucket([]byte(envId))
+	bucket := tx.Bucket(bucketEnvVersions).Bucket(envId)
 	if bucket == nil {
 		return nil, nil
 	}
 
-	var list domain.VersionList
+	var list code_push.VersionList
 
 	c := bucket.Cursor()
 	for k, v := c.First(); k != nil; k, v = c.Next() {
-		var ver domain.Version
+		var ver code_push.Version
 		if err := internal.UnmarshalVersion(v, &ver); err != nil {
 			return nil, err
 		}
@@ -63,13 +63,13 @@ func (s *VersionService) VersionsWithEnvId(envId string) (domain.VersionList, er
 	return list, nil
 }
 
-func (s *VersionService) CreateVersion(version *domain.Version) error {
+func (s *VersionService) CreateVersion(version *code_push.Version) error {
 	if len(version.EnvId) == 0 ||
 		len(version.AppVersion) == 0 {
 		return code_push.ErrParamsInvalid
 	}
 
-	if !s.client.EnvService().IsEnvAvailable(version.EnvId) {
+	if !s.client.EnvService().IsEnvAvailable([]byte(version.EnvId)) {
 		return code_push.ErrEnvNotFound
 	}
 

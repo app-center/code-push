@@ -9,10 +9,10 @@ service File {
 }
 
 message GetSourceRequest {
-  string Key = 1;
+  bytes Key = 1;
 }
 
 message InsertSourceRequest {
-  string Value = 1;
-  string Desc = 2;
+  bytes Value = 1;
+  bytes Desc = 2;
 }

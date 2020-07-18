@@ -26,8 +26,8 @@ var (
 var (
 	cmd = &cobra.Command{
 		Use:     "Filer",
-		Short:   "Filer daemon of Code-Push service",
-		Long:    fmt.Sprintf("Filer daemon of Code-Push service. Build at %s", BuildTime),
+		Short:   "Daemon of Code-Push service",
+		Long:    fmt.Sprintf("Daemon of Code-Push service. Build at %s", BuildTime),
 		Version: Version,
 		Run:     onCmdAction,
 	}
@@ -67,7 +67,7 @@ func onCmdAction(cmd *cobra.Command, args []string) {
 		AliOssAdapter: aliOssAdapter,
 	})
 
-	grpcServer := &interfacegrpc.FilerServer{Endpoints: endpoints}
+	grpcServer := interfacegrpc.NewFilerServer(endpoints)
 
 	{
 		grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
