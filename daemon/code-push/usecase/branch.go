@@ -7,13 +7,25 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func (c *UseCase) CreateBranch(branchName, branchAuthHost []byte) (*code_push.Branch, error) {
-	if branchName == nil || branchAuthHost == nil {
+func (c *useCase) CreateBranch(branchName []byte) (*code_push.Branch, error) {
+	if branchName == nil {
 		return nil, errors.Wrapf(
 			code_push.ErrParamsInvalid,
-			"branchName: %s, branchAuthHost: %s",
+			"branchName: %s",
 			branchName,
-			branchAuthHost,
+		)
+	}
+
+	if nameExisted, nameExistedErr := c.domain.IsBranchNameExisted(branchName); nameExistedErr != nil {
+		return nil, errors.Wrapf(
+			nameExistedErr,
+			"failed to check branch name was existed",
+		)
+	} else if nameExisted {
+		return nil, errors.Wrapf(
+			code_push.ErrBranchNameExisted,
+			"branchName: %s",
+			branchName,
 		)
 	}
 
@@ -28,7 +40,6 @@ func (c *UseCase) CreateBranch(branchName, branchAuthHost []byte) (*code_push.Br
 	branchToCreate := &code_push.Branch{
 		ID:       generateBranchId(string(branchName)),
 		Name:     string(branchName),
-		AuthHost: string(branchAuthHost),
 		EncToken: encToken,
 	}
 
@@ -40,7 +51,7 @@ func (c *UseCase) CreateBranch(branchName, branchAuthHost []byte) (*code_push.Br
 	return branchToCreate, nil
 }
 
-func (c *UseCase) GetBranch(branchId []byte) (*code_push.Branch, error) {
+func (c *useCase) GetBranch(branchId []byte) (*code_push.Branch, error) {
 	if branchId == nil {
 		return nil, errors.Wrapf(code_push.ErrParamsInvalid, "branchId is empty")
 	}
@@ -50,13 +61,13 @@ func (c *UseCase) GetBranch(branchId []byte) (*code_push.Branch, error) {
 		return nil, errors.WithStack(fetchErr)
 	}
 	if branchEntity == nil {
-		return nil, errors.Wrapf(code_push.ErrBranchNotFound, "branchId: %v", branchId)
+		return nil, nil
 	}
 
 	return branchEntity, nil
 }
 
-func (c *UseCase) DeleteBranch(branchId []byte) error {
+func (c *useCase) DeleteBranch(branchId []byte) error {
 	if branchId == nil {
 		return errors.Wrapf(code_push.ErrParamsInvalid, "branchId is empty")
 	}
@@ -69,7 +80,7 @@ func (c *UseCase) DeleteBranch(branchId []byte) error {
 	return nil
 }
 
-func (c *UseCase) GetBranchEncToken(branchId []byte) ([]byte, error) {
+func (c *useCase) GetBranchEncToken(branchId []byte) ([]byte, error) {
 	if branchId == nil {
 		return nil, errors.Wrapf(code_push.ErrParamsInvalid, "branchId is empty")
 	}
@@ -77,6 +88,9 @@ func (c *UseCase) GetBranchEncToken(branchId []byte) ([]byte, error) {
 	branchEntity, fetchErr := c.domain.Branch(branchId)
 	if fetchErr != nil {
 		return nil, errors.WithStack(fetchErr)
+	}
+	if branchEntity == nil {
+		return nil, errors.Wrapf(code_push.ErrBranchNotFound, "branchId:%s", branchId)
 	}
 
 	return []byte(branchEntity.EncToken), nil

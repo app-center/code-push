@@ -4,9 +4,8 @@ package internal;
 message Branch {
   string ID = 1;
   string Name = 2;
-  string AuthHost = 3;
-  string EncToken = 4;
-  int64 CreateTime = 5;
+  string EncToken = 3;
+  int64 CreateTime = 4;
 }
 
 message Env {

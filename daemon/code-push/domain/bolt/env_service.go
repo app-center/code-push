@@ -5,6 +5,7 @@ import (
 	"github.com/funnyecho/code-push/daemon/code-push/domain"
 	"github.com/funnyecho/code-push/daemon/code-push/domain/bolt/internal"
 	"github.com/pkg/errors"
+	"go.etcd.io/bbolt"
 	"time"
 )
 
@@ -107,4 +108,32 @@ func (s *EnvService) IsEnvAvailable(envId []byte) bool {
 	}
 
 	return s.client.BranchService().IsBranchAvailable([]byte(env.BranchId))
+}
+
+func (s *EnvService) IsEnvNameExisted(branchId, envName []byte) (bool, error) {
+	tx, err := s.client.db.Begin(false)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to begin tx")
+	}
+	defer tx.Rollback()
+
+	existed := false
+	err = s.client.db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(bucketEnv)
+
+		c := b.Cursor()
+
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var env code_push.Env
+			if err := internal.UnmarshalEnv(v, &env); err != nil {
+				return err
+			} else if env.BranchId == string(branchId) && env.Name == string(envName) {
+				existed = true
+			}
+		}
+
+		return nil
+	})
+
+	return existed, err
 }

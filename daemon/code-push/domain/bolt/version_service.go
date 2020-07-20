@@ -106,3 +106,13 @@ func (s *VersionService) CreateVersion(version *code_push.Version) error {
 
 	return nil
 }
+
+func (s *VersionService) IsVersionAvailable(envId, appVersion []byte) (bool, error) {
+	version, err := s.Version(envId, appVersion)
+
+	if err != nil {
+		return false, err
+	}
+
+	return version != nil, nil
+}

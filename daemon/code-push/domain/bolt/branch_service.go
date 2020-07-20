@@ -5,6 +5,7 @@ import (
 	"github.com/funnyecho/code-push/daemon/code-push/domain"
 	"github.com/funnyecho/code-push/daemon/code-push/domain/bolt/internal"
 	"github.com/pkg/errors"
+	"go.etcd.io/bbolt"
 	"time"
 )
 
@@ -34,7 +35,6 @@ func (s *BranchService) Branch(branchId []byte) (*code_push.Branch, error) {
 func (s *BranchService) CreateBranch(branch *code_push.Branch) error {
 	if len(branch.ID) == 0 ||
 		len(branch.Name) == 0 ||
-		len(branch.AuthHost) == 0 ||
 		len(branch.EncToken) == 0 {
 		return code_push.ErrParamsInvalid
 	}
@@ -100,4 +100,32 @@ func (s *BranchService) IsBranchAvailable(branchId []byte) bool {
 	branch, err := s.Branch(branchId)
 
 	return err == nil && branch != nil
+}
+
+func (s *BranchService) IsBranchNameExisted(branchName []byte) (bool, error) {
+	tx, err := s.client.db.Begin(false)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to begin tx")
+	}
+	defer tx.Rollback()
+
+	existed := false
+	err = s.client.db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(bucketBranch)
+
+		c := b.Cursor()
+
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var branch code_push.Branch
+			if err := internal.UnmarshalBranch(v, &branch); err != nil {
+				return err
+			} else if branch.Name == string(branchName) {
+				existed = true
+			}
+		}
+
+		return nil
+	})
+
+	return existed, err
 }

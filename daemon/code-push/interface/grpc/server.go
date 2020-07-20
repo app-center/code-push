@@ -18,7 +18,7 @@ type codePushServer struct {
 }
 
 func (s *codePushServer) CreateBranch(ctx context.Context, request *pb.CreateBranchRequest) (*pb.CreateBranchResponse, error) {
-	res, err := s.endpoints.CreateBranch(request.GetBranchName(), request.GetBranchAuthHost())
+	res, err := s.endpoints.CreateBranch(request.GetBranchName())
 
 	return &pb.CreateBranchResponse{
 		Code: MarshalErrorCode(err),
@@ -73,14 +73,6 @@ func (s *codePushServer) DeleteEnv(ctx context.Context, request *pb.EnvIdRequest
 
 func (s *codePushServer) GetEnvEncToken(ctx context.Context, request *pb.EnvIdRequest) (*pb.StringResponse, error) {
 	res, err := s.endpoints.GetEnvEncToken(request.EnvId)
-	return &pb.StringResponse{
-		Code: MarshalErrorCode(err),
-		Data: res,
-	}, nil
-}
-
-func (s *codePushServer) GetEnvAuthHost(ctx context.Context, request *pb.EnvIdRequest) (*pb.StringResponse, error) {
-	res, err := s.endpoints.GetEnvAuthHost(request.EnvId)
 	return &pb.StringResponse{
 		Code: MarshalErrorCode(err),
 		Data: res,

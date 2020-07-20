@@ -4,15 +4,15 @@ import (
 	"github.com/funnyecho/code-push/pkg/cache"
 )
 
-func NewUseCase(config CtorConfig) *UseCase {
-	instance := &UseCase{adapters: adapters{domain: config.DomainAdapter}}
+func NewUseCase(config CtorConfig) UseCase {
+	instance := &useCase{adapters: adapters{domain: config.DomainAdapter}}
 
 	instance.initVersionUseCase()
 
 	return instance
 }
 
-type UseCase struct {
+type useCase struct {
 	adapters
 	envVersionCollectionCache *cache.Cache
 }

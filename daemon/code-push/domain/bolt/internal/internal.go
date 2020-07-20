@@ -13,7 +13,6 @@ func MarshalBranch(b *code_push.Branch) (bytes []byte, err error) {
 	bytes, err = proto.Marshal(&Branch{
 		ID:         b.ID,
 		Name:       b.Name,
-		AuthHost:   b.AuthHost,
 		EncToken:   b.EncToken,
 		CreateTime: b.CreateTime.UnixNano(),
 	})
@@ -33,7 +32,6 @@ func UnmarshalBranch(data []byte, b *code_push.Branch) error {
 
 	b.ID = pb.GetID()
 	b.Name = pb.GetName()
-	b.AuthHost = pb.GetAuthHost()
 	b.EncToken = pb.GetEncToken()
 	b.CreateTime = time.Unix(0, pb.GetCreateTime()).UTC()
 

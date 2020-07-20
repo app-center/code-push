@@ -5,7 +5,6 @@ import "time"
 type Branch struct {
 	ID         string
 	Name       string
-	AuthHost   string
 	EncToken   string
 	CreateTime time.Time
 }

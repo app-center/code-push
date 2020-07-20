@@ -2,8 +2,14 @@ package usecase
 
 import "github.com/funnyecho/code-push/daemon/code-push"
 
+type UseCase interface {
+	Branch
+	Env
+	Version
+}
+
 type Branch interface {
-	CreateBranch(branchName, branchAuthHost []byte) (*code_push.Branch, error)
+	CreateBranch(branchName []byte) (*code_push.Branch, error)
 	GetBranch(branchId []byte) (*code_push.Branch, error)
 	DeleteBranch(branchId []byte) error
 	GetBranchEncToken(branchId []byte) ([]byte, error)
@@ -14,7 +20,6 @@ type Env interface {
 	GetEnv(envId []byte) (*code_push.Env, error)
 	DeleteEnv(envId []byte) error
 	GetEnvEncToken(envId []byte) ([]byte, error)
-	GetEnvAuthHost(envId []byte) ([]byte, error)
 }
 
 type Version interface {
@@ -45,13 +50,16 @@ type DomainAdapter interface {
 	CreateBranch(branch *code_push.Branch) error
 	DeleteBranch(branchId []byte) error
 	IsBranchAvailable(branchId []byte) bool
+	IsBranchNameExisted(branchName []byte) (bool, error)
 
 	Env(envId []byte) (*code_push.Env, error)
 	CreateEnv(env *code_push.Env) error
 	DeleteEnv(envId []byte) error
 	IsEnvAvailable(envId []byte) bool
+	IsEnvNameExisted(branchId, envName []byte) (bool, error)
 
 	Version(envId, appVersion []byte) (*code_push.Version, error)
 	VersionsWithEnvId(envId []byte) (code_push.VersionList, error)
 	CreateVersion(version *code_push.Version) error
+	IsVersionAvailable(envId, appVersion []byte) (bool, error)
 }

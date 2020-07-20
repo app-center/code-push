@@ -46,9 +46,13 @@ func (e *EnvVersionCollection) ReleaseVersion(params VersionReleaseParams) error
 	mustUpdate := params.MustUpdate()
 
 	if rawAppVersion == nil ||
-		rawCompatAppVersion == nil ||
 		packageFileKey == nil {
 		return errors.Wrapf(code_push.ErrParamsInvalid, "appVersion, compatAppVersion nor packageFileKey can't be empty")
+	}
+
+	if rawCompatAppVersion == nil {
+		rawCompatAppVersion = make([]byte, len(rawAppVersion))
+		copy(rawCompatAppVersion, rawAppVersion)
 	}
 
 	appVersion, appVersionErr := semver.ParseVersion(string(rawAppVersion))
@@ -59,6 +63,16 @@ func (e *EnvVersionCollection) ReleaseVersion(params VersionReleaseParams) error
 	compatAppVersion, compatVersionErr := semver.ParseVersion(string(rawCompatAppVersion))
 	if compatVersionErr != nil {
 		return errors.Wrapf(code_push.ErrParamsInvalid, "parse compatAppVersion failed")
+	}
+
+	if compatAppVersion.StageSafetyLooseCompare(appVersion) == semver.CompareLargeFlag {
+		return errors.Wrapf(code_push.ErrParamsInvalid, "compatAppVersion shall not larger than appVersion")
+	}
+
+	if versionAvailable, versionAvailableErr := e.domain.IsVersionAvailable([]byte(e.envId), []byte(appVersion.String())); versionAvailableErr != nil {
+		return errors.Wrapf(versionAvailableErr, "failed to check app version is available")
+	} else if versionAvailable {
+		return errors.Wrapf(code_push.ErrVersionExisted, "envId:%s, appVersion:%s", e.envId, appVersion.String())
 	}
 
 	newVersion := &code_push.Version{
@@ -80,22 +94,13 @@ func (e *EnvVersionCollection) ReleaseVersion(params VersionReleaseParams) error
 	return nil
 }
 
-func (e *EnvVersionCollection) GetVersion(rawAppVersion []byte) (*code_push.Version, error) {
-	if rawAppVersion == nil {
-		return nil, errors.Wrapf(code_push.ErrParamsInvalid, "rawAppVersion required")
-	}
-
-	appVersion, appVersionErr := semver.ParseVersion(string(rawAppVersion))
-	if appVersionErr != nil {
-		return nil, errors.Wrapf(appVersionErr, "failed to parse version, rawAppVersion: %s", rawAppVersion)
-	}
-
+func (e *EnvVersionCollection) GetVersion(appVersion *semver.SemVer) (*code_push.Version, error) {
 	version, versionErr := e.domain.Version([]byte(e.envId), []byte(appVersion.String()))
 	if versionErr != nil {
 		return nil, errors.WithStack(versionErr)
 	}
 	if version == nil {
-		return nil, errors.Wrapf(code_push.ErrVersionNotFound, "envId: %s, version: %s", e.envId, appVersion.String())
+		return nil, nil
 	}
 
 	return version, nil
@@ -107,17 +112,18 @@ func (e *EnvVersionCollection) ListVersions() (code_push.VersionList, error) {
 		return nil, errors.Wrapf(versionListErr, "fetch version list failed, envId: %s", e.envId)
 	}
 
+	if versionList == nil {
+		versionList = make(code_push.VersionList, 0)
+	}
+
 	return versionList, nil
 }
 
-func (e *EnvVersionCollection) VersionStrictCompatQuery(rawAppVersion []byte) (VersionCompatQueryResult, error) {
-	if rawAppVersion == nil {
-		return nil, errors.Wrapf(code_push.ErrParamsInvalid, "rawAppVersion required")
-	}
-
-	appVersion, appVersionErr := semver.ParseVersion(string(rawAppVersion))
-	if appVersionErr != nil {
-		return nil, errors.Wrapf(code_push.ErrParamsInvalid, "invalid version: %s", rawAppVersion)
+func (e *EnvVersionCollection) VersionStrictCompatQuery(appVersion *semver.SemVer) (VersionCompatQueryResult, error) {
+	isAppVersionAvailable, appVersionAvailableErr := e.domain.IsVersionAvailable([]byte(e.envId), []byte(appVersion.String()))
+	var resultAppVersion *semver.SemVer
+	if appVersionAvailableErr == nil && isAppVersionAvailable {
+		resultAppVersion = appVersion
 	}
 
 	r := e.versionCompatTree.StrictCompat(newVersionCompatQueryAnchor(appVersion))
@@ -134,7 +140,7 @@ func (e *EnvVersionCollection) VersionStrictCompatQuery(rawAppVersion []byte) (V
 
 	if canUpdateAppVersionEntry != nil {
 		canUpdateAppVersion = canUpdateAppVersionEntry.Version()
-		canUpdateAppVersionModel, canUpdateAppVersionModelErr := e.GetVersion([]byte(canUpdateAppVersion.String()))
+		canUpdateAppVersionModel, canUpdateAppVersionModelErr := e.GetVersion(canUpdateAppVersion)
 		if canUpdateAppVersionModelErr != nil {
 			return nil, errors.Wrapf(canUpdateAppVersionModelErr, "failed to get canUpdateAppVersion: %s", canUpdateAppVersion.String())
 		}
@@ -143,7 +149,7 @@ func (e *EnvVersionCollection) VersionStrictCompatQuery(rawAppVersion []byte) (V
 	}
 
 	queryResult := NewVersionCompatQueryResult(VersionCompatQueryResultConfig{
-		AppVersion:          appVersion,
+		AppVersion:          resultAppVersion,
 		LatestAppVersion:    latestAppVersion,
 		CanUpdateAppVersion: canUpdateAppVersion,
 		MustUpdate:          mustUpdate,
