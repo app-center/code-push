@@ -6,6 +6,7 @@ require (
 	github.com/Workiva/go-datastructures v1.0.50 // indirect
 	github.com/aliyun/aliyun-oss-go-sdk v2.1.2+incompatible
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/gin-gonic/gin v1.6.3 // indirect
 	github.com/go-kit/kit v0.10.0 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
