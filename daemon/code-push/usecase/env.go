@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"github.com/funnyecho/code-push/daemon/code-push"
-	"github.com/funnyecho/code-push/daemon/code-push/domain"
 	"github.com/funnyecho/code-push/pkg/util"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
@@ -95,11 +94,6 @@ func (c *useCase) GetEnvEncToken(envId []byte) ([]byte, error) {
 	}
 
 	return []byte(envEntity.EncToken), nil
-}
-
-type EnvUseCaseConfig struct {
-	BranchService domain.BranchService
-	EnvService    domain.EnvService
 }
 
 func generateEnvEncToken() (string, error) {

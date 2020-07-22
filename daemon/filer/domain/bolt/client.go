@@ -57,12 +57,14 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func (c *Client) FileService() domain.FileService {
+func (c *Client) FileService() *FileService {
 	return &c.fileService
 }
 
-func (c *Client) DomainService() *domain.Service {
-	return &domain.Service{
+func (c *Client) DomainService() domain.Service {
+	return &struct {
+		*FileService
+	}{
 		FileService: c.FileService(),
 	}
 }

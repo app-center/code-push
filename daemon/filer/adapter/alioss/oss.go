@@ -3,13 +3,14 @@ package alioss
 import (
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/funnyecho/code-push/daemon/filer"
+	"github.com/funnyecho/code-push/daemon/filer/usecase"
 	"github.com/funnyecho/code-push/pkg/util"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 	"io"
 )
 
-func NewAliOssAdapter(endpoint, accessKeyId, accessKeySecret []byte) (*aliOss, error) {
+func NewAliOssAdapter(endpoint, accessKeyId, accessKeySecret []byte) (usecase.AliOssAdapter, error) {
 	if endpoint == nil || accessKeyId == nil || accessKeySecret == nil {
 		return nil, errors.Wrap(filer.ErrParamsInvalid, "endpoint, accessKeyId, accessKeySecret is required")
 	}

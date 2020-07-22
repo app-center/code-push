@@ -2,14 +2,11 @@ package bolt
 
 import (
 	"github.com/funnyecho/code-push/daemon/code-push"
-	"github.com/funnyecho/code-push/daemon/code-push/domain"
 	"github.com/funnyecho/code-push/daemon/code-push/domain/bolt/internal"
 	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
 	"time"
 )
-
-var _ domain.BranchService = &BranchService{}
 
 type BranchService struct {
 	client *Client

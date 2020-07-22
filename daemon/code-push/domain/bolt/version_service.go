@@ -2,13 +2,10 @@ package bolt
 
 import (
 	"github.com/funnyecho/code-push/daemon/code-push"
-	"github.com/funnyecho/code-push/daemon/code-push/domain"
 	"github.com/funnyecho/code-push/daemon/code-push/domain/bolt/internal"
 	"github.com/pkg/errors"
 	"time"
 )
-
-var _ domain.VersionService = &VersionService{}
 
 type VersionService struct {
 	client *Client

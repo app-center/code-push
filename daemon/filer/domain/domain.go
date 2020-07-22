@@ -1,13 +1,7 @@
 package domain
 
-import "github.com/funnyecho/code-push/daemon/filer"
+import (
+	"github.com/funnyecho/code-push/daemon/filer/usecase"
+)
 
-type Service struct {
-	FileService
-}
-
-type FileService interface {
-	File(fileKey filer.FileKey) (*filer.File, error)
-	InsertFile(file *filer.File) error
-	IsFileKeyExisted(fileKey filer.FileKey) bool
-}
+type Service usecase.DomainAdapter

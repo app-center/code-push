@@ -1,8 +1,7 @@
 package usecase
 
 import (
-	code_push "github.com/funnyecho/code-push/daemon/code-push"
-	"github.com/funnyecho/code-push/daemon/code-push/domain"
+	"github.com/funnyecho/code-push/daemon/code-push"
 	"github.com/funnyecho/code-push/pkg/cache"
 	"github.com/funnyecho/code-push/pkg/semver"
 	"github.com/pkg/errors"
@@ -116,9 +115,4 @@ func (c *useCase) getEnvVersionCollection(envId []byte) (*EnvVersionCollection, 
 	} else {
 		return nil, errors.Wrapf(code_push.ErrEnvNotFound, "can not find version collection, envId: %s", envId)
 	}
-}
-
-type VersionUseCaseConfig struct {
-	VersionService domain.VersionService
-	EnvService     domain.EnvService
 }
