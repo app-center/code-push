@@ -3,36 +3,26 @@ syntax = "proto3";
 package pb;
 import "common.proto";
 
-service IBranch {
-  rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse) {}
-  rpc GetBranch(GetBranchRequest) returns (GetBranchResponse) {}
-  rpc DeleteBranch(DeleteBranchRequest) returns (PlainResponse) {}
-  rpc GetBranchEncToken(GetBranchEncTokenRequest) returns (StringResponse) {}
+service Branch {
+  rpc CreateBranch(CreateBranchRequest) returns (BranchResponse);
+  rpc GetBranch(GetBranchRequest) returns (BranchResponse);
+  rpc DeleteBranch(DeleteBranchRequest) returns (PlainResponse);
+  rpc GetBranchEncToken(GetBranchEncTokenRequest) returns (StringResponse);
 }
 
-message Branch {
+message BranchResponse {
   string BranchId = 1;
   string BranchName = 2;
-  int64 CreateTime = 3;
+  string BranchEncToken = 3;
+  int64 CreateTime = 4;
 }
 
 message CreateBranchRequest {
   bytes BranchName = 1;
-  bytes BranchAuthHost = 2;
-}
-
-message CreateBranchResponse {
-  string code = 1;
-  Branch data = 2;
 }
 
 message GetBranchRequest {
   bytes BranchId = 1;
-}
-
-message GetBranchResponse {
-  string code = 1;
-  Branch data = 2;
 }
 
 message DeleteBranchRequest {

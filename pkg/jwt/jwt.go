@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-func NewJwt(fns ...func(*options)) *jwt {
-	jwtOptions := &options{
+func NewJwt(fns ...func(*Options)) *Jwt {
+	jwtOptions := &Options{
 		Secret:   "",
 		Issuer:   "",
 		Lifetime: 0,
@@ -17,20 +17,20 @@ func NewJwt(fns ...func(*options)) *jwt {
 		fn(jwtOptions)
 	}
 
-	return &jwt{options: jwtOptions}
+	return &Jwt{options: jwtOptions}
 }
 
-type options struct {
+type Options struct {
 	Secret   string
 	Issuer   string
 	Lifetime time.Duration
 }
 
-type jwt struct {
-	options *options
+type Jwt struct {
+	options *Options
 }
 
-func (j *jwt) SignToken(subject string) (token string, err error) {
+func (j *Jwt) SignToken(subject string) (token string, err error) {
 	expireTime := time.Now().Add(j.options.Lifetime)
 
 	claims := gojwt.StandardClaims{
@@ -45,7 +45,7 @@ func (j *jwt) SignToken(subject string) (token string, err error) {
 	return
 }
 
-func (j *jwt) VerifyToken(tokenString string) (*gojwt.StandardClaims, error) {
+func (j *Jwt) VerifyToken(tokenString string) (*gojwt.StandardClaims, error) {
 	claims := &gojwt.StandardClaims{}
 
 	token, err := gojwt.ParseWithClaims(

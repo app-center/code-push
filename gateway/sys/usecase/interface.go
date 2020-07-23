@@ -11,6 +11,8 @@ type UseCase interface {
 
 type Auth interface {
 	Auth(name, pwd []byte) error
+	SignToken() ([]byte, error)
+	VerifyToken(token []byte) error
 }
 
 type Branch interface {

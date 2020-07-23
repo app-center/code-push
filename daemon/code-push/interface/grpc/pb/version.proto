@@ -3,14 +3,14 @@ syntax = "proto3";
 package pb;
 import "common.proto";
 
-service IVersion {
+service Version {
   rpc ReleaseVersion(VersionReleaseRequest) returns (PlainResponse) {}
   rpc GetVersion(GetVersionRequest) returns (VersionResponse) {}
   rpc ListVersions(ListVersionsRequest) returns (VersionListResponse) {}
   rpc VersionStrictCompatQuery(VersionStrictCompatQueryRequest) returns (VersionStrictCompatQueryResponse) {}
 }
 
-message Version {
+message VersionResponse {
   string EnvId = 1;
   string AppVersion = 2;
   string CompatAppVersion = 3;
@@ -20,14 +20,8 @@ message Version {
   int64 CreateTime = 7;
 }
 
-message VersionResponse {
-  string code = 1;
-  Version data = 2;
-}
-
 message VersionListResponse {
-  string code = 1;
-  repeated Version data = 2;
+  repeated VersionResponse list = 1;
 }
 
 message VersionReleaseRequest {
@@ -54,11 +48,6 @@ message VersionStrictCompatQueryRequest {
 }
 
 message VersionStrictCompatQueryResponse {
-  string code = 1;
-  VersionCompatQueryResult data = 2;
-}
-
-message VersionCompatQueryResult {
   bytes AppVersion = 1;
   bytes LatestAppVersion = 2;
   bytes CanUpdateAppVersion = 3;

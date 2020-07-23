@@ -71,9 +71,9 @@ func onCmdAction(cmd *cobra.Command, args []string) {
 		// Create gRPC server
 		g.Add(func() error {
 			baseServer := grpc.NewServer()
-			pb.RegisterIBranchServer(baseServer, grpcServer)
-			pb.RegisterIEnvServer(baseServer, grpcServer)
-			pb.RegisterIVersionServer(baseServer, grpcServer)
+			pb.RegisterBranchServer(baseServer, grpcServer)
+			pb.RegisterEnvServer(baseServer, grpcServer)
+			pb.RegisterVersionServer(baseServer, grpcServer)
 			return baseServer.Serve(grpcListener)
 		}, func(err error) {
 			grpcListener.Close()

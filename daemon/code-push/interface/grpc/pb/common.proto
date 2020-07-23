@@ -3,10 +3,12 @@ syntax = "proto3";
 package pb;
 
 message PlainResponse {
-  string code = 1;
+}
+
+message BytesResponse {
+  bytes data = 1;
 }
 
 message StringResponse {
-  string code = 1;
-  bytes data = 2;
+  string data = 1;
 }

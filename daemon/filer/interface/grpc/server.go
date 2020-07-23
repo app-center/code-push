@@ -2,11 +2,8 @@ package grpc
 
 import (
 	"context"
-	"github.com/funnyecho/code-push/daemon/filer"
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
-	cpErrors "github.com/funnyecho/code-push/pkg/errors"
 	"github.com/funnyecho/code-push/pkg/grpcStreamer"
-	"github.com/pkg/errors"
 )
 
 func NewFilerServer(endpoints Endpoints) *filerServer {
@@ -26,40 +23,28 @@ func (f *filerServer) UploadToAliOss(stream pb.Upload_UploadToAliOssServer) erro
 		},
 	}))
 
-	return stream.SendAndClose(&pb.StringResponse{
-		Code: marshalErrorCode(err),
-		Data: fileKey,
-	})
+	if err != nil {
+		return err
+	}
+
+	return stream.SendAndClose(marshalBytesToStringResponse(fileKey))
 }
 
 func (f *filerServer) GetSource(ctx context.Context, request *pb.GetSourceRequest) (*pb.StringResponse, error) {
 	source, err := f.endpoints.GetSource(request.GetKey())
 
-	return &pb.StringResponse{
-		Code: marshalErrorCode(err),
-		Data: source,
-	}, nil
+	return marshalBytesToStringResponse(source), err
 }
 
 func (f *filerServer) InsertSource(ctx context.Context, request *pb.InsertSourceRequest) (*pb.StringResponse, error) {
 	key, err := f.endpoints.InsertSource(request.GetValue(), request.GetDesc())
-	return &pb.StringResponse{
-		Code: marshalErrorCode(err),
-		Data: key,
-	}, nil
+	return marshalBytesToStringResponse(key), err
 }
 
-func marshalErrorCode(err error) string {
-	if err != nil {
-		return "S_OK"
+func marshalBytesToStringResponse(data []byte) *pb.StringResponse {
+	if data == nil {
+		return nil
 	}
 
-	var cpErr cpErrors.Error
-
-	if !errors.As(err, &cpErr) {
-		// FIXME: log err
-		return filer.ErrInternalError.Error()
-	} else {
-		return cpErr.Error()
-	}
+	return &pb.StringResponse{Data: string(data)}
 }

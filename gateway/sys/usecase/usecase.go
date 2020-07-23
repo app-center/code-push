@@ -1,18 +1,33 @@
 package usecase
 
-func NewUseCase(config CtorConfig, optionFns ...func(*options)) UseCase {
-	ctorOptions := &options{
-		RootUserName: nil,
-		RootUserPwd:  nil,
+import (
+	"github.com/funnyecho/code-push/pkg/jwt"
+	"time"
+)
+
+func NewUseCase(config CtorConfig, optionFns ...func(*Options)) UseCase {
+	ctorOptions := &Options{
+		RootUserName: "",
+		RootUserPwd:  "",
+		JwtSecret:    "",
+		JwtIssuer:    "",
+		JwtLifetime:  0,
 	}
 
 	for _, fn := range optionFns {
 		fn(ctorOptions)
 	}
 
+	sysJwt := jwt.NewJwt(func(options *jwt.Options) {
+		options.Secret = ctorOptions.JwtSecret
+		options.Issuer = ctorOptions.JwtIssuer
+		options.Lifetime = ctorOptions.JwtLifetime
+	})
+
 	return &useCase{
-		adapters: &adapters{codePush: config.CodePushAdapter},
-		options:  ctorOptions,
+		&adapters{codePush: config.CodePushAdapter},
+		ctorOptions,
+		sysJwt,
 	}
 }
 
@@ -22,14 +37,18 @@ type CtorConfig struct {
 
 type useCase struct {
 	*adapters
-	*options
+	options *Options
+	jwt     *jwt.Jwt
 }
 
 type adapters struct {
 	codePush CodePushAdapter
 }
 
-type options struct {
+type Options struct {
 	RootUserName string
 	RootUserPwd  string
+	JwtSecret    string
+	JwtIssuer    string
+	JwtLifetime  time.Duration
 }
