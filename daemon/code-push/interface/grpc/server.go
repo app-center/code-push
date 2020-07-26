@@ -96,10 +96,11 @@ func MarshalEnvResponse(e *code_push.Env) *pb.EnvResponse {
 	}
 
 	return &pb.EnvResponse{
-		BranchId:   e.BranchId,
-		EnvId:      e.ID,
-		Name:       e.Name,
-		CreateTime: e.CreateTime.UnixNano(),
+		BranchId:    e.BranchId,
+		EnvId:       e.ID,
+		Name:        e.Name,
+		EnvEncToken: e.EncToken,
+		CreateTime:  e.CreateTime.UnixNano(),
 	}
 }
 

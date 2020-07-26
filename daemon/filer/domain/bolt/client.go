@@ -32,14 +32,14 @@ func (c *Client) Open() error {
 	// Open database file.
 	db, err := bbolt.Open(c.Path, 0666, &bbolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		return errors.Wrapf(err, "open bolt database failed, path: %s", c.Path)
+		return errors.Wrapf(err, "open cache database failed, path: %s", c.Path)
 	}
 	c.db = db
 
 	// Initialize top-level buckets.
 	tx, err := c.db.Begin(true)
 	if err != nil {
-		return errors.Wrap(err, "begin writable tx failed while opening bolt database")
+		return errors.Wrap(err, "begin writable tx failed while opening cache database")
 	}
 	defer tx.Rollback()
 

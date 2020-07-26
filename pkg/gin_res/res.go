@@ -7,53 +7,82 @@ import (
 	"net/http"
 )
 
+func ErrorWithStatusCode(c *gin.Context, status int, err error) {
+	res(c, bodyErrorCodeMiddleware(err), errorStacksMiddleware(err), statusCodeMiddleware(status))
+}
+
 func Error(c *gin.Context, err error) {
-	Res(c, err, nil)
+	res(c, bodyErrorCodeMiddleware(err), errorStacksMiddleware(err), statusCodeMiddleware(http.StatusBadRequest))
 }
 
 func Success(c *gin.Context, data interface{}) {
-	Res(c, nil, data)
+	res(c, bodyDataMiddleware(data), statusCodeMiddleware(http.StatusOK))
 }
 
-func Res(c *gin.Context, err error, data interface{}) {
-	if err == nil {
-		c.JSON(http.StatusOK, gin.H{
-			"code": "S_OK",
-			"data": data,
-		})
-		return
+func res(c *gin.Context, fns ...resOptionsFn) {
+	statusCode := http.StatusOK
+	body := make(gin.H)
+
+	for _, fn := range fns {
+		fn(c, &statusCode, body)
 	}
 
-	for cause := err; cause != nil; cause = stderr.Unwrap(err) {
-		parsedError, ok := err.(*gin.Error)
+	c.JSON(statusCode, body)
+}
 
-		if ok {
-			_ = c.Error(parsedError)
-		} else {
-			var reasonableErr *errors.Error
+type resOptionsFn func(c *gin.Context, statusCode *int, body gin.H)
 
-			isReasonableCause := stderr.As(cause, reasonableErr)
-			causeType := gin.ErrorTypePrivate
+func errorStacksMiddleware(err error) resOptionsFn {
+	return func(c *gin.Context, statusCode *int, body gin.H) {
+		for cause := err; cause != nil; cause = stderr.Unwrap(err) {
+			parsedError, ok := err.(*gin.Error)
 
-			if isReasonableCause {
-				causeType = gin.ErrorTypePublic
+			if ok {
+				_ = c.Error(parsedError)
+			} else {
+				var reasonableErr *errors.Error
+
+				isReasonableCause := stderr.As(cause, reasonableErr)
+				causeType := gin.ErrorTypePrivate
+
+				if isReasonableCause {
+					causeType = gin.ErrorTypePublic
+				}
+
+				_ = c.Error(&gin.Error{
+					Err:  err,
+					Type: causeType,
+				})
 			}
-
-			_ = c.Error(&gin.Error{
-				Err:  err,
-				Type: causeType,
-			})
 		}
 	}
+}
 
-	var reasonableErr *errors.Error
+func bodyErrorCodeMiddleware(err error) resOptionsFn {
+	return func(c *gin.Context, statusCode *int, body gin.H) {
+		var reasonableErr *errors.Error
 
-	isReasonableErr := stderr.As(err, reasonableErr)
-	if !isReasonableErr {
-		*reasonableErr = "FA_INTERNAL_ERROR"
+		isReasonableErr := stderr.As(err, reasonableErr)
+		if !isReasonableErr {
+			*reasonableErr = "FA_INTERNAL_ERROR"
+		}
+
+		body["code"] = reasonableErr.Error()
 	}
+}
 
-	c.JSON(http.StatusBadRequest, gin.H{
-		"code": reasonableErr.Error(),
-	})
+func bodyDataMiddleware(data interface{}) resOptionsFn {
+	return func(c *gin.Context, _ *int, body gin.H) {
+		if data == nil {
+			return
+		}
+
+		body["data"] = data
+	}
+}
+
+func statusCodeMiddleware(code int) resOptionsFn {
+	return func(c *gin.Context, statusCode *int, _ gin.H) {
+		*statusCode = code
+	}
 }

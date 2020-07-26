@@ -3,8 +3,6 @@ package code_push
 import "github.com/funnyecho/code-push/pkg/errors"
 
 const (
-	OK = errors.Error("S_OK")
-
 	ErrInternalError = errors.Error("FA_INTERNAL_ERROR")
 	ErrParamsInvalid = errors.Error("FA_PARAMS_INVALID")
 

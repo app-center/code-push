@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	code_push "github.com/funnyecho/code-push/gateway/sys/adapter/code-push"
+	"github.com/funnyecho/code-push/gateway/sys/adapter/session"
 	"github.com/funnyecho/code-push/gateway/sys/interface/http"
 	"github.com/funnyecho/code-push/gateway/sys/usecase"
 	"github.com/spf13/cobra"
@@ -29,7 +30,7 @@ var (
 )
 
 func init() {
-	cmd.PersistentFlags().IntVarP(&port, "port", "p", 7892, "http server port")
+	cmd.PersistentFlags().IntVarP(&port, "port", "p", 7881, "http server port")
 }
 
 func main() {
@@ -51,9 +52,25 @@ func onCmdAction(cmd *cobra.Command, args []string) {
 	}
 	defer codePushAdapter.Close()
 
-	useCase := usecase.NewUseCase(usecase.CtorConfig{CodePushAdapter: codePushAdapter}, func(options *usecase.Options) {
-
+	sessionAdapter := session.New(func(options *session.Options) {
+		options.ServerAddr = ":7892"
 	})
+	sessionConnErr := sessionAdapter.Conn()
+	if sessionConnErr != nil {
+		os.Exit(1)
+		return
+	}
+	defer sessionAdapter.Close()
+
+	useCase := usecase.NewUseCase(
+		usecase.CtorConfig{
+			CodePushAdapter: codePushAdapter,
+			SessionAdapter:  sessionAdapter,
+		},
+		func(options *usecase.Options) {
+
+		},
+	)
 
 	server := http.New(useCase, func(options *http.Options) {
 		options.Port = port

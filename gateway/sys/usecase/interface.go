@@ -24,3 +24,8 @@ type CodePushAdapter interface {
 	CreateBranch(branchName []byte) (*sys.Branch, error)
 	DeleteBranch(branchId []byte) error
 }
+
+type SessionAdapter interface {
+	GenerateAccessToken(subject string) ([]byte, error)
+	VerifyAccessToken(token string) (subject []byte, err error)
+}

@@ -2,9 +2,9 @@ package http
 
 import (
 	"fmt"
-	"github.com/funnyecho/code-push/gateway/sys/interface/http/endpoints"
-	"github.com/funnyecho/code-push/gateway/sys/interface/http/middleware"
-	"github.com/funnyecho/code-push/gateway/sys/usecase"
+	"github.com/funnyecho/code-push/gateway/portal/interface/http/endpoints"
+	"github.com/funnyecho/code-push/gateway/portal/interface/http/middleware"
+	"github.com/funnyecho/code-push/gateway/portal/usecase"
 	"github.com/gin-gonic/gin"
 	stdHttp "net/http"
 )
@@ -64,8 +64,9 @@ func (s *server) initHttpHandler() {
 
 	apiGroup := r.Group("/api")
 	apiGroup.POST("/auth", s.endpoints.Auth)
-
-	apiGroup.POST("/v1/branch", s.middleware.Authorized, s.endpoints.CreateBranch)
+	apiGroup.POST("/env", s.middleware.Authorized, s.endpoints.CreateEnv)
+	apiGroup.POST("/version", s.middleware.Authorized, s.endpoints.ReleaseVersion)
+	apiGroup.POST("/upload/pkg", s.middleware.Authorized, s.endpoints.UploadPkg)
 
 	s.handler = r
 }

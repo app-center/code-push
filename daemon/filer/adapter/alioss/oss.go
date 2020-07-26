@@ -12,7 +12,7 @@ import (
 
 func NewAliOssAdapter(endpoint, accessKeyId, accessKeySecret []byte) (usecase.AliOssAdapter, error) {
 	if endpoint == nil || accessKeyId == nil || accessKeySecret == nil {
-		return nil, errors.Wrap(filer.ErrParamsInvalid, "endpoint, accessKeyId, accessKeySecret is required")
+		return nil, errors.Wrap(filer.ErrParamsInvalid, "endpoints, accessKeyId, accessKeySecret is required")
 	}
 
 	return &aliOss{

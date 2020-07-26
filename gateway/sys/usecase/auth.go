@@ -23,12 +23,12 @@ func (u *useCase) SignToken() ([]byte, error) {
 		return nil, errors.WithStack(subjectErr)
 	}
 
-	token, tokenErr := u.jwt.SignToken(string(subject))
+	token, tokenErr := u.session.GenerateAccessToken(string(subject))
 	if tokenErr != nil {
 		return nil, errors.WithStack(tokenErr)
 	}
 
-	return []byte(token), nil
+	return token, nil
 }
 
 func (u *useCase) VerifyToken(token []byte) error {
@@ -36,12 +36,12 @@ func (u *useCase) VerifyToken(token []byte) error {
 		return sys.ErrParamsInvalid
 	}
 
-	claims, verifyErr := u.jwt.VerifyToken(string(token))
+	subject, verifyErr := u.session.VerifyAccessToken(string(token))
 	if verifyErr != nil {
 		return errors.WithStack(verifyErr)
 	}
 
-	plainSubject, plainSubjectErr := util.DecryptAES([]byte(u.options.RootUserPwd), []byte(claims.Subject))
+	plainSubject, plainSubjectErr := util.DecryptAES([]byte(u.options.RootUserPwd), subject)
 	if plainSubjectErr != nil || string(plainSubject) != u.options.RootUserName {
 		return errors.Wrap(sys.ErrInvalidToken, "failed to verify subject in jwt token")
 	}
