@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"github.com/funnyecho/code-push/gateway/portal"
-	"github.com/funnyecho/code-push/gateway/portal/interface/http/constants"
-	"github.com/funnyecho/code-push/gateway/portal/usecase"
+	"github.com/funnyecho/code-push/gateway/client"
+	"github.com/funnyecho/code-push/gateway/client/interface/http/constants"
+	"github.com/funnyecho/code-push/gateway/client/usecase"
 	res "github.com/funnyecho/code-push/pkg/gin_res"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -16,7 +16,7 @@ func (m *Middleware) Authorized(c *gin.Context) {
 		return
 	}
 
-	c.Set(constants.CtxBranchId, branchId)
+	c.Set(constants.CtxEnvId, branchId)
 	c.Next()
 }
 
@@ -35,13 +35,13 @@ func AuthorizedWithReturns(uc usecase.UseCase, c *gin.Context) ([]byte, error) {
 	}
 
 	if len(accessToken) == 0 {
-		return nil, portal.ErrUnauthorized
+		return nil, client.ErrUnauthorized
 	}
 
-	branchId, verifyErr := uc.VerifyToken([]byte(accessToken))
+	envId, verifyErr := uc.VerifyToken([]byte(accessToken))
 	if verifyErr != nil {
-		return nil, portal.ErrInvalidToken
+		return nil, client.ErrInvalidToken
 	}
 
-	return branchId, nil
+	return envId, nil
 }

@@ -2,9 +2,9 @@ package http
 
 import (
 	"fmt"
-	"github.com/funnyecho/code-push/gateway/portal/interface/http/endpoints"
-	"github.com/funnyecho/code-push/gateway/portal/interface/http/middleware"
-	"github.com/funnyecho/code-push/gateway/portal/usecase"
+	"github.com/funnyecho/code-push/gateway/client/interface/http/endpoints"
+	"github.com/funnyecho/code-push/gateway/client/interface/http/middleware"
+	"github.com/funnyecho/code-push/gateway/client/usecase"
 	"github.com/gin-gonic/gin"
 	stdHttp "net/http"
 )
@@ -64,9 +64,9 @@ func (s *server) initHttpHandler() {
 
 	apiGroup := r.Group("/api")
 	apiGroup.POST("/auth", s.endpoints.Auth)
-	apiGroup.POST("/env", s.endpoints.CreateEnv)
-	apiGroup.POST("/version", s.middleware.Authorized, s.endpoints.ReleaseVersion)
-	apiGroup.POST("/upload/pkg", s.middleware.Authorized, s.endpoints.UploadPkg)
+	apiGroup.GET("/version/:version/download", s.endpoints.DownloadVersionPkg)
+	apiGroup.GET("/version/:version/download/:filename", s.endpoints.DownloadVersionPkg)
+	apiGroup.POST("/version/:version/upgrade", s.endpoints.VersionUpgradeQuery)
 
 	s.handler = r
 }

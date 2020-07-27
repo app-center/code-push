@@ -8,7 +8,7 @@ import (
 )
 
 type createEnvRequest struct {
-	EnvName  string `form:"env_name" binding:"required"`
+	EnvName string `form:"env_name" binding:"required"`
 }
 
 type createEnvResponse struct {
@@ -25,7 +25,7 @@ func (e *Endpoints) CreateEnv(c *gin.Context) {
 	}
 
 	branchId, authErr := middleware.AuthorizedWithReturns(e.uc, c)
-	if authErr == nil {
+	if authErr != nil {
 		res.ErrorWithStatusCode(c, http.StatusUnauthorized, authErr)
 		return
 	}
@@ -37,7 +37,7 @@ func (e *Endpoints) CreateEnv(c *gin.Context) {
 	}
 
 	res.Success(c, createEnvResponse{
-		EnvId: response.ID,
+		EnvId:       response.ID,
 		EnvEncToken: response.EncToken,
 	})
 	return
