@@ -62,10 +62,11 @@ func (s *server) initMiddleware() {
 func (s *server) initHttpHandler() {
 	r := gin.New()
 
+	r.GET("/version/:version/download", s.endpoints.DownloadVersionPkg)
+	r.GET("/version/:version/download/:filename", s.endpoints.DownloadVersionPkg)
+
 	apiGroup := r.Group("/api")
 	apiGroup.POST("/auth", s.endpoints.Auth)
-	apiGroup.GET("/version/:version/download", s.endpoints.DownloadVersionPkg)
-	apiGroup.GET("/version/:version/download/:filename", s.endpoints.DownloadVersionPkg)
 	apiGroup.POST("/version/:version/upgrade", s.endpoints.VersionUpgradeQuery)
 
 	s.handler = r

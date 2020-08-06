@@ -10,15 +10,15 @@ import (
 	"io"
 )
 
-func NewAliOssAdapter(endpoint, accessKeyId, accessKeySecret []byte) (usecase.AliOssAdapter, error) {
-	if endpoint == nil || accessKeyId == nil || accessKeySecret == nil {
+func NewAliOssAdapter(endpoint, accessKeyId, accessKeySecret string) (usecase.AliOssAdapter, error) {
+	if endpoint == "" || accessKeyId == "" || accessKeySecret == "" {
 		return nil, errors.Wrap(filer.ErrParamsInvalid, "endpoints, accessKeyId, accessKeySecret is required")
 	}
 
 	return &aliOss{
-		endpoint:        string(endpoint),
-		accessKeyId:     string(accessKeyId),
-		accessKeySecret: string(accessKeySecret),
+		endpoint:        endpoint,
+		accessKeyId:     accessKeyId,
+		accessKeySecret: accessKeySecret,
 	}, nil
 }
 

@@ -1,64 +1,122 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"fmt"
 	code_push "github.com/funnyecho/code-push/gateway/sys/adapter/code-push"
 	"github.com/funnyecho/code-push/gateway/sys/adapter/session"
 	"github.com/funnyecho/code-push/gateway/sys/interface/http"
 	"github.com/funnyecho/code-push/gateway/sys/usecase"
-	"github.com/spf13/cobra"
+	"github.com/peterbourgon/ff/v3"
+	"github.com/peterbourgon/ff/v3/ffcli"
+	"github.com/peterbourgon/ff/v3/ffyaml"
 	"os"
+	"path/filepath"
 )
 
 var (
-	Version   string
-	BuildTime string
+	Version       string
+	BuildTime     string
+	BuildPlatform string
 )
 
 var (
-	port int
+	executableName string
 )
 
-var (
-	cmd = &cobra.Command{
-		Use:     "System Gateway",
-		Short:   "Gateway of System service",
-		Long:    fmt.Sprintf("Gateway of System service. Build at %s", BuildTime),
-		Version: Version,
-		Run:     onCmdAction,
-	}
-)
+var cmd, versionCmd, serveCmd *ffcli.Command
+var serveCmdOptions serveConfig
 
 func init() {
-	cmd.PersistentFlags().IntVarP(&port, "port", "p", 7881, "http server port")
+	executableName = filepath.Base(os.Args[0])
 }
 
 func main() {
-	if err := cmd.Execute(); err != nil {
-		fmt.Println(err)
+	initServeCmd()
+
+	versionCmd = &ffcli.Command{
+		Name:      "version",
+		ShortHelp: "Version of service",
+		Exec:      onVersion,
+	}
+
+	cmd = &ffcli.Command{
+		Name:       fmt.Sprintf("Sys gateway, build at %s", BuildTime),
+		ShortUsage: fmt.Sprintf("%s <command> [arguments]", executableName),
+		UsageFunc: func(c *ffcli.Command) string {
+			return fmt.Sprintf("%s\n\n%s", c.Name, ffcli.DefaultUsageFunc(c))
+		},
+		FlagSet: nil,
+		Options: nil,
+		Subcommands: []*ffcli.Command{
+			versionCmd,
+			serveCmd,
+		},
+		Exec: onRoot,
+	}
+
+	if err := cmd.ParseAndRun(context.Background(), os.Args[1:]); err != nil {
+		fmt.Printf("FF failed to parse and run: %s", err.Error())
 		os.Exit(1)
 	}
 }
 
-func onCmdAction(cmd *cobra.Command, args []string) {
+func initServeCmd() {
+	serveCmdFS := flag.NewFlagSet("serve", flag.ExitOnError)
+	serveCmdFS.StringVar(&(serveCmdOptions.ConfigFilePath), "config", "config/sys.g/serve.yml", "alternative config file path")
+	serveCmdFS.BoolVar(&(serveCmdOptions.Debug), "debug", false, "run in debug mode")
+	serveCmdFS.IntVar(&(serveCmdOptions.Port), "port", 0, "port for grpc server listen to")
+	serveCmdFS.IntVar(&(serveCmdOptions.PortCodePushD), "port-code-push", 0, "port of code-push.d")
+	serveCmdFS.IntVar(&(serveCmdOptions.PortSessionD), "port-session", 0, "port of session.d")
+
+	serveCmd = &ffcli.Command{
+		Name:       "serve",
+		ShortUsage: "serve grpc server",
+		ShortHelp:  fmt.Sprintf("%s serve [arguments]", executableName),
+		FlagSet:    serveCmdFS,
+		Options: []ff.Option{
+			ff.WithEnvVarPrefix("SYS_G"),
+			ff.WithEnvVarSplit("_"),
+			ff.WithConfigFileFlag("config"),
+			ff.WithAllowMissingConfigFile(true),
+			ff.WithConfigFileParser(ffyaml.Parser),
+		},
+		Subcommands: nil,
+		Exec:        onServe,
+	}
+}
+
+func onRoot(ctx context.Context, args []string) error {
+	return serveCmd.ParseAndRun(ctx, args)
+}
+
+func onVersion(ctx context.Context, args []string) error {
+	fmt.Println(fmt.Sprintf("Version of Xiner-Web %s %s%", Version, BuildPlatform))
+	return nil
+}
+
+func onServe(ctx context.Context, args []string) error {
+	if configErr := serveCmdOptions.validate(); configErr != nil {
+		return configErr
+	}
+
 	codePushAdapter := code_push.New(func(options *code_push.Options) {
-		options.ServerAddr = ":7890"
+		options.ServerAddr = fmt.Sprintf(":%d", serveCmdOptions.PortCodePushD)
 	})
 
 	codePushConnErr := codePushAdapter.Conn()
 	if codePushConnErr != nil {
-		os.Exit(1)
-		return
+		return codePushConnErr
 	}
 	defer codePushAdapter.Close()
 
 	sessionAdapter := session.New(func(options *session.Options) {
-		options.ServerAddr = ":7892"
+		options.ServerAddr = fmt.Sprintf(":%d", serveCmdOptions.PortSessionD)
 	})
 	sessionConnErr := sessionAdapter.Conn()
 	if sessionConnErr != nil {
-		os.Exit(1)
-		return
+		return sessionConnErr
 	}
 	defer sessionAdapter.Close()
 
@@ -73,11 +131,13 @@ func onCmdAction(cmd *cobra.Command, args []string) {
 	)
 
 	server := http.New(useCase, func(options *http.Options) {
-		options.Port = port
+		options.Port = serveCmdOptions.Port
 	})
 
 	httpServeErr := server.ListenAndServe()
 	if httpServeErr != nil {
-		os.Exit(1)
+		return httpServeErr
 	}
+
+	return nil
 }
