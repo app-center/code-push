@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/funnyecho/code-push/pkg/fs"
 	"strings"
 )
 
@@ -22,6 +23,17 @@ func (c *serveConfig) validate() error {
 
 	if c.BoltPath == "" {
 		errs = append(errs, "BoltPath required")
+	} else {
+		boltFile, boltFileErr := fs.File(fs.FileConfig{
+			FilePath: c.BoltPath,
+		})
+		if boltFileErr != nil {
+			errs = append(errs, boltFileErr.Error())
+		} else {
+			if dirErr := boltFile.EnsurePath(); dirErr != nil {
+				errs = append(errs, dirErr.Error())
+			}
+		}
 	}
 
 	if len(errs) == 0 {

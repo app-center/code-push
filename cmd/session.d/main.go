@@ -68,7 +68,7 @@ func initServeCmd() {
 	serveCmdFS := flag.NewFlagSet("serve", flag.ExitOnError)
 	serveCmdFS.StringVar(&(serveCmdOptions.ConfigFilePath), "config", "config/session.d/serve.yml", "alternative config file path")
 	serveCmdFS.BoolVar(&(serveCmdOptions.Debug), "debug", false, "run in debug mode")
-	serveCmdFS.IntVar(&(serveCmdOptions.Port), "port", 7890, "port for grpc server listen to")
+	serveCmdFS.IntVar(&(serveCmdOptions.Port), "port", 0, "port for grpc server listen to")
 
 	serveCmd = &ffcli.Command{
 		Name:       "serve",

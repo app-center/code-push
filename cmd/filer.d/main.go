@@ -70,7 +70,7 @@ func initServeCmd() {
 	serveCmdFS := flag.NewFlagSet("serve", flag.ExitOnError)
 	serveCmdFS.StringVar(&(serveCmdOptions.ConfigFilePath), "config", "config/filer.d/serve.yml", "alternative config file path")
 	serveCmdFS.BoolVar(&(serveCmdOptions.Debug), "debug", false, "run in debug mode")
-	serveCmdFS.IntVar(&(serveCmdOptions.Port), "port", 7890, "port for grpc server listen to")
+	serveCmdFS.IntVar(&(serveCmdOptions.Port), "port", 0, "port for grpc server listen to")
 	serveCmdFS.StringVar(&(serveCmdOptions.BoltPath), "bolt-path", "storage/filer.d/db", "path of bolt file")
 	serveCmdFS.StringVar(&(serveCmdOptions.AliOssEndpoint), "alioss-endpoint", "", "endpoint of ali-oss")
 	serveCmdFS.StringVar(&(serveCmdOptions.AliOssAccessKeyId), "alioss-access-key-id", "", "access key id of ali-oss")

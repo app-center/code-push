@@ -1,0 +1,3 @@
+debug: false
+port: 9520
+bolt-path: storage/code-push.d/db

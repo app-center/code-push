@@ -72,7 +72,7 @@ func initServeCmd() {
 	serveCmdFS := flag.NewFlagSet("serve", flag.ExitOnError)
 	serveCmdFS.StringVar(&(serveCmdOptions.ConfigFilePath), "config", "config/code-push.d/serve.yml", "alternative config file path")
 	serveCmdFS.BoolVar(&(serveCmdOptions.Debug), "debug", false, "run in debug mode")
-	serveCmdFS.IntVar(&(serveCmdOptions.Port), "port", 7890, "port for grpc server listen to")
+	serveCmdFS.IntVar(&(serveCmdOptions.Port), "port", 0, "port for grpc server listen to")
 	serveCmdFS.StringVar(&(serveCmdOptions.BoltPath), "bolt-path", "storage/code-push.d/db", "path of bolt storage file")
 
 	serveCmd = &ffcli.Command{
@@ -137,7 +137,7 @@ func onServe(ctx context.Context, args []string) error {
 	grpcServer := interfacegrpc.NewCodePushServer(endpoints)
 
 	{
-		grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", serveCmdOptions.Port))
+		grpcListener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.Port))
 		if err != nil {
 			return err
 		}

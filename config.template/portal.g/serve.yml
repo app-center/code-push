@@ -1,0 +1,5 @@
+debug: false
+port: 9621
+port-code-push: 9520
+port-filer: 9521
+port-session: 9522
