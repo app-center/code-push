@@ -13,6 +13,9 @@ type serveConfig struct {
 
 	PortCodePushD int
 	PortSessionD  int
+
+	RootUserName string
+	RootUserPwd  string
 }
 
 func (c *serveConfig) validate() error {
@@ -28,6 +31,14 @@ func (c *serveConfig) validate() error {
 
 	if c.PortSessionD == 0 {
 		errs = append(errs, "Invalid port of session.d")
+	}
+
+	if len(c.RootUserName) < 6 {
+		errs = append(errs, "length of root use name shall be larger than 6")
+	}
+
+	if len(c.RootUserPwd) < 8 {
+		errs = append(errs, "length of root use pwd shall be larger than 8")
 	}
 
 	if len(errs) == 0 {

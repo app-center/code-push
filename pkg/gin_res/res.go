@@ -28,21 +28,25 @@ func res(c *gin.Context, fns ...resOptionsFn) {
 	}
 
 	c.JSON(statusCode, body)
+
+	if statusCode != http.StatusOK {
+		c.Abort()
+	}
 }
 
 type resOptionsFn func(c *gin.Context, statusCode *int, body gin.H)
 
 func errorStacksMiddleware(err error) resOptionsFn {
 	return func(c *gin.Context, statusCode *int, body gin.H) {
-		for cause := err; cause != nil; cause = stderr.Unwrap(err) {
-			parsedError, ok := err.(*gin.Error)
+		for cause := err; cause != nil; cause = stderr.Unwrap(cause) {
+			parsedError, ok := cause.(*gin.Error)
 
 			if ok {
 				_ = c.Error(parsedError)
 			} else {
-				var reasonableErr *errors.Error
+				reasonableErr := errors.Error("FA_INTERNAL_ERROR")
 
-				isReasonableCause := stderr.As(cause, reasonableErr)
+				isReasonableCause := stderr.Is(cause, &reasonableErr)
 				causeType := gin.ErrorTypePrivate
 
 				if isReasonableCause {
@@ -60,12 +64,9 @@ func errorStacksMiddleware(err error) resOptionsFn {
 
 func bodyErrorCodeMiddleware(err error) resOptionsFn {
 	return func(c *gin.Context, statusCode *int, body gin.H) {
-		var reasonableErr *errors.Error
+		reasonableErr := errors.Error("FA_INTERNAL_ERROR")
 
-		isReasonableErr := stderr.As(err, reasonableErr)
-		if !isReasonableErr {
-			*reasonableErr = "FA_INTERNAL_ERROR"
-		}
+		_ = stderr.As(err, &reasonableErr)
 
 		body["code"] = reasonableErr.Error()
 	}

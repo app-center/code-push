@@ -72,6 +72,8 @@ func initServeCmd() {
 	serveCmdFS.IntVar(&(serveCmdOptions.Port), "port", 0, "port for grpc server listen to")
 	serveCmdFS.IntVar(&(serveCmdOptions.PortCodePushD), "port-code-push", 0, "port of code-push.d")
 	serveCmdFS.IntVar(&(serveCmdOptions.PortSessionD), "port-session", 0, "port of session.d")
+	serveCmdFS.StringVar(&(serveCmdOptions.RootUserName), "root-user-name", "", "root user name")
+	serveCmdFS.StringVar(&(serveCmdOptions.RootUserPwd), "root-user-pwd", "", "root user password")
 
 	serveCmd = &ffcli.Command{
 		Name:       "serve",
@@ -151,7 +153,8 @@ func onServe(ctx context.Context, args []string) error {
 			Logger:          log.New(gokitLog.With(logger, "component", "usecase")),
 		},
 		func(options *usecase.Options) {
-
+			options.RootUserName = serveCmdOptions.RootUserName
+			options.RootUserPwd = serveCmdOptions.RootUserPwd
 		},
 	)
 

@@ -12,11 +12,13 @@ func NewUseCase(config CtorConfig, optionFns ...func(*Options)) UseCase {
 		fn(ctorOptions)
 	}
 
-	return &useCase{
-		&adapters{codePush: config.CodePushAdapter},
-		config.Logger,
-		ctorOptions,
+	uc := &useCase{
+		adapters: &adapters{codePush: config.CodePushAdapter, session: config.SessionAdapter},
+		Logger:   config.Logger,
+		options:  ctorOptions,
 	}
+
+	return uc
 }
 
 type CtorConfig struct {
