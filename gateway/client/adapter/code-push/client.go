@@ -53,7 +53,7 @@ func (c *CodePushClient) VersionStrictCompatQuery(envId, appVersion []byte) (*cl
 }
 
 func (c *CodePushClient) Conn() error {
-	conn, err := grpc.Dial(c.options.ServerAddr)
+	conn, err := grpc.Dial(c.options.ServerAddr, grpc.WithInsecure())
 	if err != nil {
 		return errors.Wrapf(err, "Dail to grpc server: %s failed", c.options.ServerAddr)
 	}

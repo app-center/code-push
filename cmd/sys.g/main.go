@@ -102,7 +102,7 @@ func onServe(ctx context.Context, args []string) error {
 	}
 
 	codePushAdapter := code_push.New(func(options *code_push.Options) {
-		options.ServerAddr = fmt.Sprintf(":%d", serveCmdOptions.PortCodePushD)
+		options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortCodePushD)
 	})
 
 	codePushConnErr := codePushAdapter.Conn()
@@ -112,7 +112,7 @@ func onServe(ctx context.Context, args []string) error {
 	defer codePushAdapter.Close()
 
 	sessionAdapter := session.New(func(options *session.Options) {
-		options.ServerAddr = fmt.Sprintf(":%d", serveCmdOptions.PortSessionD)
+		options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortSessionD)
 	})
 	sessionConnErr := sessionAdapter.Conn()
 	if sessionConnErr != nil {

@@ -51,7 +51,7 @@ func (s *Client) UploadPkg(source io.Reader) (fileKey []byte, err error) {
 }
 
 func (s *Client) Conn() error {
-	conn, err := grpc.Dial(s.options.ServerAddr)
+	conn, err := grpc.Dial(s.options.ServerAddr, grpc.WithInsecure())
 	if err != nil {
 		return errors.Wrapf(err, "Dail to grpc server: %s failed", s.options.ServerAddr)
 	}
