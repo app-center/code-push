@@ -122,6 +122,7 @@ func onServe(ctx context.Context, args []string) error {
 	var g run.Group
 
 	domainAdapter := bolt.NewClient()
+	domainAdapter.Logger = log.New(gokitLog.With(logger, "component", "domain", "adapter", "bbolt"))
 	domainAdapter.Path = serveCmdOptions.BoltPath
 	domainAdapterOpenErr := domainAdapter.Open()
 	if domainAdapterOpenErr != nil {
@@ -134,7 +135,10 @@ func onServe(ctx context.Context, args []string) error {
 		Logger:        log.New(gokitLog.With(logger, "component", "usecase")),
 	})
 
-	grpcServer := interfacegrpc.NewCodePushServer(endpoints)
+	grpcServer := interfacegrpc.NewCodePushServer(
+		endpoints,
+		log.New(gokitLog.With(logger, "component", "interfaces", "interface", "grpc")),
+	)
 
 	{
 		grpcListener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.Port))
@@ -143,7 +147,7 @@ func onServe(ctx context.Context, args []string) error {
 		}
 
 		// Create gRPC server
-		g.Add(func() error {
+		g.Add(func() (err error) {
 			baseServer := grpc.NewServer()
 			pb.RegisterBranchServer(baseServer, grpcServer)
 			pb.RegisterEnvServer(baseServer, grpcServer)

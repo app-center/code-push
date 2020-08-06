@@ -1,5 +1,7 @@
 package usecase
 
+import "github.com/funnyecho/code-push/pkg/log"
+
 func NewUseCase(config CtorConfig, optionFns ...func(*Options)) UseCase {
 	ctorOptions := &Options{
 		RootUserName: "",
@@ -12,6 +14,7 @@ func NewUseCase(config CtorConfig, optionFns ...func(*Options)) UseCase {
 
 	return &useCase{
 		&adapters{codePush: config.CodePushAdapter},
+		config.Logger,
 		ctorOptions,
 	}
 }
@@ -19,10 +22,12 @@ func NewUseCase(config CtorConfig, optionFns ...func(*Options)) UseCase {
 type CtorConfig struct {
 	CodePushAdapter
 	SessionAdapter
+	log.Logger
 }
 
 type useCase struct {
 	*adapters
+	log.Logger
 	options *Options
 }
 

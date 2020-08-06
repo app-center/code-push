@@ -5,14 +5,16 @@ import (
 	code_push "github.com/funnyecho/code-push/daemon/code-push"
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
 	"github.com/funnyecho/code-push/daemon/code-push/usecase"
+	"github.com/funnyecho/code-push/pkg/log"
 )
 
-func NewCodePushServer(endpoints Endpoints) *codePushServer {
-	return &codePushServer{endpoints: endpoints}
+func NewCodePushServer(endpoints Endpoints, logger log.Logger) *codePushServer {
+	return &codePushServer{endpoints: endpoints, Logger: logger}
 }
 
 type codePushServer struct {
 	endpoints Endpoints
+	log.Logger
 }
 
 func (s *codePushServer) CreateBranch(ctx context.Context, request *pb.CreateBranchRequest) (*pb.BranchResponse, error) {

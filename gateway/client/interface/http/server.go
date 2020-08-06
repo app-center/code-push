@@ -5,11 +5,12 @@ import (
 	"github.com/funnyecho/code-push/gateway/client/interface/http/endpoints"
 	"github.com/funnyecho/code-push/gateway/client/interface/http/middleware"
 	"github.com/funnyecho/code-push/gateway/client/usecase"
+	"github.com/funnyecho/code-push/pkg/log"
 	"github.com/gin-gonic/gin"
 	stdHttp "net/http"
 )
 
-func New(uc usecase.UseCase, fns ...func(*Options)) *server {
+func New(uc usecase.UseCase, logger log.Logger, fns ...func(*Options)) *server {
 	ctorOptions := &Options{}
 
 	for _, fn := range fns {
@@ -18,6 +19,7 @@ func New(uc usecase.UseCase, fns ...func(*Options)) *server {
 
 	svr := &server{
 		uc:      uc,
+		Logger:  logger,
 		options: ctorOptions,
 	}
 
@@ -29,7 +31,8 @@ func New(uc usecase.UseCase, fns ...func(*Options)) *server {
 }
 
 type server struct {
-	uc         usecase.UseCase
+	uc usecase.UseCase
+	log.Logger
 	options    *Options
 	endpoints  *endpoints.Endpoints
 	middleware *middleware.Middleware

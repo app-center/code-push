@@ -13,20 +13,20 @@ func New(logKit log.Logger) Logger {
 
 type Logger interface {
 	log.Logger
-	Info(keyvals ...interface{}) error
-	Debug(keyvals ...interface{}) error
+	Info(msg string, keyvals ...interface{}) error
+	Debug(msg string, keyvals ...interface{}) error
 }
 
 type logger struct {
 	log.Logger
 }
 
-func (l *logger) Info(keyvals ...interface{}) error {
-	keyvals = append(keyvals, level.Key(), level.InfoValue())
+func (l *logger) Info(msg string, keyvals ...interface{}) error {
+	keyvals = append([]interface{}{level.Key(), level.InfoValue(), "msg", msg}, keyvals...)
 	return l.Log(keyvals...)
 }
 
-func (l *logger) Debug(keyvals ...interface{}) error {
-	keyvals = append(keyvals, level.Key(), level.DebugValue())
+func (l *logger) Debug(msg string, keyvals ...interface{}) error {
+	keyvals = append([]interface{}{level.Key(), level.DebugValue(), "msg", msg}, keyvals...)
 	return l.Log(keyvals...)
 }

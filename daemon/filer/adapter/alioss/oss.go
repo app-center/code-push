@@ -4,13 +4,14 @@ import (
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/funnyecho/code-push/daemon/filer"
 	"github.com/funnyecho/code-push/daemon/filer/usecase"
+	"github.com/funnyecho/code-push/pkg/log"
 	"github.com/funnyecho/code-push/pkg/util"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 	"io"
 )
 
-func NewAliOssAdapter(endpoint, accessKeyId, accessKeySecret string) (usecase.AliOssAdapter, error) {
+func NewAliOssAdapter(endpoint, accessKeyId, accessKeySecret string, logger log.Logger) (usecase.AliOssAdapter, error) {
 	if endpoint == "" || accessKeyId == "" || accessKeySecret == "" {
 		return nil, errors.Wrap(filer.ErrParamsInvalid, "endpoints, accessKeyId, accessKeySecret is required")
 	}
@@ -19,6 +20,7 @@ func NewAliOssAdapter(endpoint, accessKeyId, accessKeySecret string) (usecase.Al
 		endpoint:        endpoint,
 		accessKeyId:     accessKeyId,
 		accessKeySecret: accessKeySecret,
+		Logger:          logger,
 	}, nil
 }
 
@@ -26,6 +28,8 @@ type aliOss struct {
 	endpoint        string
 	accessKeyId     string
 	accessKeySecret string
+
+	log.Logger
 
 	client *oss.Client
 }

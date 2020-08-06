@@ -3,6 +3,7 @@ package bolt
 import (
 	"fmt"
 	"github.com/funnyecho/code-push/daemon/filer/domain"
+	"github.com/funnyecho/code-push/pkg/log"
 	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
 	"time"
@@ -18,6 +19,7 @@ func NewClient() *Client {
 
 type Client struct {
 	Path string
+	log.Logger
 
 	fileService FileService
 

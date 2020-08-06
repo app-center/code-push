@@ -7,6 +7,9 @@ import (
 	sessiongrpc "github.com/funnyecho/code-push/daemon/session/interface/grpc"
 	"github.com/funnyecho/code-push/daemon/session/interface/grpc/pb"
 	"github.com/funnyecho/code-push/daemon/session/usecase"
+	"github.com/funnyecho/code-push/pkg/log"
+	gokitLog "github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/oklog/run"
 	"github.com/peterbourgon/ff/v3"
 	"github.com/peterbourgon/ff/v3/ffcli"
@@ -101,11 +104,29 @@ func onServe(ctx context.Context, args []string) error {
 		return configErr
 	}
 
+	var logger gokitLog.Logger
+	{
+		logger = gokitLog.NewLogfmtLogger(os.Stdout)
+		logger = gokitLog.With(logger, "ts", gokitLog.DefaultTimestampUTC)
+		logger = gokitLog.With(logger, "caller", gokitLog.DefaultCaller)
+
+		if serveCmdOptions.Debug {
+			logger = level.NewFilter(logger, level.AllowDebug())
+		} else {
+			logger = level.NewFilter(logger, level.AllowInfo())
+		}
+	}
+
 	var g run.Group
 
-	uc := usecase.New()
+	uc := usecase.New(
+		log.New(gokitLog.With(logger, "component", "usecase")),
+	)
 
-	grpcServer := sessiongrpc.New(uc)
+	grpcServer := sessiongrpc.New(
+		uc,
+		log.New(gokitLog.With(logger, "component", "interfaces", "interface", "grpc")),
+	)
 	{
 		grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", serveCmdOptions.Port))
 		if err != nil {

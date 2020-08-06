@@ -8,6 +8,9 @@ import (
 	"github.com/funnyecho/code-push/gateway/sys/adapter/session"
 	"github.com/funnyecho/code-push/gateway/sys/interface/http"
 	"github.com/funnyecho/code-push/gateway/sys/usecase"
+	"github.com/funnyecho/code-push/pkg/log"
+	gokitLog "github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/peterbourgon/ff/v3"
 	"github.com/peterbourgon/ff/v3/ffcli"
 	"github.com/peterbourgon/ff/v3/ffyaml"
@@ -101,38 +104,64 @@ func onServe(ctx context.Context, args []string) error {
 		return configErr
 	}
 
-	codePushAdapter := code_push.New(func(options *code_push.Options) {
-		options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortCodePushD)
-	})
+	var logger gokitLog.Logger
+	{
+		logger = gokitLog.NewLogfmtLogger(os.Stdout)
+		logger = gokitLog.With(logger, "ts", gokitLog.DefaultTimestampUTC)
+		logger = gokitLog.With(logger, "caller", gokitLog.DefaultCaller)
+
+		if serveCmdOptions.Debug {
+			logger = level.NewFilter(logger, level.AllowDebug())
+		} else {
+			logger = level.NewFilter(logger, level.AllowInfo())
+		}
+	}
+
+	codePushAdapter := code_push.New(
+		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "code-push.d")),
+		func(options *code_push.Options) {
+			options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortCodePushD)
+		},
+	)
 
 	codePushConnErr := codePushAdapter.Conn()
 	if codePushConnErr != nil {
 		return codePushConnErr
 	}
 	defer codePushAdapter.Close()
+	codePushAdapter.Debug("connected to code-push.d", "addr", codePushAdapter.ServerAddr)
 
-	sessionAdapter := session.New(func(options *session.Options) {
-		options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortSessionD)
-	})
+	sessionAdapter := session.New(
+		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "session.d")),
+		func(options *session.Options) {
+			options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortSessionD)
+		},
+	)
 	sessionConnErr := sessionAdapter.Conn()
 	if sessionConnErr != nil {
 		return sessionConnErr
 	}
 	defer sessionAdapter.Close()
+	sessionAdapter.Debug("connected to session.d", "addr", sessionAdapter.ServerAddr)
 
 	useCase := usecase.NewUseCase(
 		usecase.CtorConfig{
 			CodePushAdapter: codePushAdapter,
 			SessionAdapter:  sessionAdapter,
+			Logger:          log.New(gokitLog.With(logger, "component", "usecase")),
 		},
 		func(options *usecase.Options) {
 
 		},
 	)
 
-	server := http.New(useCase, func(options *http.Options) {
-		options.Port = serveCmdOptions.Port
-	})
+	server := http.New(
+		useCase,
+		log.New(gokitLog.With(logger, "component", "interfaces", "interface", "http")),
+		func(options *http.Options) {
+			options.Port = serveCmdOptions.Port
+		},
+	)
 
 	httpServeErr := server.ListenAndServe()
 	if httpServeErr != nil {

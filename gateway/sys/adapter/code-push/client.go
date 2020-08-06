@@ -4,12 +4,13 @@ import (
 	"context"
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
 	"github.com/funnyecho/code-push/gateway/sys"
+	"github.com/funnyecho/code-push/pkg/log"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"time"
 )
 
-func New(fns ...func(*Options)) *CodePushClient {
+func New(logger log.Logger, fns ...func(*Options)) *CodePushClient {
 	ctorOptions := &Options{ServerAddr: ""}
 
 	for _, fn := range fns {
@@ -17,12 +18,14 @@ func New(fns ...func(*Options)) *CodePushClient {
 	}
 
 	return &CodePushClient{
-		options: ctorOptions,
+		Logger:  logger,
+		Options: ctorOptions,
 	}
 }
 
 type CodePushClient struct {
-	options *Options
+	log.Logger
+	*Options
 
 	conn         *grpc.ClientConn
 	branchClient pb.BranchClient
@@ -46,9 +49,9 @@ func (c *CodePushClient) DeleteBranch(branchId []byte) error {
 }
 
 func (c *CodePushClient) Conn() error {
-	conn, err := grpc.Dial(c.options.ServerAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(c.ServerAddr, grpc.WithInsecure())
 	if err != nil {
-		return errors.Wrapf(err, "Dail to grpc server: %s failed", c.options.ServerAddr)
+		return errors.Wrapf(err, "Dail to grpc server: %s failed", c.ServerAddr)
 	}
 
 	c.conn = conn

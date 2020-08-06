@@ -3,6 +3,7 @@ package bolt
 import (
 	"fmt"
 	"github.com/funnyecho/code-push/daemon/code-push/domain"
+	"github.com/funnyecho/code-push/pkg/log"
 	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
 	"time"
@@ -10,6 +11,7 @@ import (
 
 type Client struct {
 	Path string
+	log.Logger
 
 	// Services
 	branchService  BranchService

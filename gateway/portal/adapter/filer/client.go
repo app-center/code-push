@@ -4,12 +4,13 @@ import (
 	"context"
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
 	"github.com/funnyecho/code-push/pkg/grpcStreamer"
+	"github.com/funnyecho/code-push/pkg/log"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"io"
 )
 
-func New(fns ...func(*Options)) *Client {
+func New(logger log.Logger, fns ...func(*Options)) *Client {
 	ctorOptions := &Options{ServerAddr: ""}
 
 	for _, fn := range fns {
@@ -17,12 +18,14 @@ func New(fns ...func(*Options)) *Client {
 	}
 
 	return &Client{
-		options: ctorOptions,
+		Logger:  logger,
+		Options: ctorOptions,
 	}
 }
 
 type Client struct {
-	options *Options
+	log.Logger
+	*Options
 
 	conn         *grpc.ClientConn
 	uploadClient pb.UploadClient
@@ -51,9 +54,9 @@ func (s *Client) UploadPkg(source io.Reader) (fileKey []byte, err error) {
 }
 
 func (s *Client) Conn() error {
-	conn, err := grpc.Dial(s.options.ServerAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(s.Options.ServerAddr, grpc.WithInsecure())
 	if err != nil {
-		return errors.Wrapf(err, "Dail to grpc server: %s failed", s.options.ServerAddr)
+		return errors.Wrapf(err, "Dail to grpc server: %s failed", s.Options.ServerAddr)
 	}
 
 	s.conn = conn

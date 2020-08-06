@@ -4,16 +4,19 @@ import (
 	context "context"
 	"github.com/funnyecho/code-push/daemon/session"
 	"github.com/funnyecho/code-push/daemon/session/interface/grpc/pb"
+	"github.com/funnyecho/code-push/pkg/log"
 )
 
-func New(endpoints Endpoints) *sessionServer {
+func New(endpoints Endpoints, logger log.Logger) *sessionServer {
 	return &sessionServer{
 		endpoints,
+		logger,
 	}
 }
 
 type sessionServer struct {
 	endpoints Endpoints
+	log.Logger
 }
 
 func (s *sessionServer) GenerateAccessToken(ctx context.Context, request *pb.GenerateAccessTokenRequest) (*pb.StringResponse, error) {

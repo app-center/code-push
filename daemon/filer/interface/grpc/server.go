@@ -4,14 +4,19 @@ import (
 	"context"
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
 	"github.com/funnyecho/code-push/pkg/grpcStreamer"
+	"github.com/funnyecho/code-push/pkg/log"
 )
 
-func NewFilerServer(endpoints Endpoints) *filerServer {
-	return &filerServer{endpoints: endpoints}
+func NewFilerServer(endpoints Endpoints, logger log.Logger) *filerServer {
+	return &filerServer{
+		endpoints: endpoints,
+		Logger:    logger,
+	}
 }
 
 type filerServer struct {
 	endpoints Endpoints
+	log.Logger
 }
 
 func (f *filerServer) UploadToAliOss(stream pb.Upload_UploadToAliOssServer) error {

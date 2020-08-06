@@ -9,6 +9,9 @@ import (
 	interfacegrpc "github.com/funnyecho/code-push/daemon/filer/interface/grpc"
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
 	"github.com/funnyecho/code-push/daemon/filer/usecase"
+	"github.com/funnyecho/code-push/pkg/log"
+	gokitLog "github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/oklog/run"
 	"github.com/peterbourgon/ff/v3"
 	"github.com/peterbourgon/ff/v3/ffcli"
@@ -107,12 +110,26 @@ func onServe(ctx context.Context, args []string) error {
 		return configErr
 	}
 
+	var logger gokitLog.Logger
+	{
+		logger = gokitLog.NewLogfmtLogger(os.Stdout)
+		logger = gokitLog.With(logger, "ts", gokitLog.DefaultTimestampUTC)
+		logger = gokitLog.With(logger, "caller", gokitLog.DefaultCaller)
+
+		if serveCmdOptions.Debug {
+			logger = level.NewFilter(logger, level.AllowDebug())
+		} else {
+			logger = level.NewFilter(logger, level.AllowInfo())
+		}
+	}
+
 	var g run.Group
 
 	aliOssAdapter, aliOssAdapterErr := alioss.NewAliOssAdapter(
 		serveCmdOptions.AliOssEndpoint,
 		serveCmdOptions.AliOssAccessKeyId,
 		serveCmdOptions.AliOssAccessSecret,
+		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "ali-oss")),
 	)
 	if aliOssAdapterErr != nil {
 		return aliOssAdapterErr
@@ -120,6 +137,7 @@ func onServe(ctx context.Context, args []string) error {
 
 	domainAdapter := bolt.NewClient()
 	domainAdapter.Path = serveCmdOptions.BoltPath
+	domainAdapter.Logger = log.New(gokitLog.With(logger, "component", "domain", "adapter", "bbolt"))
 	domainAdapterOpenErr := domainAdapter.Open()
 	if domainAdapterOpenErr != nil {
 		return domainAdapterOpenErr
@@ -129,9 +147,13 @@ func onServe(ctx context.Context, args []string) error {
 	endpoints := usecase.NewUseCase(usecase.CtorConfig{
 		DomainAdapter: domainAdapter.DomainService(),
 		AliOssAdapter: aliOssAdapter,
+		Logger:        log.New(gokitLog.With(logger, "component", "usecase")),
 	})
 
-	grpcServer := interfacegrpc.NewFilerServer(endpoints)
+	grpcServer := interfacegrpc.NewFilerServer(
+		endpoints,
+		log.New(gokitLog.With(logger, "component", "interfaces", "interface", "grpc")),
+	)
 
 	{
 		grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", serveCmdOptions.Port))

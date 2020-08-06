@@ -2,14 +2,15 @@ package usecase
 
 import (
 	"github.com/funnyecho/code-push/daemon/session"
+	"github.com/funnyecho/code-push/pkg/log"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 	"time"
 )
 
-func New() UseCase {
-	uc := &useCase{}
+func New(logger log.Logger) UseCase {
+	uc := &useCase{Logger: logger}
 
 	uc.initCache()
 
@@ -17,6 +18,8 @@ func New() UseCase {
 }
 
 type useCase struct {
+	log.Logger
+
 	accessTokenCache *cache.Cache
 }
 
