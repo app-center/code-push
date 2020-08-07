@@ -70,7 +70,7 @@ func initServeCmd() {
 	serveCmdFS := flag.NewFlagSet("serve", flag.ExitOnError)
 	serveCmdFS.StringVar(&(serveCmdOptions.ConfigFilePath), "config", "config/client.g/serve.yml", "alternative config file path")
 	serveCmdFS.BoolVar(&(serveCmdOptions.Debug), "debug", false, "run in debug mode")
-	serveCmdFS.IntVar(&(serveCmdOptions.Port), "port", 7890, "port for grpc server listen to")
+	serveCmdFS.IntVar(&(serveCmdOptions.Port), "port", 0, "port for grpc server listen to")
 	serveCmdFS.IntVar(&(serveCmdOptions.PortCodePushD), "port-code-push", 0, "port of code-push.d")
 	serveCmdFS.IntVar(&(serveCmdOptions.PortFilerD), "port-filer", 0, "port of filer.d")
 	serveCmdFS.IntVar(&(serveCmdOptions.PortSessionD), "port-session", 0, "port of session.d")
@@ -122,7 +122,7 @@ func onServe(ctx context.Context, args []string) error {
 	codePushAdapter := code_push.New(
 		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "code-push.d")),
 		func(options *code_push.Options) {
-			options.ServerAddr = fmt.Sprintf(":%d", serveCmdOptions.PortCodePushD)
+			options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortCodePushD)
 		},
 	)
 
@@ -136,7 +136,7 @@ func onServe(ctx context.Context, args []string) error {
 	sessionAdapter := session.New(
 		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "session.d")),
 		func(options *session.Options) {
-			options.ServerAddr = fmt.Sprintf(":%d", serveCmdOptions.PortSessionD)
+			options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortSessionD)
 		},
 	)
 	sessionConnErr := sessionAdapter.Conn()
@@ -149,7 +149,7 @@ func onServe(ctx context.Context, args []string) error {
 	filerAdapter := filer.New(
 		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "filer.d")),
 		func(options *filer.Options) {
-			options.ServerAddr = fmt.Sprintf(":%d", serveCmdOptions.PortFilerD)
+			options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortFilerD)
 		},
 	)
 	filerConnErr := filerAdapter.Conn()

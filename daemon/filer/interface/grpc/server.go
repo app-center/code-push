@@ -5,6 +5,7 @@ import (
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
 	"github.com/funnyecho/code-push/pkg/grpcStreamer"
 	"github.com/funnyecho/code-push/pkg/log"
+	"io"
 )
 
 func NewFilerServer(endpoints Endpoints, logger log.Logger) *filerServer {
@@ -21,10 +22,19 @@ type filerServer struct {
 
 func (f *filerServer) UploadToAliOss(stream pb.Upload_UploadToAliOssServer) error {
 	fileKey, err := f.endpoints.UploadToAliOss(grpcStreamer.NewStreamReader(grpcStreamer.StreamReaderConfig{
-		RecvByte: func() (byte, error) {
-			var chunk pb.UploadToAliOssRequest
-			err := stream.RecvMsg(&chunk)
-			return byte(chunk.Data), err
+		RecvByte: func() (b byte, err error) {
+			chunk, recvErr := stream.Recv()
+			if recvErr != nil {
+				err = recvErr
+				return
+			}
+
+			if chunk == nil {
+				err = io.EOF
+				return
+			}
+
+			return byte(chunk.Data), nil
 		},
 	}))
 

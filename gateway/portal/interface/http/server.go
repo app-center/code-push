@@ -67,9 +67,9 @@ func (s *server) initHttpHandler() {
 
 	apiGroup := r.Group("/api")
 	apiGroup.POST("/auth", s.endpoints.Auth)
-	apiGroup.POST("/env", s.endpoints.CreateEnv)
-	apiGroup.POST("/version", s.middleware.Authorized, s.endpoints.ReleaseVersion)
-	apiGroup.POST("/upload/pkg", s.middleware.Authorized, s.endpoints.UploadPkg)
+	apiGroup.POST("/v1/env", s.endpoints.CreateEnv)
+	apiGroup.POST("/v1/version", s.middleware.Authorized, s.endpoints.ReleaseVersion)
+	apiGroup.POST("/v1/upload/pkg", s.middleware.Authorized, s.endpoints.UploadPkg)
 
 	s.handler = r
 }

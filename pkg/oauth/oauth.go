@@ -17,13 +17,9 @@ func Valid(token, timestamp, nonce, sign string) (bool, error) {
 		return false, errors.New("invalid timestamp")
 	}
 
-	expectSign, signErr := util.EncryptAES([]byte(token), []byte(fmt.Sprintf("%s.%s", timestamp, nonce)))
+	expectSign := util.EncodeMD5(fmt.Sprintf("%s.%s.%s", token, timestamp, nonce))
 
-	if signErr != nil {
-		return false, signErr
-	}
-
-	return string(expectSign) == sign, nil
+	return expectSign == sign, nil
 }
 
 func isTimestampValid(timestamp string) bool {
@@ -33,11 +29,11 @@ func isTimestampValid(timestamp string) bool {
 		return true
 	}
 
-	nowTime := time.Now().Unix()
+	nowTime := time.Now().Unix() * 1000
 
 	if startTime > nowTime {
 		return false
 	}
 
-	return (nowTime - startTime) > int64(authTimeout.Seconds())
+	return (nowTime - startTime) < authTimeout.Milliseconds()*1000*20
 }

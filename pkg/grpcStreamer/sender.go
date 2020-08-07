@@ -12,12 +12,12 @@ func (s *streamSender) Write(p []byte) (n int, err error) {
 	n = 0
 	for {
 		if n >= len(p) {
-			return n, nil
+			return
 		}
 
-		err := s.sendByte(p[n])
+		err = s.sendByte(p[n])
 		if err != nil {
-			return n, err
+			return
 		} else {
 			n += 1
 		}

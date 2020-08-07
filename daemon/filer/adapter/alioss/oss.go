@@ -9,15 +9,17 @@ import (
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 	"io"
+	"path"
 )
 
-func NewAliOssAdapter(endpoint, accessKeyId, accessKeySecret string, logger log.Logger) (usecase.AliOssAdapter, error) {
-	if endpoint == "" || accessKeyId == "" || accessKeySecret == "" {
-		return nil, errors.Wrap(filer.ErrParamsInvalid, "endpoints, accessKeyId, accessKeySecret is required")
+func NewAliOssAdapter(endpoint, bucket, accessKeyId, accessKeySecret string, logger log.Logger) (usecase.AliOssAdapter, error) {
+	if endpoint == "" || bucket == "" || accessKeyId == "" || accessKeySecret == "" {
+		return nil, errors.Wrap(filer.ErrParamsInvalid, "endpoints, bucket, accessKeyId, accessKeySecret is required")
 	}
 
 	return &aliOss{
 		endpoint:        endpoint,
+		bucket:          bucket,
 		accessKeyId:     accessKeyId,
 		accessKeySecret: accessKeySecret,
 		Logger:          logger,
@@ -26,6 +28,7 @@ func NewAliOssAdapter(endpoint, accessKeyId, accessKeySecret string, logger log.
 
 type aliOss struct {
 	endpoint        string
+	bucket          string
 	accessKeyId     string
 	accessKeySecret string
 
@@ -37,7 +40,7 @@ type aliOss struct {
 func (o *aliOss) SignFetchURL(key []byte) ([]byte, error) {
 	bucket, err := o.getPackageBucket()
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get package bucket: %s", ossBucketPackage)
+		return nil, errors.Wrapf(err, "failed to get package bucket: %s", o.bucket)
 	}
 
 	url, err := bucket.SignURL(string(key), oss.HTTPGet, 5*60)
@@ -74,11 +77,11 @@ func (o *aliOss) getPackageBucket() (*oss.Bucket, error) {
 		return nil, errors.Wrap(err, "failed to get oss client")
 	}
 
-	return client.Bucket(ossBucketPackage)
+	return client.Bucket(o.bucket)
 }
 
 func (o *aliOss) generatePackageObjectKey() string {
-	return util.EncodeBase64(uuid.NewV4().String())
+	return path.Join(ossDir, util.EncodeBase64(uuid.NewV4().String()))
 }
 
 func (o *aliOss) getClient() (*oss.Client, error) {
@@ -95,5 +98,5 @@ func (o *aliOss) getClient() (*oss.Client, error) {
 }
 
 const (
-	ossBucketPackage = "package"
+	ossDir = "package"
 )

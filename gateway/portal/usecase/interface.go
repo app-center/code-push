@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"github.com/funnyecho/code-push/gateway/portal"
-	"io"
+	"mime/multipart"
 )
 
 type UseCase interface {
@@ -32,7 +32,7 @@ type Version interface {
 }
 
 type Uploader interface {
-	UploadPkg(stream io.Reader) (fileKey []byte, err error)
+	UploadPkg(stream multipart.File) (fileKey []byte, err error)
 }
 
 type CodePushAdapter interface {
@@ -52,5 +52,5 @@ type SessionAdapter interface {
 }
 
 type FilerAdapter interface {
-	UploadPkg(source io.Reader) (fileKey []byte, err error)
+	UploadPkg(source multipart.File) (fileKey []byte, err error)
 }

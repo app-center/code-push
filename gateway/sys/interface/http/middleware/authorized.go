@@ -17,7 +17,7 @@ func (m *Middleware) Authorized(c *gin.Context) {
 	} else {
 		accessToken = c.Query("access-token")
 		if len(accessToken) == 0 {
-			accessToken = c.GetHeader("SYS-Access-Token")
+			accessToken = c.GetHeader("Sys-Access-Token")
 		}
 	}
 

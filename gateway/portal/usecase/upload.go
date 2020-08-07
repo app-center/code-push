@@ -1,7 +1,9 @@
 package usecase
 
-import "io"
+import (
+	"mime/multipart"
+)
 
-func (u *useCase) UploadPkg(stream io.Reader) (fileKey []byte, err error) {
-	panic("implement me")
+func (u *useCase) UploadPkg(stream multipart.File) (fileKey []byte, err error) {
+	return u.filer.UploadPkg(stream)
 }

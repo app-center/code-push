@@ -14,6 +14,7 @@ type serveConfig struct {
 	BoltPath       string
 
 	AliOssEndpoint     string
+	AliOssBucket       string
 	AliOssAccessKeyId  string
 	AliOssAccessSecret string
 }
@@ -42,6 +43,10 @@ func (c *serveConfig) validate() error {
 
 	if c.AliOssEndpoint == "" {
 		errs = append(errs, "AliOssEndpoint required")
+	}
+
+	if c.AliOssBucket == "" {
+		errs = append(errs, "AliOssBucket required")
 	}
 
 	if c.AliOssAccessKeyId == "" {

@@ -29,8 +29,8 @@ func AuthorizedWithReturns(uc usecase.UseCase, c *gin.Context) ([]byte, error) {
 		accessToken = accessTokenFromCookies
 	} else {
 		accessToken = c.Query("access-token")
-		if len(accessToken) == 0 {
-			accessToken = c.GetHeader("SYS-Access-Token")
+		if accessToken == "" {
+			accessToken = c.GetHeader("Portal-Access-Token")
 		}
 	}
 

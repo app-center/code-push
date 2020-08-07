@@ -11,22 +11,28 @@ func NewStreamReader(config StreamReaderConfig) *streamReader {
 }
 
 type streamReader struct {
-	recvByte RecvByte
+	recvByte  RecvByte
+	streamEOF bool
 }
 
 func (s *streamReader) Read(p []byte) (n int, err error) {
+	if s.streamEOF {
+		return 0, io.EOF
+	}
+
 	n = 0
 	for {
 		if n >= len(p) {
 			return n, nil
 		}
 
-		data, err := s.recvByte()
-		if err != nil {
-			if err == io.EOF {
+		data, recvErr := s.recvByte()
+		if recvErr != nil {
+			if recvErr == io.EOF {
+				s.streamEOF = true
 				return n, nil
 			} else {
-				return 0, err
+				return n, recvErr
 			}
 		} else {
 			p[n] = data

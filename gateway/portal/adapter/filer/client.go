@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"io"
+	"mime/multipart"
 )
 
 func New(logger log.Logger, fns ...func(*Options)) *Client {
@@ -31,22 +32,19 @@ type Client struct {
 	uploadClient pb.UploadClient
 }
 
-func (s *Client) UploadPkg(source io.Reader) (fileKey []byte, err error) {
+func (s *Client) UploadPkg(source multipart.File) (fileKey []byte, err error) {
 	stream, err := s.uploadClient.UploadToAliOss(context.Background())
 
-	streamSender := grpcStreamer.NewSender(func(p byte) error {
-		sendErr := stream.Send(&pb.UploadToAliOssRequest{Data: uint32(p)})
-		if sendErr == io.EOF {
-			return sendErr
-		}
+	streamSender := grpcStreamer.NewSender(func(p byte) (err error) {
+		err = stream.Send(&pb.UploadToAliOssRequest{Data: uint32(p)})
 
-		return nil
+		return
 	})
 
 	written, copyErr := io.Copy(streamSender, source)
 	if copyErr != nil {
-		// FIXME: maybe stream need to close
-		return nil, errors.Wrapf(err, "failed to write to client stream, written: %d", written)
+		_ = stream.CloseSend()
+		return nil, errors.Wrapf(copyErr, "failed to write to client stream, written: %d", written)
 	}
 
 	res, resErr := stream.CloseAndRecv()

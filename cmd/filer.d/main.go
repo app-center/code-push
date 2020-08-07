@@ -76,6 +76,7 @@ func initServeCmd() {
 	serveCmdFS.IntVar(&(serveCmdOptions.Port), "port", 0, "port for grpc server listen to")
 	serveCmdFS.StringVar(&(serveCmdOptions.BoltPath), "bolt-path", "storage/filer.d/db", "path of bolt file")
 	serveCmdFS.StringVar(&(serveCmdOptions.AliOssEndpoint), "alioss-endpoint", "", "endpoint of ali-oss")
+	serveCmdFS.StringVar(&(serveCmdOptions.AliOssBucket), "alioss-bucket", "", "bucket of ali-oss")
 	serveCmdFS.StringVar(&(serveCmdOptions.AliOssAccessKeyId), "alioss-access-key-id", "", "access key id of ali-oss")
 	serveCmdFS.StringVar(&(serveCmdOptions.AliOssAccessSecret), "alioss-access-secret", "", "access secret of ali-oss")
 
@@ -127,6 +128,7 @@ func onServe(ctx context.Context, args []string) error {
 
 	aliOssAdapter, aliOssAdapterErr := alioss.NewAliOssAdapter(
 		serveCmdOptions.AliOssEndpoint,
+		serveCmdOptions.AliOssBucket,
 		serveCmdOptions.AliOssAccessKeyId,
 		serveCmdOptions.AliOssAccessSecret,
 		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "ali-oss")),
@@ -165,6 +167,7 @@ func onServe(ctx context.Context, args []string) error {
 		g.Add(func() error {
 			baseServer := grpc.NewServer()
 			pb.RegisterFileServer(baseServer, grpcServer)
+			pb.RegisterUploadServer(baseServer, grpcServer)
 			return baseServer.Serve(grpcListener)
 		}, func(err error) {
 			grpcListener.Close()
