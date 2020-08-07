@@ -70,7 +70,7 @@ func (s *server) initHttpHandler() {
 
 	apiGroup := r.Group("/api")
 	apiGroup.POST("/auth", s.endpoints.Auth)
-	apiGroup.POST("/version/:version/upgrade", s.endpoints.VersionUpgradeQuery)
+	apiGroup.GET("/v1/version/:version/upgrade", s.endpoints.VersionUpgradeQuery)
 
 	s.handler = r
 }

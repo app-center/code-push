@@ -12,9 +12,9 @@ type versionUpgradeQueryRequest struct {
 }
 
 type versionUpgradeQueryResponse struct {
-	AppVersion          []byte `json:"app_version"`
-	LatestAppVersion    []byte `json:"latest_app_version"`
-	CanUpdateAppVersion []byte `json:"can_update_app_version"`
+	AppVersion          string `json:"app_version"`
+	LatestAppVersion    string `json:"latest_app_version"`
+	CanUpdateAppVersion string `json:"can_update_app_version"`
 	MustUpdate          bool   `json:"must_update"`
 }
 
@@ -39,9 +39,9 @@ func (e *Endpoints) VersionUpgradeQuery(c *gin.Context) {
 	}
 
 	res.Success(c, &versionUpgradeQueryResponse{
-		AppVersion:          result.AppVersion,
-		LatestAppVersion:    result.LatestAppVersion,
-		CanUpdateAppVersion: result.CanUpdateAppVersion,
+		AppVersion:          string(result.AppVersion),
+		LatestAppVersion:    string(result.LatestAppVersion),
+		CanUpdateAppVersion: string(result.CanUpdateAppVersion),
 		MustUpdate:          result.MustUpdate,
 	})
 }

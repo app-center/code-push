@@ -13,6 +13,7 @@ func NewUseCase(config CtorConfig, optionsFns ...func(*Options)) UseCase {
 		adapters: &adapters{
 			codePush: config.CodePushAdapter,
 			session:  config.SessionAdapter,
+			filer:    config.FilerAdapter,
 		},
 		Logger:  config.Logger,
 		options: ctorOptions,
