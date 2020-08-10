@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
 	"github.com/funnyecho/code-push/gateway/client"
+	"github.com/funnyecho/code-push/pkg/grpcInterceptor"
 	"github.com/funnyecho/code-push/pkg/log"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 )
@@ -30,30 +32,41 @@ type Client struct {
 	fileClient pb.FileClient
 }
 
-func (s *Client) GetSource(fileKey []byte) ([]byte, error) {
+func (c *Client) GetSource(fileKey []byte) ([]byte, error) {
 	if fileKey == nil {
 		return nil, client.ErrParamsInvalid
 	}
 
-	res, err := s.fileClient.GetSource(context.Background(), &pb.GetSourceRequest{Key: fileKey})
+	res, err := c.fileClient.GetSource(context.Background(), &pb.GetSourceRequest{Key: fileKey})
 
 	return unmarshalStringResponse(res), err
 }
 
-func (s *Client) Conn() error {
-	conn, err := grpc.Dial(s.Options.ServerAddr, grpc.WithInsecure())
+func (c *Client) Conn() error {
+	conn, err := grpc.Dial(
+		c.Options.ServerAddr,
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
+			grpcInterceptor.UnaryClientMetricInterceptor(c.Logger),
+			grpcInterceptor.UnaryClientErrorInterceptor(),
+		)),
+		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(
+			grpcInterceptor.StreamClientMetricInterceptor(c.Logger),
+			grpcInterceptor.StreamClientErrorInterceptor(),
+		)),
+	)
 	if err != nil {
-		return errors.Wrapf(err, "Dail to grpc server: %s failed", s.Options.ServerAddr)
+		return errors.Wrapf(err, "Dail to grpc server: %c failed", c.Options.ServerAddr)
 	}
 
-	s.conn = conn
-	s.fileClient = pb.NewFileClient(conn)
+	c.conn = conn
+	c.fileClient = pb.NewFileClient(conn)
 	return nil
 }
 
-func (s *Client) Close() error {
-	if s.conn != nil {
-		return s.conn.Close()
+func (c *Client) Close() error {
+	if c.conn != nil {
+		return c.conn.Close()
 	}
 
 	return nil

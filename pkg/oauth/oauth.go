@@ -26,10 +26,10 @@ func isTimestampValid(timestamp string) bool {
 	startTime, startTimeErr := strconv.ParseInt(timestamp, 10, 64)
 
 	if startTimeErr != nil {
-		return true
+		return false
 	}
 
-	nowTime := time.Now().Unix() * 1000
+	nowTime := time.Now().UnixNano() / 1000000
 
 	if startTime > nowTime {
 		return false

@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/funnyecho/code-push/daemon/session/interface/grpc/pb"
 	"github.com/funnyecho/code-push/gateway/sys"
+	"github.com/funnyecho/code-push/pkg/grpcInterceptor"
 	"github.com/funnyecho/code-push/pkg/log"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 )
@@ -30,8 +32,8 @@ type Client struct {
 	accessTokenClient pb.AccessTokenClient
 }
 
-func (s *Client) GenerateAccessToken(subject string) ([]byte, error) {
-	res, err := s.accessTokenClient.GenerateAccessToken(context.Background(), &pb.GenerateAccessTokenRequest{
+func (c *Client) GenerateAccessToken(subject string) ([]byte, error) {
+	res, err := c.accessTokenClient.GenerateAccessToken(context.Background(), &pb.GenerateAccessTokenRequest{
 		Claims: &pb.AccessTokenClaims{
 			Issuer:   pb.AccessTokenIssuer_PORTAL,
 			Subject:  subject,
@@ -42,8 +44,8 @@ func (s *Client) GenerateAccessToken(subject string) ([]byte, error) {
 	return unmarshalStringResponse(res), err
 }
 
-func (s *Client) VerifyAccessToken(token string) (subject []byte, err error) {
-	res, err := s.accessTokenClient.VerifyAccessToken(context.Background(), &pb.VerifyAccessTokenRequest{Token: token})
+func (c *Client) VerifyAccessToken(token string) (subject []byte, err error) {
+	res, err := c.accessTokenClient.VerifyAccessToken(context.Background(), &pb.VerifyAccessTokenRequest{Token: token})
 
 	if err != nil {
 		return nil, err
@@ -57,20 +59,31 @@ func (s *Client) VerifyAccessToken(token string) (subject []byte, err error) {
 	return []byte(claims.Subject), nil
 }
 
-func (s *Client) Conn() error {
-	conn, err := grpc.Dial(s.Options.ServerAddr, grpc.WithInsecure())
+func (c *Client) Conn() error {
+	conn, err := grpc.Dial(
+		c.Options.ServerAddr,
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
+			grpcInterceptor.UnaryClientMetricInterceptor(c.Logger),
+			grpcInterceptor.UnaryClientErrorInterceptor(),
+		)),
+		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(
+			grpcInterceptor.StreamClientMetricInterceptor(c.Logger),
+			grpcInterceptor.StreamClientErrorInterceptor(),
+		)),
+	)
 	if err != nil {
-		return errors.Wrapf(err, "Dail to grpc server: %s failed", s.Options.ServerAddr)
+		return errors.Wrapf(err, "Dail to grpc server: %c failed", c.Options.ServerAddr)
 	}
 
-	s.conn = conn
-	s.accessTokenClient = pb.NewAccessTokenClient(conn)
+	c.conn = conn
+	c.accessTokenClient = pb.NewAccessTokenClient(conn)
 	return nil
 }
 
-func (s *Client) Close() error {
-	if s.conn != nil {
-		return s.conn.Close()
+func (c *Client) Close() error {
+	if c.conn != nil {
+		return c.conn.Close()
 	}
 
 	return nil

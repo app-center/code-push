@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
 	"github.com/funnyecho/code-push/gateway/portal"
+	"github.com/funnyecho/code-push/pkg/grpcInterceptor"
 	"github.com/funnyecho/code-push/pkg/log"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"time"
@@ -86,7 +88,18 @@ func (c *CodePushClient) VersionStrictCompatQuery(envId, appVersion []byte) (*po
 }
 
 func (c *CodePushClient) Conn() error {
-	conn, err := grpc.Dial(c.Options.ServerAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		c.Options.ServerAddr,
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
+			grpcInterceptor.UnaryClientMetricInterceptor(c.Logger),
+			grpcInterceptor.UnaryClientErrorInterceptor(),
+		)),
+		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(
+			grpcInterceptor.StreamClientMetricInterceptor(c.Logger),
+			grpcInterceptor.StreamClientErrorInterceptor(),
+		)),
+	)
 	if err != nil {
 		return errors.Wrapf(err, "Dail to grpc server: %s failed", c.Options.ServerAddr)
 	}

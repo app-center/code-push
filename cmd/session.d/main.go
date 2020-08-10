@@ -7,9 +7,11 @@ import (
 	sessiongrpc "github.com/funnyecho/code-push/daemon/session/interface/grpc"
 	"github.com/funnyecho/code-push/daemon/session/interface/grpc/pb"
 	"github.com/funnyecho/code-push/daemon/session/usecase"
+	"github.com/funnyecho/code-push/pkg/grpcInterceptor"
 	"github.com/funnyecho/code-push/pkg/log"
 	gokitLog "github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/oklog/run"
 	"github.com/peterbourgon/ff/v3"
 	"github.com/peterbourgon/ff/v3/ffcli"
@@ -123,9 +125,10 @@ func onServe(ctx context.Context, args []string) error {
 		log.New(gokitLog.With(logger, "component", "usecase")),
 	)
 
+	grpcServerLogger := log.New(gokitLog.With(logger, "component", "interfaces", "interface", "grpc"))
 	grpcServer := sessiongrpc.New(
 		uc,
-		log.New(gokitLog.With(logger, "component", "interfaces", "interface", "grpc")),
+		grpcServerLogger,
 	)
 	{
 		grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", serveCmdOptions.Port))
@@ -134,7 +137,16 @@ func onServe(ctx context.Context, args []string) error {
 		}
 
 		g.Add(func() error {
-			baseServer := grpc.NewServer()
+			baseServer := grpc.NewServer(
+				grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+					grpcInterceptor.UnaryServerMetricInterceptor(grpcServerLogger),
+					grpcInterceptor.UnaryServerErrorInterceptor(),
+				)),
+				grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+					grpcInterceptor.StreamServerMetricInterceptor(grpcServerLogger),
+					grpcInterceptor.StreamServerErrorInterceptor(),
+				)),
+			)
 			pb.RegisterAccessTokenServer(baseServer, grpcServer)
 			return baseServer.Serve(grpcListener)
 		}, func(err error) {

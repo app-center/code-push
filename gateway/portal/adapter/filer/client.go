@@ -3,8 +3,10 @@ package filer
 import (
 	"context"
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
+	"github.com/funnyecho/code-push/pkg/grpcInterceptor"
 	"github.com/funnyecho/code-push/pkg/grpcStreamer"
 	"github.com/funnyecho/code-push/pkg/log"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"io"
@@ -32,8 +34,8 @@ type Client struct {
 	uploadClient pb.UploadClient
 }
 
-func (s *Client) UploadPkg(source multipart.File) (fileKey []byte, err error) {
-	stream, err := s.uploadClient.UploadToAliOss(context.Background())
+func (c *Client) UploadPkg(source multipart.File) (fileKey []byte, err error) {
+	stream, err := c.uploadClient.UploadToAliOss(context.Background())
 
 	streamSender := grpcStreamer.NewSender(func(p byte) (err error) {
 		err = stream.Send(&pb.UploadToAliOssRequest{Data: uint32(p)})
@@ -51,20 +53,31 @@ func (s *Client) UploadPkg(source multipart.File) (fileKey []byte, err error) {
 	return unmarshalStringResponse(res), resErr
 }
 
-func (s *Client) Conn() error {
-	conn, err := grpc.Dial(s.Options.ServerAddr, grpc.WithInsecure())
+func (c *Client) Conn() error {
+	conn, err := grpc.Dial(
+		c.Options.ServerAddr,
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
+			grpcInterceptor.UnaryClientMetricInterceptor(c.Logger),
+			grpcInterceptor.UnaryClientErrorInterceptor(),
+		)),
+		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(
+			grpcInterceptor.StreamClientMetricInterceptor(c.Logger),
+			grpcInterceptor.StreamClientErrorInterceptor(),
+		)),
+	)
 	if err != nil {
-		return errors.Wrapf(err, "Dail to grpc server: %s failed", s.Options.ServerAddr)
+		return errors.Wrapf(err, "Dail to grpc server: %c failed", c.Options.ServerAddr)
 	}
 
-	s.conn = conn
-	s.uploadClient = pb.NewUploadClient(conn)
+	c.conn = conn
+	c.uploadClient = pb.NewUploadClient(conn)
 	return nil
 }
 
-func (s *Client) Close() error {
-	if s.conn != nil {
-		return s.conn.Close()
+func (c *Client) Close() error {
+	if c.conn != nil {
+		return c.conn.Close()
 	}
 
 	return nil
