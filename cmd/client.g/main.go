@@ -6,6 +6,7 @@ import (
 	"fmt"
 	code_push "github.com/funnyecho/code-push/gateway/client/adapter/code-push"
 	"github.com/funnyecho/code-push/gateway/client/adapter/filer"
+	"github.com/funnyecho/code-push/gateway/client/adapter/metric"
 	"github.com/funnyecho/code-push/gateway/client/adapter/session"
 	"github.com/funnyecho/code-push/gateway/client/interface/http"
 	"github.com/funnyecho/code-push/gateway/client/usecase"
@@ -71,6 +72,7 @@ func initServeCmd() {
 	serveCmdFS.StringVar(&(serveCmdOptions.ConfigFilePath), "config", "config/client.g/serve.yml", "alternative config file path")
 	serveCmdFS.BoolVar(&(serveCmdOptions.Debug), "debug", false, "run in debug mode")
 	serveCmdFS.IntVar(&(serveCmdOptions.Port), "port", 0, "port for grpc server listen to")
+	serveCmdFS.IntVar(&(serveCmdOptions.PortMetricG), "port-metric", 0, "port of metric.g")
 	serveCmdFS.IntVar(&(serveCmdOptions.PortCodePushD), "port-code-push", 0, "port of code-push.d")
 	serveCmdFS.IntVar(&(serveCmdOptions.PortFilerD), "port-filer", 0, "port of filer.d")
 	serveCmdFS.IntVar(&(serveCmdOptions.PortSessionD), "port-session", 0, "port of session.d")
@@ -159,11 +161,21 @@ func onServe(ctx context.Context, args []string) error {
 	defer filerAdapter.Close()
 	filerAdapter.Debug("connected to filer.d", "addr", filerAdapter.ServerAddr)
 
+	metricAdapter := metric.New(nil, func(options *metric.Options) {
+		options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortMetricG)
+	})
+	metricConnErr := metricAdapter.Conn()
+	if metricConnErr != nil {
+		return metricConnErr
+	}
+	defer metricAdapter.Close()
+
 	uc := usecase.NewUseCase(
 		usecase.CtorConfig{
 			CodePushAdapter: codePushAdapter,
 			SessionAdapter:  sessionAdapter,
 			FilerAdapter:    filerAdapter,
+			MetricsAdapter:  metricAdapter,
 			Logger:          log.New(gokitLog.With(logger, "component", "usecase")),
 		},
 		func(options *usecase.Options) {

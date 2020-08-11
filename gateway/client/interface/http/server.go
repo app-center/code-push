@@ -65,6 +65,8 @@ func (s *server) initMiddleware() {
 func (s *server) initHttpHandler() {
 	r := gin.New()
 
+	r.Use(s.middleware.RequestDuration)
+
 	r.GET("/version/:version/download", s.endpoints.DownloadVersionPkg)
 	r.GET("/version/:version/download/:filename", s.endpoints.DownloadVersionPkg)
 

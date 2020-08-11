@@ -5,16 +5,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (u useCase) VersionStrictCompatQuery(envId, appVersion []byte) (*client.VersionCompatQueryResult, error) {
-	return u.codePush.VersionStrictCompatQuery(envId, appVersion)
+func (uc *useCase) VersionStrictCompatQuery(envId, appVersion []byte) (*client.VersionCompatQueryResult, error) {
+	return uc.codePush.VersionStrictCompatQuery(envId, appVersion)
 }
 
-func (u *useCase) GetVersion(envId, appVersion []byte) (*client.Version, error) {
-	return u.codePush.GetVersion(envId, appVersion)
+func (uc *useCase) GetVersion(envId, appVersion []byte) (*client.Version, error) {
+	return uc.codePush.GetVersion(envId, appVersion)
 }
 
-func (u *useCase) VersionDownloadPkg(envId, appVersion []byte) ([]byte, error) {
-	ver, verErr := u.codePush.GetVersion(envId, appVersion)
+func (uc *useCase) VersionDownloadPkg(envId, appVersion []byte) ([]byte, error) {
+	ver, verErr := uc.codePush.GetVersion(envId, appVersion)
 	if verErr != nil {
 		return nil, verErr
 	}
@@ -23,5 +23,5 @@ func (u *useCase) VersionDownloadPkg(envId, appVersion []byte) ([]byte, error) {
 	}
 
 	fileKey := ver.PackageFileKey
-	return u.filer.GetSource([]byte(fileKey))
+	return uc.filer.GetSource([]byte(fileKey))
 }

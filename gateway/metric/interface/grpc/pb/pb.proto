@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package pb;
+
+service RequestDuration {
+  rpc Gateway(GatewayRequestDurationRequest) returns (RequestDurationResponse) {}
+  rpc Daemon(DaemonRequestDurationRequest) returns (RequestDurationResponse) {}
+}
+
+message RequestDurationResponse {}
+
+message GatewayRequestDurationRequest {
+  string svr = 1;
+  string proto = 2;
+  string path = 3;
+  bool success = 4;
+  double durationSecond = 5;
+}
+
+message DaemonRequestDurationRequest {
+  string svr = 1;
+  string proto = 2;
+  string method = 3;
+  bool success = 4;
+  double durationSecond = 5;
+}

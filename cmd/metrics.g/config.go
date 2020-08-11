@@ -10,11 +10,7 @@ type serveConfig struct {
 	ConfigFilePath string
 	Debug          bool
 	Port           int
-
-	PortMetricG   int
-	PortCodePushD int
-	PortFilerD    int
-	PortSessionD  int
+	PortMetric     int
 }
 
 func (c *serveConfig) validate() error {
@@ -24,20 +20,8 @@ func (c *serveConfig) validate() error {
 		errs = append(errs, "Invalid Port")
 	}
 
-	if c.PortMetricG == 0 {
-		errs = append(errs, "Invalid port of metric.g")
-	}
-
-	if c.PortCodePushD == 0 {
-		errs = append(errs, "Invalid port of code-push.d")
-	}
-
-	if c.PortFilerD == 0 {
-		errs = append(errs, "Invalid port of filer.d")
-	}
-
-	if c.PortSessionD == 0 {
-		errs = append(errs, "Invalid port of session.d")
+	if c.PortMetric == 0 {
+		errs = append(errs, "Invalid PortMetric")
 	}
 
 	if len(errs) == 0 {

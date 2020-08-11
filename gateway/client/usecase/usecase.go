@@ -14,6 +14,7 @@ func NewUseCase(config CtorConfig, optionsFns ...func(*Options)) UseCase {
 			codePush: config.CodePushAdapter,
 			session:  config.SessionAdapter,
 			filer:    config.FilerAdapter,
+			metrics:  config.MetricsAdapter,
 		},
 		Logger:  config.Logger,
 		options: ctorOptions,
@@ -24,6 +25,7 @@ type CtorConfig struct {
 	CodePushAdapter
 	SessionAdapter
 	FilerAdapter
+	MetricsAdapter
 	log.Logger
 }
 
@@ -37,6 +39,7 @@ type adapters struct {
 	codePush CodePushAdapter
 	session  SessionAdapter
 	filer    FilerAdapter
+	metrics  MetricsAdapter
 }
 
 type Options struct {
