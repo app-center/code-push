@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	sessionAdapter "github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/gateway/portal"
 	"github.com/funnyecho/code-push/pkg/oauth"
 	"github.com/pkg/errors"
@@ -33,7 +34,7 @@ func (u *useCase) SignToken(branchId []byte) ([]byte, error) {
 		return nil, errors.Wrap(portal.ErrParamsInvalid, "branchId required")
 	}
 
-	token, tokenErr := u.session.GenerateAccessToken(string(branchId))
+	token, tokenErr := u.session.GenerateAccessToken(sessionAdapter.AccessTokenIssuer_PORTAL, string(branchId))
 	if tokenErr != nil {
 		return nil, errors.WithStack(tokenErr)
 	}

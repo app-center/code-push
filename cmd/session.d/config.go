@@ -12,7 +12,7 @@ type serveConfig struct {
 	Port           int
 }
 
-func (c *serveConfig) validate() error {
+func (c *serveConfig) Validate() error {
 	var errs []string
 
 	if c.Port == 0 {

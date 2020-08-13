@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	sessionAdapter "github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/gateway/client"
 	"github.com/funnyecho/code-push/pkg/oauth"
 	"github.com/pkg/errors"
@@ -33,7 +34,7 @@ func (uc *useCase) SignToken(envId []byte) ([]byte, error) {
 		return nil, errors.Wrap(client.ErrParamsInvalid, "branchId required")
 	}
 
-	token, tokenErr := uc.session.GenerateAccessToken(string(envId))
+	token, tokenErr := uc.session.GenerateAccessToken(sessionAdapter.AccessTokenIssuer_CLIENT, string(envId))
 	if tokenErr != nil {
 		return nil, errors.WithStack(tokenErr)
 	}

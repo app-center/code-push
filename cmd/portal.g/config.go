@@ -13,10 +13,10 @@ type serveConfig struct {
 
 	PortCodePushD int
 	PortFilerD    int
-	PortSessionD  int
+	AddrSessionD  string
 }
 
-func (c *serveConfig) validate() error {
+func (c *serveConfig) Validate() error {
 	var errs []string
 
 	if c.Port == 0 {
@@ -31,8 +31,8 @@ func (c *serveConfig) validate() error {
 		errs = append(errs, "Invalid port of filer.d")
 	}
 
-	if c.PortSessionD == 0 {
-		errs = append(errs, "Invalid port of session.d")
+	if c.AddrSessionD == "" {
+		errs = append(errs, "Invalid address of session.d")
 	}
 
 	if len(errs) == 0 {

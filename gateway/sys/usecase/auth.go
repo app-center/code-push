@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"crypto/md5"
+	sessionAdapter "github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/gateway/sys"
 	"github.com/funnyecho/code-push/pkg/util"
 	"github.com/pkg/errors"
@@ -25,7 +26,7 @@ func (u *useCase) SignToken() ([]byte, error) {
 		return nil, errors.WithStack(subjectErr)
 	}
 
-	token, tokenErr := u.session.GenerateAccessToken(string(subject))
+	token, tokenErr := u.session.GenerateAccessToken(sessionAdapter.AccessTokenIssuer_SYS, string(subject))
 	if tokenErr != nil {
 		return nil, errors.WithStack(tokenErr)
 	}

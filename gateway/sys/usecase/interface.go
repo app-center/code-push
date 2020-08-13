@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	sessionAdapter "github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/gateway/sys"
 )
 
@@ -26,6 +27,6 @@ type CodePushAdapter interface {
 }
 
 type SessionAdapter interface {
-	GenerateAccessToken(subject string) ([]byte, error)
+	GenerateAccessToken(issuer sessionAdapter.AccessTokenIssuer, subject string) ([]byte, error)
 	VerifyAccessToken(token string) (subject []byte, err error)
 }
