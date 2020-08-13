@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc_adapter"
+	"github.com/funnyecho/code-push/daemon/filer/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
-	code_push "github.com/funnyecho/code-push/gateway/client/adapter/code-push"
-	"github.com/funnyecho/code-push/gateway/client/adapter/filer"
-	"github.com/funnyecho/code-push/gateway/client/adapter/metric"
 	"github.com/funnyecho/code-push/gateway/client/interface/http"
 	"github.com/funnyecho/code-push/gateway/client/usecase"
+	"github.com/funnyecho/code-push/gateway/metric/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/pkg/log"
 	"github.com/funnyecho/code-push/pkg/svrkit"
 	gokitLog "github.com/go-kit/kit/log"
@@ -26,9 +25,9 @@ func main() {
 			svrkit.WithServeCmdEnvPrefix("CLIENT_G"),
 			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
 			svrkit.WithServeHttpPort(&(serveCmdOptions.Port)),
-			svrkit.WithServeMetricPort(&(serveCmdOptions.PortMetricG)),
-			svrkit.WithServeCodePushPort(&(serveCmdOptions.PortCodePushD)),
-			svrkit.WithServeFilerPort(&(serveCmdOptions.PortFilerD)),
+			svrkit.WithServeMetricAddress(&(serveCmdOptions.AddrMetricG)),
+			svrkit.WithServeCodePushAddr(&(serveCmdOptions.AddrCodePushD)),
+			svrkit.WithServeFilerAddr(&(serveCmdOptions.AddrFilerD)),
 			svrkit.WithServeSessionAddr(&(serveCmdOptions.AddrSessionD)),
 			svrkit.WithServeCmdConfigValidation(&serveCmdOptions),
 			svrkit.WithServeCmdRun(onServe),
@@ -50,10 +49,10 @@ func onServe(ctx context.Context, args []string) error {
 		}
 	}
 
-	codePushAdapter := code_push.New(
+	codePushAdapter := codePushAdapter.New(
 		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "code-push.d")),
-		func(options *code_push.Options) {
-			options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortCodePushD)
+		func(options *codePushAdapter.Options) {
+			options.ServerAddr = serveCmdOptions.AddrCodePushD
 		},
 	)
 
@@ -77,10 +76,10 @@ func onServe(ctx context.Context, args []string) error {
 	defer sessionAdapter.Close()
 	sessionAdapter.Debug("connected to session.d", "addr", sessionAdapter.ServerAddr)
 
-	filerAdapter := filer.New(
+	filerAdapter := filerAdapter.New(
 		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "filer.d")),
-		func(options *filer.Options) {
-			options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortFilerD)
+		func(options *filerAdapter.Options) {
+			options.ServerAddr = serveCmdOptions.AddrFilerD
 		},
 	)
 	filerConnErr := filerAdapter.Conn()
@@ -90,9 +89,12 @@ func onServe(ctx context.Context, args []string) error {
 	defer filerAdapter.Close()
 	filerAdapter.Debug("connected to filer.d", "addr", filerAdapter.ServerAddr)
 
-	metricAdapter := metric.New(nil, func(options *metric.Options) {
-		options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortMetricG)
-	})
+	metricAdapter := metricAdapter.New(
+		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "metric.g")),
+		func(options *metricAdapter.Options) {
+			options.ServerAddr = serveCmdOptions.AddrMetricG
+		},
+	)
 	metricConnErr := metricAdapter.Conn()
 	if metricConnErr != nil {
 		return metricConnErr

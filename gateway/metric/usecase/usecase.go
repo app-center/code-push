@@ -21,7 +21,7 @@ type useCase struct {
 func (uc *useCase) initMetrics() {
 	uc.requestDurationMetric = prometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
 		Namespace: "code_push",
-		Name: "request_duration_seconds",
-		Help: "Request duration in seconds",
-	}, []string{"svr_type", "svr_name", "interface", "path", "success"})
+		Name:      "request_duration_seconds",
+		Help:      "Request duration in seconds",
+	}, []string{"svr_name", "interface", "path", "success"})
 }

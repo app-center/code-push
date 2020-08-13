@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
 	sessionAdapter "github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/gateway/client"
 )
@@ -29,8 +30,8 @@ type Metrics interface {
 
 type CodePushAdapter interface {
 	GetEnvEncToken(envId []byte) ([]byte, error)
-	GetVersion(envId, appVersion []byte) (*client.Version, error)
-	VersionStrictCompatQuery(envId, appVersion []byte) (*client.VersionCompatQueryResult, error)
+	GetVersion(envId, appVersion []byte) (*pb.VersionResponse, error)
+	VersionStrictCompatQuery(envId, appVersion []byte) (*pb.VersionStrictCompatQueryResponse, error)
 }
 
 type SessionAdapter interface {
@@ -43,5 +44,5 @@ type FilerAdapter interface {
 }
 
 type MetricsAdapter interface {
-	RequestDuration(path string, success bool, durationSecond float64)
+	HttpRequestDuration(svr, path string, success bool, durationSecond float64)
 }

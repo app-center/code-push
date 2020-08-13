@@ -3,9 +3,8 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
+	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
-	code_push "github.com/funnyecho/code-push/gateway/sys/adapter/code-push"
 	"github.com/funnyecho/code-push/gateway/sys/interface/http"
 	"github.com/funnyecho/code-push/gateway/sys/usecase"
 	"github.com/funnyecho/code-push/pkg/log"
@@ -25,7 +24,7 @@ func main() {
 			svrkit.WithServeCmdEnvPrefix("SYS_G"),
 			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
 			svrkit.WithServeHttpPort(&(serveCmdOptions.Port)),
-			svrkit.WithServeCodePushPort(&(serveCmdOptions.PortCodePushD)),
+			svrkit.WithServeCodePushAddr(&(serveCmdOptions.AddrCodePushD)),
 			svrkit.WithServeSessionAddr(&(serveCmdOptions.AddrSessionD)),
 			svrkit.WithServeCmdFlagSet(func(set *flag.FlagSet) {
 				set.StringVar(&(serveCmdOptions.RootUserName), "root-user-name", "", "root user name")
@@ -51,10 +50,10 @@ func onServe(ctx context.Context, args []string) error {
 		}
 	}
 
-	codePushAdapter := code_push.New(
+	codePushAdapter := codePushAdapter.New(
 		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "code-push.d")),
-		func(options *code_push.Options) {
-			options.ServerAddr = fmt.Sprintf("127.0.0.1:%d", serveCmdOptions.PortCodePushD)
+		func(options *codePushAdapter.Options) {
+			options.ServerAddr = serveCmdOptions.AddrCodePushD
 		},
 	)
 

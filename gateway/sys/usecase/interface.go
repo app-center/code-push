@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
 	sessionAdapter "github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/gateway/sys"
 )
@@ -22,7 +23,7 @@ type Branch interface {
 }
 
 type CodePushAdapter interface {
-	CreateBranch(branchName []byte) (*sys.Branch, error)
+	CreateBranch(branchName []byte) (*pb.BranchResponse, error)
 	DeleteBranch(branchId []byte) error
 }
 

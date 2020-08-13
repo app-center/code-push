@@ -4,21 +4,19 @@ import (
 	"fmt"
 )
 
-func (uc *useCase) GatewayDuration(svr, proto, path string, success bool, durationSecond float64) {
+func (uc *useCase) HttpDuration(svr, path string, success bool, durationSecond float64) {
 	uc.requestDurationMetric.With(
-		"svr_type", "gateway",
 		"svr_name", svr,
-		"interface", proto,
+		"interface", "http",
 		"path", path,
 		"success", fmt.Sprint(success),
 	).Observe(durationSecond)
 }
 
-func (uc *useCase) DaemonDuration(svr, proto, method string, success bool, durationSecond float64) {
+func (uc *useCase) GrpcDuration(svr, method string, success bool, durationSecond float64) {
 	uc.requestDurationMetric.With(
-		"svr_type", "gateway",
 		"svr_name", svr,
-		"interface", proto,
+		"interface", "grpc",
 		"path", method,
 		"success", fmt.Sprint(success),
 	).Observe(durationSecond)

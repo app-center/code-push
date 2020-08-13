@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
 	sessionAdapter "github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/gateway/portal"
 	"mime/multipart"
@@ -38,13 +39,13 @@ type Uploader interface {
 
 type CodePushAdapter interface {
 	GetBranchEncToken(branchId []byte) ([]byte, error)
-	CreateEnv(branchId, envName []byte) (*portal.Env, error)
-	GetEnv(envId []byte) (*portal.Env, error)
+	CreateEnv(branchId, envName []byte) (*pb.EnvResponse, error)
+	GetEnv(envId []byte) (*pb.EnvResponse, error)
 	DeleteEnv(envId []byte) error
 	GetEnvEncToken(envId []byte) ([]byte, error)
-	ReleaseVersion(params *portal.VersionReleaseParams) error
-	GetVersion(envId, appVersion []byte) (*portal.Version, error)
-	VersionStrictCompatQuery(envId, appVersion []byte) (*portal.VersionCompatQueryResult, error)
+	ReleaseVersion(params *pb.VersionReleaseRequest) error
+	GetVersion(envId, appVersion []byte) (*pb.VersionResponse, error)
+	VersionStrictCompatQuery(envId, appVersion []byte) (*pb.VersionStrictCompatQueryResponse, error)
 }
 
 type SessionAdapter interface {

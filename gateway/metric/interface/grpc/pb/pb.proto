@@ -3,24 +3,22 @@ syntax = "proto3";
 package pb;
 
 service RequestDuration {
-  rpc Gateway(GatewayRequestDurationRequest) returns (RequestDurationResponse) {}
-  rpc Daemon(DaemonRequestDurationRequest) returns (RequestDurationResponse) {}
+  rpc Http(HttpRequestDurationRequest) returns (RequestDurationResponse) {}
+  rpc Grpc(GrpcRequestDurationRequest) returns (RequestDurationResponse) {}
 }
 
 message RequestDurationResponse {}
 
-message GatewayRequestDurationRequest {
+message HttpRequestDurationRequest {
   string svr = 1;
-  string proto = 2;
-  string path = 3;
-  bool success = 4;
-  double durationSecond = 5;
+  string path = 2;
+  bool success = 3;
+  double durationSecond = 4;
 }
 
-message DaemonRequestDurationRequest {
+message GrpcRequestDurationRequest {
   string svr = 1;
-  string proto = 2;
-  string method = 3;
-  bool success = 4;
-  double durationSecond = 5;
+  string method = 2;
+  bool success = 3;
+  double durationSecond = 4;
 }

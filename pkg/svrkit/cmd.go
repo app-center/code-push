@@ -128,15 +128,15 @@ func WithServeGrpcPort(port *int) ServeCmdOption {
 	}
 }
 
-func WithServeCodePushPort(port *int) ServeCmdOption {
+func WithServeCodePushAddr(addr *string) ServeCmdOption {
 	return func(cmd *ffcli.Command) {
-		cmd.FlagSet.IntVar(port, "port-code-push", 0, "port of code-push.d")
+		cmd.FlagSet.StringVar(addr, "addr-code-push", "", "address of code-push.d")
 	}
 }
 
-func WithServeFilerPort(port *int) ServeCmdOption {
+func WithServeFilerAddr(addr *string) ServeCmdOption {
 	return func(cmd *ffcli.Command) {
-		cmd.FlagSet.IntVar(port, "port-filer", 0, "port of filer.d")
+		cmd.FlagSet.StringVar(addr, "addr-filer", "", "address of filer.d")
 	}
 }
 
@@ -146,9 +146,9 @@ func WithServeSessionAddr(addr *string) ServeCmdOption {
 	}
 }
 
-func WithServeMetricPort(port *int) ServeCmdOption {
+func WithServeMetricAddress(addr *string) ServeCmdOption {
 	return func(cmd *ffcli.Command) {
-		cmd.FlagSet.IntVar(port, "port-metric", 0, "port of metric.g")
+		cmd.FlagSet.StringVar(addr, "addr-metric", "", "address of metric.g")
 	}
 }
 

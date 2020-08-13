@@ -11,8 +11,8 @@ type serveConfig struct {
 	Debug          bool
 	Port           int
 
-	PortCodePushD int
-	PortFilerD    int
+	AddrCodePushD string
+	AddrFilerD    string
 	AddrSessionD  string
 }
 
@@ -23,12 +23,12 @@ func (c *serveConfig) Validate() error {
 		errs = append(errs, "Invalid Port")
 	}
 
-	if c.PortCodePushD == 0 {
-		errs = append(errs, "Invalid port of code-push.d")
+	if c.AddrCodePushD == "" {
+		errs = append(errs, "Invalid address of code-push.d")
 	}
 
-	if c.PortFilerD == 0 {
-		errs = append(errs, "Invalid port of filer.d")
+	if c.AddrFilerD == "" {
+		errs = append(errs, "Invalid address of filer.d")
 	}
 
 	if c.AddrSessionD == "" {

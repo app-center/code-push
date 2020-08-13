@@ -1,4 +1,4 @@
-package filerAdapter
+package codePushAdapter
 
 import (
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
@@ -45,4 +45,12 @@ type Client struct {
 
 type Options struct {
 	ServerAddr string
+}
+
+func unmarshalStringResponse(r *pb.StringResponse) []byte {
+	if r == nil {
+		return nil
+	}
+
+	return []byte(r.Data)
 }

@@ -22,12 +22,12 @@ type server struct {
 	uc usecase.UseCase
 }
 
-func (s *server) Gateway(ctx context.Context, request *pb.GatewayRequestDurationRequest) (*pb.RequestDurationResponse, error) {
-	s.uc.GatewayDuration(request.GetSvr(), request.GetProto(), request.GetPath(), request.GetSuccess(), request.GetDurationSecond())
+func (s *server) Http(ctx context.Context, request *pb.HttpRequestDurationRequest) (*pb.RequestDurationResponse, error) {
+	s.uc.HttpDuration(request.GetSvr(), request.GetPath(), request.GetSuccess(), request.GetDurationSecond())
 	return nil, nil
 }
 
-func (s *server) Daemon(ctx context.Context, request *pb.DaemonRequestDurationRequest) (*pb.RequestDurationResponse, error) {
-	s.uc.DaemonDuration(request.GetSvr(), request.GetProto(), request.GetMethod(), request.GetSuccess(), request.GetDurationSecond())
+func (s *server) Grpc(ctx context.Context, request *pb.GrpcRequestDurationRequest) (*pb.RequestDurationResponse, error) {
+	s.uc.GrpcDuration(request.GetSvr(), request.GetMethod(), request.GetSuccess(), request.GetDurationSecond())
 	return nil, nil
 }
