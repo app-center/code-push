@@ -1,7 +1,7 @@
 debug: false
 port: 9620
-port-code-push: 9520
-port-session: 9522
+addr-code-push: :9520
+addr-session: :9522
 
 root-user-name: uceNtigA
 root-user-pwd: omenTergaCQU

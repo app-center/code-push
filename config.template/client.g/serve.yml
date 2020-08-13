@@ -1,5 +1,6 @@
 debug: false
 port: 9622
-port-code-push: 9520
-port-filer: 9521
-port-session: 9522
+addr-metric: :9523
+addr-code-push: :9520
+addr-filer: :9521
+addr-session: :9522
