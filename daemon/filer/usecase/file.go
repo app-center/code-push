@@ -8,8 +8,8 @@ import (
 	"net/url"
 )
 
-func (c *UseCase) InsertSource(value filer.FileValue, desc filer.FileDesc) (filer.FileKey, error) {
-	if value == nil {
+func (c *UseCase) InsertSource(value, desc, fileMD5 string, fileSize int64) (filer.FileKey, error) {
+	if value == "" {
 		return nil, errors.Wrap(filer.ErrInvalidFileValue, "filer.File value required")
 	}
 
@@ -29,23 +29,25 @@ func (c *UseCase) InsertSource(value filer.FileValue, desc filer.FileDesc) (file
 		return nil, errors.Wrapf(filer.ErrInvalidFileValue, "unSupported filer.File uri scheme: %s", u.Scheme)
 	}
 
-	fileKey := []byte(generateFileKey())
+	fileKey := generateFileKey()
 
 	err := c.domain.InsertFile(&filer.File{
-		Key:   fileKey,
-		Value: value,
-		Desc:  desc,
+		Key:      fileKey,
+		Value:    value,
+		Desc:     desc,
+		FileMD5:  fileMD5,
+		FileSize: fileSize,
 	})
 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to insert filer.File")
 	}
 
-	return fileKey, nil
+	return []byte(fileKey), nil
 }
 
-func (c *UseCase) GetSource(key filer.FileKey) ([]byte, error) {
-	if key == nil {
+func (c *UseCase) GetSource(key string) (*filer.File, error) {
+	if key == "" {
 		return nil, errors.Wrap(filer.ErrInvalidFileKey, "key required")
 	}
 
@@ -58,25 +60,40 @@ func (c *UseCase) GetSource(key filer.FileKey) ([]byte, error) {
 	}
 
 	value := file.Value
-	if value == nil {
+	if value == "" {
 		return nil, errors.Wrap(filer.ErrInvalidFileValue, "filer.File value missed")
 	}
 
-	u, uErr := url.Parse(string(value))
+	u, uErr := url.Parse(value)
 	if uErr != nil {
 		return nil, errors.Wrap(filer.ErrInvalidFileValue, "filer.File value not a valid uri string")
 	}
 
+	var source string
+
 	switch u.Scheme {
 	case schemeAliOss:
-		return c.getAliOssSource(value)
+		if aliSource, aliSourceErr := c.getAliOssSource([]byte(value)); aliSourceErr != nil {
+			return nil, errors.Wrapf(aliSourceErr, "failed to get alioss source:%s", value)
+		} else {
+			source = string(aliSource)
+		}
 	case schemeHttp:
 		fallthrough
 	case schemeHttps:
-		return value, nil
+		source = value
 	default:
 		return nil, errors.Wrapf(filer.ErrInvalidFileValue, "unSupported filer.File uri scheme: %s", u.Scheme)
 	}
+
+	return &filer.File{
+		Key:        key,
+		Value:      source,
+		Desc:       file.Desc,
+		CreateTime: file.CreateTime,
+		FileMD5:    file.FileMD5,
+		FileSize:   file.FileSize,
+	}, nil
 }
 
 func (c *UseCase) getAliOssSource(fileValue []byte) ([]byte, error) {

@@ -6,8 +6,8 @@ import (
 )
 
 type File interface {
-	GetSource(key filer.FileKey) ([]byte, error)
-	InsertSource(value filer.FileValue, desc filer.FileDesc) (filer.FileKey, error)
+	GetSource(key string) (*filer.File, error)
+	InsertSource(value, desc, fileMD5 string, fileSize int64) (filer.FileKey, error)
 }
 
 type Upload interface {
@@ -15,9 +15,9 @@ type Upload interface {
 }
 
 type DomainAdapter interface {
-	File(fileKey filer.FileKey) (*filer.File, error)
+	File(fileKey string) (*filer.File, error)
 	InsertFile(file *filer.File) error
-	IsFileKeyExisted(fileKey filer.FileKey) bool
+	IsFileKeyExisted(fileKey string) bool
 }
 
 type AliOssAdapter interface {

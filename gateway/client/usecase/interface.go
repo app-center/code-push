@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
+	filerpb "github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
 	sessionAdapter "github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/gateway/client"
 )
@@ -10,6 +11,7 @@ type UseCase interface {
 	Auth
 	Version
 	Metrics
+	Filer
 }
 
 type Auth interface {
@@ -20,8 +22,12 @@ type Auth interface {
 
 type Version interface {
 	GetVersion(envId, appVersion []byte) (*client.Version, error)
-	VersionDownloadPkg(envId, appVersion []byte) ([]byte, error)
+	VersionPkgSource(envId, appVersion string) (*client.FileSource, error)
 	VersionStrictCompatQuery(envId, appVersion []byte) (*client.VersionCompatQueryResult, error)
+}
+
+type Filer interface {
+	FileDownload(fileId []byte) ([]byte, error)
 }
 
 type Metrics interface {
@@ -40,7 +46,7 @@ type SessionAdapter interface {
 }
 
 type FilerAdapter interface {
-	GetSource(fileKey []byte) ([]byte, error)
+	GetSource(fileKey []byte) (*filerpb.FileSource, error)
 }
 
 type MetricsAdapter interface {

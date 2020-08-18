@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
+	filerpb "github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
 	"github.com/funnyecho/code-push/gateway/client"
 	"github.com/pkg/errors"
 	"time"
@@ -17,8 +18,8 @@ func (uc *useCase) GetVersion(envId, appVersion []byte) (*client.Version, error)
 	return unmarshalVersion(res), err
 }
 
-func (uc *useCase) VersionDownloadPkg(envId, appVersion []byte) ([]byte, error) {
-	ver, verErr := uc.codePush.GetVersion(envId, appVersion)
+func (uc *useCase) VersionPkgSource(envId, appVersion string) (*client.FileSource, error) {
+	ver, verErr := uc.codePush.GetVersion([]byte(envId), []byte(appVersion))
 	if verErr != nil {
 		return nil, verErr
 	}
@@ -27,7 +28,13 @@ func (uc *useCase) VersionDownloadPkg(envId, appVersion []byte) ([]byte, error) 
 	}
 
 	fileKey := ver.PackageFileKey
-	return uc.filer.GetSource([]byte(fileKey))
+
+	source, sourceErr := uc.filer.GetSource([]byte(fileKey))
+	if sourceErr != nil {
+		return nil, sourceErr
+	}
+
+	return unmarshalFileSource(source), nil
 }
 
 func unmarshalVersion(v *pb.VersionResponse) *client.Version {
@@ -52,9 +59,24 @@ func unmarshalVersionCompatQueryResult(r *pb.VersionStrictCompatQueryResponse) *
 	}
 
 	return &client.VersionCompatQueryResult{
-		AppVersion:          r.GetAppVersion(),
-		LatestAppVersion:    r.GetLatestAppVersion(),
-		CanUpdateAppVersion: r.GetCanUpdateAppVersion(),
+		AppVersion:          string(r.GetAppVersion()),
+		LatestAppVersion:    string(r.GetLatestAppVersion()),
+		CanUpdateAppVersion: string(r.GetCanUpdateAppVersion()),
 		MustUpdate:          r.GetMustUpdate(),
+	}
+}
+
+func unmarshalFileSource(v *filerpb.FileSource) *client.FileSource {
+	if v == nil {
+		return nil
+	}
+
+	return &client.FileSource{
+		Key:        v.GetKey(),
+		Value:      v.GetValue(),
+		Desc:       v.GetDesc(),
+		CreateTime: time.Unix(0, v.GetCreateTime()),
+		FileMD5:    v.GetFileMD5(),
+		FileSize:   v.GetFileSize(),
 	}
 }

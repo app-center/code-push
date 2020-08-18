@@ -1,7 +1,9 @@
 package usecase
 
 import (
+	"bytes"
 	"github.com/funnyecho/code-push/daemon/filer"
+	"github.com/funnyecho/code-push/pkg/util"
 	"github.com/pkg/errors"
 	"io"
 )
@@ -11,13 +13,18 @@ func (c *UseCase) UploadToAliOss(stream io.Reader) (filer.FileKey, error) {
 		return nil, errors.Wrap(filer.ErrParamsInvalid, "upload stream required")
 	}
 
-	ossKey, uploadErr := c.aliOss.Upload(stream)
+	var buf bytes.Buffer
+	tee := io.TeeReader(stream, &buf)
+
+	ossKey, uploadErr := c.aliOss.Upload(tee)
 
 	if uploadErr != nil {
 		return nil, errors.WithStack(uploadErr)
 	}
 
-	fileValue := []byte(encodeAliOssObjectKey(ossKey))
+	fileValue := encodeAliOssObjectKey(ossKey)
+	fileSize := buf.Len()
+	fileMD5 := util.EncodeMD5(string(buf.Bytes()))
 
-	return c.InsertSource(fileValue, nil)
+	return c.InsertSource(fileValue, "", fileMD5, int64(fileSize))
 }

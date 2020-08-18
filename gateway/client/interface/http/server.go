@@ -67,12 +67,11 @@ func (s *server) initHttpHandler() {
 
 	r.Use(s.middleware.RequestDuration)
 
-	r.GET("/version/:version/download", s.endpoints.DownloadVersionPkg)
-	r.GET("/version/:version/download/:filename", s.endpoints.DownloadVersionPkg)
+	r.GET("/client/download/pkg/:fileId", s.endpoints.DownloadFile)
 
-	apiGroup := r.Group("/api")
-	apiGroup.POST("/auth", s.endpoints.Auth)
-	apiGroup.GET("/v1/version/:version/upgrade", s.endpoints.VersionUpgradeQuery)
+	apiGroup := r.Group("/api/client")
+	apiGroup.POST("/auth/ddder", s.endpoints.Auth)
+	apiGroup.GET("/v1/upgrade/:envId/:version", s.endpoints.VersionUpgradeQuery)
 
 	s.handler = r
 }

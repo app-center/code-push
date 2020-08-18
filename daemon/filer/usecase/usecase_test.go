@@ -40,8 +40,8 @@ func (m *mockAdapters) Upload(stream io.Reader) ([]byte, error) {
 	return []byte(uuid.NewV4().String()), nil
 }
 
-func (m *mockAdapters) File(fileKey filer.FileKey) (*filer.File, error) {
-	return m.files[string(fileKey)], nil
+func (m *mockAdapters) File(fileKey string) (*filer.File, error) {
+	return m.files[fileKey], nil
 }
 
 func (m *mockAdapters) InsertFile(file *filer.File) error {
@@ -49,7 +49,7 @@ func (m *mockAdapters) InsertFile(file *filer.File) error {
 		return errors.New("file required")
 	}
 
-	if file.Key == nil || file.Value == nil {
+	if file.Key == "" || file.Value == "" {
 		return errors.New("file.Key and file.Value required")
 	}
 
@@ -60,6 +60,6 @@ func (m *mockAdapters) InsertFile(file *filer.File) error {
 	return nil
 }
 
-func (m *mockAdapters) IsFileKeyExisted(fileKey filer.FileKey) bool {
-	return m.files[string(fileKey)] != nil
+func (m *mockAdapters) IsFileKeyExisted(fileKey string) bool {
+	return m.files[fileKey] != nil
 }

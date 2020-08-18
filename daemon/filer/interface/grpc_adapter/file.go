@@ -5,12 +5,10 @@ import (
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
 )
 
-func (c *Client) GetSource(fileKey []byte) ([]byte, error) {
+func (c *Client) GetSource(fileKey []byte) (*pb.FileSource, error) {
 	if fileKey == nil {
 		return nil, ErrParamsInvalid
 	}
 
-	res, err := c.fileClient.GetSource(context.Background(), &pb.GetSourceRequest{Key: fileKey})
-
-	return unmarshalStringResponse(res), err
+	return c.fileClient.GetSource(context.Background(), &pb.GetSourceRequest{Key: string(fileKey)})
 }

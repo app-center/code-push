@@ -6,4 +6,6 @@ message File {
   string Value = 2;
   string Desc = 3;
   int64 CreateTime = 4;
+  string FileMD5 = 5;
+  int64 FileSize = 6;
 }

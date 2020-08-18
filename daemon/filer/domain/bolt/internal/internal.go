@@ -11,10 +11,12 @@ import (
 
 func MarshalFile(f *filer.File) (bytes []byte, err error) {
 	bytes, err = proto.Marshal(&File{
-		Key:        string(f.Key),
-		Value:      string(f.Value),
-		Desc:       string(f.Desc),
+		Key:        f.Key,
+		Value:      f.Value,
+		Desc:       f.Desc,
 		CreateTime: f.CreateTime.UnixNano(),
+		FileMD5:    f.FileMD5,
+		FileSize:   int64(f.FileSize),
 	})
 
 	if err != nil {
@@ -30,19 +32,13 @@ func UnmarshalFile(data []byte, f *filer.File) error {
 		return errors.Wrap(err, "protobuf unmarshal failed")
 	}
 
-	if key := pb.GetKey(); len(key) != 0 {
-		f.Key = []byte(key)
-	}
-
-	if value := pb.GetValue(); len(value) != 0 {
-		f.Value = []byte(value)
-	}
-
-	if desc := pb.GetDesc(); len(desc) != 0 {
-		f.Desc = []byte(desc)
-	}
+	f.Key = pb.GetKey()
+	f.Value = pb.GetValue()
+	f.Desc = pb.GetDesc()
 
 	f.CreateTime = time.Unix(0, pb.GetCreateTime()).UTC()
+	f.FileMD5 = pb.GetFileMD5()
+	f.FileSize = pb.GetFileSize()
 
 	return nil
 }

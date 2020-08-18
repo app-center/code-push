@@ -3,9 +3,9 @@ package client
 import "time"
 
 type VersionCompatQueryResult struct {
-	AppVersion          []byte
-	LatestAppVersion    []byte
-	CanUpdateAppVersion []byte
+	AppVersion          string
+	LatestAppVersion    string
+	CanUpdateAppVersion string
 	MustUpdate          bool
 }
 
@@ -17,4 +17,13 @@ type Version struct {
 	Changelog        string
 	PackageFileKey   string
 	CreateTime       time.Time
+}
+
+type FileSource struct {
+	Key        string
+	Value      string
+	Desc       string
+	CreateTime time.Time
+	FileMD5    string
+	FileSize   int64
 }

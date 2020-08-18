@@ -11,8 +11,8 @@ type FileService struct {
 	client *Client
 }
 
-func (s *FileService) File(fileKey filer.FileKey) (*filer.File, error) {
-	if fileKey == nil {
+func (s *FileService) File(fileKey string) (*filer.File, error) {
+	if fileKey == "" {
 		return nil, filer.ErrInvalidFileKey
 	}
 
@@ -23,7 +23,7 @@ func (s *FileService) File(fileKey filer.FileKey) (*filer.File, error) {
 	defer tx.Rollback()
 
 	var f filer.File
-	if v := tx.Bucket(bucketFile).Get(fileKey); v == nil {
+	if v := tx.Bucket(bucketFile).Get([]byte(fileKey)); v == nil {
 		return nil, nil
 	} else if err := internal.UnmarshalFile(v, &f); err != nil {
 		return nil, err
@@ -37,11 +37,11 @@ func (s *FileService) InsertFile(file *filer.File) error {
 		return filer.ErrParamsInvalid
 	}
 
-	if file.Key == nil {
+	if file.Key == "" {
 		return filer.ErrInvalidFileKey
 	}
 
-	if file.Value == nil {
+	if file.Value == "" {
 		return filer.ErrInvalidFileValue
 	}
 
@@ -52,7 +52,7 @@ func (s *FileService) InsertFile(file *filer.File) error {
 	defer tx.Rollback()
 
 	b := tx.Bucket(bucketFile)
-	if v := b.Get(file.Key); v != nil {
+	if v := b.Get([]byte(file.Key)); v != nil {
 		return errors.WithMessagef(
 			filer.ErrFileKeyExisted,
 			"fileKey: %s",
@@ -64,7 +64,7 @@ func (s *FileService) InsertFile(file *filer.File) error {
 
 	if v, err := internal.MarshalFile(file); err != nil {
 		return err
-	} else if err := b.Put(file.Key, v); err != nil {
+	} else if err := b.Put([]byte(file.Key), v); err != nil {
 		return errors.Wrap(err, "put file to tx failed")
 	}
 
@@ -75,7 +75,7 @@ func (s *FileService) InsertFile(file *filer.File) error {
 	return nil
 }
 
-func (s *FileService) IsFileKeyExisted(fileKey filer.FileKey) bool {
+func (s *FileService) IsFileKeyExisted(fileKey string) bool {
 	f, err := s.File(fileKey)
 
 	return err == nil && f != nil

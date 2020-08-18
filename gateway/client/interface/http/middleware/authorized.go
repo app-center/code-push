@@ -30,7 +30,7 @@ func AuthorizedWithReturns(uc usecase.UseCase, c *gin.Context) ([]byte, error) {
 	} else {
 		accessToken = c.Query("access-token")
 		if len(accessToken) == 0 {
-			accessToken = c.GetHeader("Client-Access-Token")
+			accessToken = c.GetHeader("X-Authentication")
 		}
 	}
 

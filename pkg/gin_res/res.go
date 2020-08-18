@@ -16,7 +16,11 @@ func Error(c *gin.Context, err error) {
 }
 
 func Success(c *gin.Context, data interface{}) {
-	res(c, bodyDataMiddleware(data), statusCodeMiddleware(http.StatusOK))
+	res(c, bodySuccessCodeMiddleware(), bodyDataMiddleware(data), statusCodeMiddleware(http.StatusOK))
+}
+
+func SuccessWithCode(c *gin.Context, code string, data interface{}) {
+	res(c, bodyCustomCodeMiddleware(code), bodyDataMiddleware(data), statusCodeMiddleware(http.StatusOK))
 }
 
 func res(c *gin.Context, fns ...resOptionsFn) {
@@ -69,6 +73,18 @@ func bodyErrorCodeMiddleware(err error) resOptionsFn {
 		_ = stderr.As(err, &reasonableErr)
 
 		body["code"] = reasonableErr.Error()
+	}
+}
+
+func bodySuccessCodeMiddleware() resOptionsFn {
+	return func(c *gin.Context, statusCode *int, body gin.H) {
+		body["code"] = "S_OK"
+	}
+}
+
+func bodyCustomCodeMiddleware(code string) resOptionsFn {
+	return func(c *gin.Context, statusCode *int, body gin.H) {
+		body["code"] = code
 	}
 }
 

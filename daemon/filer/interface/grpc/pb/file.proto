@@ -4,15 +4,26 @@ package pb;
 import "common.proto";
 
 service File {
-  rpc GetSource(GetSourceRequest) returns (StringResponse) {}
+  rpc GetSource(GetSourceRequest) returns (FileSource) {}
   rpc InsertSource(InsertSourceRequest) returns (StringResponse) {}
 }
 
 message GetSourceRequest {
-  bytes Key = 1;
+  string Key = 1;
+}
+
+message FileSource {
+  string Key = 1;
+  string Value = 2;
+  string Desc = 3;
+  int64 CreateTime = 4;
+  string FileMD5 = 5;
+  int64 FileSize = 6;
 }
 
 message InsertSourceRequest {
-  bytes Value = 1;
-  bytes Desc = 2;
+  string Value = 1;
+  string Desc = 2;
+  string FileMD5 = 3;
+  int64 FileSize = 4;
 }
