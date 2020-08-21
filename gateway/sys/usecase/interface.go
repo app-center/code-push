@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
 	sessionAdapter "github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/gateway/sys"
@@ -12,22 +13,22 @@ type UseCase interface {
 }
 
 type Auth interface {
-	Auth(name, pwd string) error
-	SignToken() ([]byte, error)
-	VerifyToken(token []byte) error
+	Auth(ctx context.Context, name, pwd string) error
+	SignToken(ctx context.Context) ([]byte, error)
+	VerifyToken(ctx context.Context, token []byte) error
 }
 
 type Branch interface {
-	CreateBranch(branchName []byte) (*sys.Branch, error)
-	DeleteBranch(branchId []byte) error
+	CreateBranch(ctx context.Context, branchName []byte) (*sys.Branch, error)
+	DeleteBranch(ctx context.Context, branchId []byte) error
 }
 
 type CodePushAdapter interface {
-	CreateBranch(branchName []byte) (*pb.BranchResponse, error)
-	DeleteBranch(branchId []byte) error
+	CreateBranch(ctx context.Context, branchName []byte) (*pb.BranchResponse, error)
+	DeleteBranch(ctx context.Context, branchId []byte) error
 }
 
 type SessionAdapter interface {
-	GenerateAccessToken(issuer sessionAdapter.AccessTokenIssuer, subject string) ([]byte, error)
-	VerifyAccessToken(token string) (subject []byte, err error)
+	GenerateAccessToken(ctx context.Context, issuer sessionAdapter.AccessTokenIssuer, subject string) ([]byte, error)
+	VerifyAccessToken(ctx context.Context, token string) (subject []byte, err error)
 }

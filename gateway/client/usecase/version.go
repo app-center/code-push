@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
 	filerpb "github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
 	"github.com/funnyecho/code-push/gateway/client"
@@ -8,18 +9,18 @@ import (
 	"time"
 )
 
-func (uc *useCase) VersionStrictCompatQuery(envId, appVersion []byte) (*client.VersionCompatQueryResult, error) {
-	res, err := uc.codePush.VersionStrictCompatQuery(envId, appVersion)
+func (uc *useCase) VersionStrictCompatQuery(ctx context.Context, envId, appVersion []byte) (*client.VersionCompatQueryResult, error) {
+	res, err := uc.codePush.VersionStrictCompatQuery(ctx, envId, appVersion)
 	return unmarshalVersionCompatQueryResult(res), err
 }
 
-func (uc *useCase) GetVersion(envId, appVersion []byte) (*client.Version, error) {
-	res, err := uc.codePush.GetVersion(envId, appVersion)
+func (uc *useCase) GetVersion(ctx context.Context, envId, appVersion []byte) (*client.Version, error) {
+	res, err := uc.codePush.GetVersion(ctx, envId, appVersion)
 	return unmarshalVersion(res), err
 }
 
-func (uc *useCase) VersionPkgSource(envId, appVersion string) (*client.FileSource, error) {
-	ver, verErr := uc.codePush.GetVersion([]byte(envId), []byte(appVersion))
+func (uc *useCase) VersionPkgSource(ctx context.Context, envId, appVersion string) (*client.FileSource, error) {
+	ver, verErr := uc.codePush.GetVersion(ctx, []byte(envId), []byte(appVersion))
 	if verErr != nil {
 		return nil, verErr
 	}
@@ -29,7 +30,7 @@ func (uc *useCase) VersionPkgSource(envId, appVersion string) (*client.FileSourc
 
 	fileKey := ver.PackageFileKey
 
-	source, sourceErr := uc.filer.GetSource([]byte(fileKey))
+	source, sourceErr := uc.filer.GetSource(ctx, []byte(fileKey))
 	if sourceErr != nil {
 		return nil, sourceErr
 	}

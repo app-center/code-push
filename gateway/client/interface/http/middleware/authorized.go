@@ -38,7 +38,7 @@ func AuthorizedWithReturns(uc usecase.UseCase, c *gin.Context) ([]byte, error) {
 		return nil, client.ErrUnauthorized
 	}
 
-	envId, verifyErr := uc.VerifyToken([]byte(accessToken))
+	envId, verifyErr := uc.VerifyToken(c.Request.Context(), []byte(accessToken))
 	if verifyErr != nil {
 		return nil, client.ErrInvalidToken
 	}

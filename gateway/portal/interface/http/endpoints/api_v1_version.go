@@ -23,7 +23,7 @@ func (e *Endpoints) ReleaseVersion(c *gin.Context) {
 		return
 	}
 
-	releaseErr := e.uc.ReleaseVersion(&portal.VersionReleaseParams{
+	releaseErr := e.uc.ReleaseVersion(c.Request.Context(), &portal.VersionReleaseParams{
 		EnvId:            []byte(request.EnvId),
 		AppVersion:       []byte(request.AppVersion),
 		CompatAppVersion: []byte(request.CompatAppVersion),

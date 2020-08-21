@@ -29,7 +29,7 @@ func (e *Endpoints) UploadPkg(c *gin.Context) {
 	}
 	defer uploadStream.Close()
 
-	fileKey, uploadErr := e.uc.UploadPkg(uploadStream)
+	fileKey, uploadErr := e.uc.UploadPkg(c.Request.Context(), uploadStream)
 	if uploadErr != nil {
 		res.Error(c, uploadErr)
 		return

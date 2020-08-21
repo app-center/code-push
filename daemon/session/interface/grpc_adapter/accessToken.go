@@ -9,13 +9,13 @@ import (
 type AccessTokenIssuer = pb.AccessTokenIssuer
 
 const (
-	AccessTokenIssuer_SYS    = pb.AccessTokenIssuer_SYS
-	AccessTokenIssuer_PORTAL = pb.AccessTokenIssuer_PORTAL
-	AccessTokenIssuer_CLIENT = pb.AccessTokenIssuer_CLIENT
+	AccessTokenIssuerSys    = pb.AccessTokenIssuer_SYS
+	AccessTokenIssuerPortal = pb.AccessTokenIssuer_PORTAL
+	AccessTokenIssuerClient = pb.AccessTokenIssuer_CLIENT
 )
 
-func (c *Client) GenerateAccessToken(issuer AccessTokenIssuer, subject string) ([]byte, error) {
-	res, err := c.accessTokenClient.GenerateAccessToken(context.Background(), &pb.GenerateAccessTokenRequest{
+func (c *Client) GenerateAccessToken(ctx context.Context, issuer AccessTokenIssuer, subject string) ([]byte, error) {
+	res, err := c.accessTokenClient.GenerateAccessToken(ctx, &pb.GenerateAccessTokenRequest{
 		Claims: &pb.AccessTokenClaims{
 			Issuer:   issuer,
 			Subject:  subject,
@@ -26,8 +26,8 @@ func (c *Client) GenerateAccessToken(issuer AccessTokenIssuer, subject string) (
 	return unmarshalStringResponse(res), err
 }
 
-func (c *Client) VerifyAccessToken(token string) (subject []byte, err error) {
-	res, err := c.accessTokenClient.VerifyAccessToken(context.Background(), &pb.VerifyAccessTokenRequest{Token: token})
+func (c *Client) VerifyAccessToken(ctx context.Context, token string) (subject []byte, err error) {
+	res, err := c.accessTokenClient.VerifyAccessToken(ctx, &pb.VerifyAccessTokenRequest{Token: token})
 
 	if err != nil {
 		return nil, err

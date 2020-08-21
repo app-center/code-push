@@ -26,7 +26,7 @@ func (e *Endpoints) DownloadFile(c *gin.Context) {
 		return
 	}
 
-	downloadUri, downloadUriErr := e.uc.FileDownload([]byte(request.FileId))
+	downloadUri, downloadUriErr := e.uc.FileDownload(c.Request.Context(), []byte(request.FileId))
 	if downloadUriErr != nil {
 		res.Error(c, downloadUriErr)
 		return

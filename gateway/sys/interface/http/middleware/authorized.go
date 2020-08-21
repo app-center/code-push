@@ -26,7 +26,7 @@ func (m *Middleware) Authorized(c *gin.Context) {
 		return
 	}
 
-	verifyErr := m.uc.VerifyToken([]byte(accessToken))
+	verifyErr := m.uc.VerifyToken(c.Request.Context(), []byte(accessToken))
 	if verifyErr != nil {
 		res.ErrorWithStatusCode(c, http.StatusUnauthorized, sys.ErrInvalidToken)
 		return

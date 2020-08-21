@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
 	filerpb "github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
 	sessionAdapter "github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
@@ -10,45 +11,36 @@ import (
 type UseCase interface {
 	Auth
 	Version
-	Metrics
 	Filer
 }
 
 type Auth interface {
-	Auth(envId, timestamp, nonce, sign []byte) error
-	SignToken(envId []byte) ([]byte, error)
-	VerifyToken(token []byte) (envId []byte, err error)
+	Auth(ctx context.Context, envId, timestamp, nonce, sign []byte) error
+	SignToken(ctx context.Context, envId []byte) ([]byte, error)
+	VerifyToken(ctx context.Context, token []byte) (envId []byte, err error)
 }
 
 type Version interface {
-	GetVersion(envId, appVersion []byte) (*client.Version, error)
-	VersionPkgSource(envId, appVersion string) (*client.FileSource, error)
-	VersionStrictCompatQuery(envId, appVersion []byte) (*client.VersionCompatQueryResult, error)
+	GetVersion(ctx context.Context, envId, appVersion []byte) (*client.Version, error)
+	VersionPkgSource(ctx context.Context, envId, appVersion string) (*client.FileSource, error)
+	VersionStrictCompatQuery(ctx context.Context, envId, appVersion []byte) (*client.VersionCompatQueryResult, error)
 }
 
 type Filer interface {
-	FileDownload(fileId []byte) ([]byte, error)
-}
-
-type Metrics interface {
-	RequestDuration(path string, success bool, durationSecond float64)
+	FileDownload(ctx context.Context, fileId []byte) ([]byte, error)
 }
 
 type CodePushAdapter interface {
-	GetEnvEncToken(envId []byte) ([]byte, error)
-	GetVersion(envId, appVersion []byte) (*pb.VersionResponse, error)
-	VersionStrictCompatQuery(envId, appVersion []byte) (*pb.VersionStrictCompatQueryResponse, error)
+	GetEnvEncToken(ctx context.Context, envId []byte) ([]byte, error)
+	GetVersion(ctx context.Context, envId, appVersion []byte) (*pb.VersionResponse, error)
+	VersionStrictCompatQuery(ctx context.Context, envId, appVersion []byte) (*pb.VersionStrictCompatQueryResponse, error)
 }
 
 type SessionAdapter interface {
-	GenerateAccessToken(issuer sessionAdapter.AccessTokenIssuer, subject string) ([]byte, error)
-	VerifyAccessToken(token string) (subject []byte, err error)
+	GenerateAccessToken(ctx context.Context, issuer sessionAdapter.AccessTokenIssuer, subject string) ([]byte, error)
+	VerifyAccessToken(ctx context.Context, token string) (subject []byte, err error)
 }
 
 type FilerAdapter interface {
-	GetSource(fileKey []byte) (*filerpb.FileSource, error)
-}
-
-type MetricsAdapter interface {
-	HttpRequestDuration(svr, path string, success bool, durationSecond float64)
+	GetSource(ctx context.Context, fileKey []byte) (*filerpb.FileSource, error)
 }

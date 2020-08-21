@@ -10,15 +10,16 @@ import (
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
 	"github.com/funnyecho/code-push/daemon/filer/usecase"
 	"github.com/funnyecho/code-push/pkg/grpcInterceptor"
-	"github.com/funnyecho/code-push/pkg/log"
+	zap_log "github.com/funnyecho/code-push/pkg/log/zap"
 	"github.com/funnyecho/code-push/pkg/svrkit"
-	gokitLog "github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/funnyecho/code-push/pkg/tracing"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/oklog/run"
+	"github.com/opentracing/opentracing-go"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"net"
-	"os"
 )
 
 var serveCmdOptions serveConfig
@@ -45,17 +46,25 @@ func main() {
 }
 
 func onServe(ctx context.Context, args []string) error {
-	var logger gokitLog.Logger
+	var logger *zap.SugaredLogger
 	{
-		logger = gokitLog.NewLogfmtLogger(os.Stdout)
-		logger = gokitLog.With(logger, "ts", gokitLog.DefaultTimestampUTC)
-		logger = gokitLog.With(logger, "caller", gokitLog.DefaultCaller)
-
+		var zapLogger *zap.Logger
 		if serveCmdOptions.Debug {
-			logger = level.NewFilter(logger, level.AllowDebug())
+			zapLogger, _ = zap.NewDevelopment()
 		} else {
-			logger = level.NewFilter(logger, level.AllowInfo())
+			zapLogger, _ = zap.NewProduction()
 		}
+		defer logger.Sync()
+
+		logger = zapLogger.Sugar()
+	}
+
+	openTracer, openTracerCloser, openTracerErr := tracing.InitTracer("filer.d")
+	if openTracerErr == nil {
+		opentracing.SetGlobalTracer(openTracer)
+		defer openTracerCloser.Close()
+	} else {
+		logger.Infow("failed to init openTracer", "error", openTracerErr)
 	}
 
 	var g run.Group
@@ -65,7 +74,7 @@ func onServe(ctx context.Context, args []string) error {
 		serveCmdOptions.AliOssBucket,
 		serveCmdOptions.AliOssAccessKeyId,
 		serveCmdOptions.AliOssAccessSecret,
-		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "ali-oss")),
+		zap_log.New(logger.With("component", "adapters", "adapter", "ali-oss")),
 	)
 	if aliOssAdapterErr != nil {
 		return aliOssAdapterErr
@@ -73,7 +82,7 @@ func onServe(ctx context.Context, args []string) error {
 
 	domainAdapter := bolt.NewClient()
 	domainAdapter.Path = serveCmdOptions.BoltPath
-	domainAdapter.Logger = log.New(gokitLog.With(logger, "component", "domain", "adapter", "bbolt"))
+	domainAdapter.Logger = zap_log.New(logger.With("component", "domain", "adapter", "bbolt"))
 	domainAdapterOpenErr := domainAdapter.Open()
 	if domainAdapterOpenErr != nil {
 		return domainAdapterOpenErr
@@ -83,10 +92,10 @@ func onServe(ctx context.Context, args []string) error {
 	endpoints := usecase.NewUseCase(usecase.CtorConfig{
 		DomainAdapter: domainAdapter.DomainService(),
 		AliOssAdapter: aliOssAdapter,
-		Logger:        log.New(gokitLog.With(logger, "component", "usecase")),
+		Logger:        zap_log.New(logger.With("component", "usecase")),
 	})
 
-	grpcServerLogger := log.New(gokitLog.With(logger, "component", "interfaces", "interface", "grpc"))
+	grpcServerLogger := zap_log.New(logger.With("component", "interfaces", "interface", "grpc"))
 	grpcServer := interfacegrpc.NewFilerServer(
 		endpoints,
 		grpcServerLogger,
@@ -104,10 +113,12 @@ func onServe(ctx context.Context, args []string) error {
 				grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 					grpcInterceptor.UnaryServerMetricInterceptor(grpcServerLogger),
 					grpcInterceptor.UnaryServerErrorInterceptor(),
+					grpc_opentracing.UnaryServerInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
 				)),
 				grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 					grpcInterceptor.StreamServerMetricInterceptor(grpcServerLogger),
 					grpcInterceptor.StreamServerErrorInterceptor(),
+					grpc_opentracing.StreamServerInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
 				)),
 			)
 			pb.RegisterFileServer(baseServer, grpcServer)

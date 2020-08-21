@@ -22,13 +22,13 @@ func (e *Endpoints) Auth(c *gin.Context) {
 		return
 	}
 
-	authorizeErr := e.uc.Auth(auth.Username, auth.Password)
+	authorizeErr := e.uc.Auth(c.Request.Context(), auth.Username, auth.Password)
 	if authorizeErr != nil {
 		res.Error(c, authorizeErr)
 		return
 	}
 
-	token, tokenErr := e.uc.SignToken()
+	token, tokenErr := e.uc.SignToken(c.Request.Context())
 	if tokenErr != nil {
 		res.Error(c, tokenErr)
 		return

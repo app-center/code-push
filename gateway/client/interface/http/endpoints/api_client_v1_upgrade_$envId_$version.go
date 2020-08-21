@@ -47,7 +47,7 @@ func (e *Endpoints) VersionUpgradeQuery(c *gin.Context) {
 		return
 	}
 
-	result, queryErr := e.uc.VersionStrictCompatQuery(envId, []byte(request.AppVersion))
+	result, queryErr := e.uc.VersionStrictCompatQuery(c.Request.Context(), envId, []byte(request.AppVersion))
 	if queryErr != nil {
 		res.Error(c, queryErr)
 		return
@@ -68,7 +68,7 @@ func (e *Endpoints) VersionUpgradeQuery(c *gin.Context) {
 	} else if result.CanUpdateAppVersion != "" {
 		queryResCode = "S_UPGRADABLE"
 
-		upgradeSource, upgradeSourceErr := e.uc.VersionPkgSource(string(envId), result.CanUpdateAppVersion)
+		upgradeSource, upgradeSourceErr := e.uc.VersionPkgSource(c.Request.Context(), string(envId), result.CanUpdateAppVersion)
 		if upgradeSourceErr != nil {
 			res.Error(c, errors.Wrapf(upgradeSourceErr, "failed to get upgradable version source"))
 			return

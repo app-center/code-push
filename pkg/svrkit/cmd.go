@@ -152,6 +152,12 @@ func WithServeMetricAddress(addr *string) ServeCmdOption {
 	}
 }
 
+func WithServeTracingReporterAddress(addr *string) ServeCmdOption {
+	return func(cmd *ffcli.Command) {
+		cmd.FlagSet.StringVar(addr, "addr-tracing-reporter", "", "address of opentracing reporter")
+	}
+}
+
 func WithServeCmdBoltPath(name string, path *string) ServeCmdOption {
 	return func(cmd *ffcli.Command) {
 		cmd.FlagSet.StringVar(path, "bolt-path", fmt.Sprintf("storage/%s/db", name), "path of bolt storage file")

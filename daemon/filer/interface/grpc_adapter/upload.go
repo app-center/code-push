@@ -9,8 +9,8 @@ import (
 	"mime/multipart"
 )
 
-func (c *Client) UploadPkg(source multipart.File) (fileKey []byte, err error) {
-	stream, err := c.uploadClient.UploadToAliOss(context.Background())
+func (c *Client) UploadPkg(ctx context.Context, source multipart.File) (fileKey []byte, err error) {
+	stream, err := c.uploadClient.UploadToAliOss(ctx)
 
 	streamSender := grpcStreamer.NewSender(func(p byte) (err error) {
 		err = stream.Send(&pb.UploadToAliOssRequest{Data: uint32(p)})

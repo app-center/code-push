@@ -5,6 +5,8 @@ import (
 	"github.com/funnyecho/code-push/pkg/grpcInterceptor"
 	"github.com/funnyecho/code-push/pkg/log"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"strings"
@@ -76,10 +78,12 @@ func (a *grpcAdapter) Conn() error {
 		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
 			grpcInterceptor.UnaryClientMetricInterceptor(a.logger),
 			grpcInterceptor.UnaryClientErrorInterceptor(),
+			grpc_opentracing.UnaryClientInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
 		)),
 		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(
 			grpcInterceptor.StreamClientMetricInterceptor(a.logger),
 			grpcInterceptor.StreamClientErrorInterceptor(),
+			grpc_opentracing.StreamClientInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
 		)),
 	)
 	if err != nil {

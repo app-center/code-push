@@ -7,11 +7,11 @@ import (
 	"github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/gateway/sys/interface/http"
 	"github.com/funnyecho/code-push/gateway/sys/usecase"
-	"github.com/funnyecho/code-push/pkg/log"
+	zap_log "github.com/funnyecho/code-push/pkg/log/zap"
 	"github.com/funnyecho/code-push/pkg/svrkit"
-	gokitLog "github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
-	"os"
+	"github.com/funnyecho/code-push/pkg/tracing"
+	"github.com/opentracing/opentracing-go"
+	"go.uber.org/zap"
 )
 
 var serveCmdOptions serveConfig
@@ -37,21 +37,32 @@ func main() {
 }
 
 func onServe(ctx context.Context, args []string) error {
-	var logger gokitLog.Logger
+	var logger *zap.SugaredLogger
 	{
-		logger = gokitLog.NewLogfmtLogger(os.Stdout)
-		logger = gokitLog.With(logger, "ts", gokitLog.DefaultTimestampUTC)
-		logger = gokitLog.With(logger, "caller", gokitLog.DefaultCaller)
-
+		var zapLogger *zap.Logger
 		if serveCmdOptions.Debug {
-			logger = level.NewFilter(logger, level.AllowDebug())
+			zapLogger, _ = zap.NewDevelopment()
 		} else {
-			logger = level.NewFilter(logger, level.AllowInfo())
+			zapLogger, _ = zap.NewProduction()
 		}
+		defer logger.Sync()
+
+		logger = zapLogger.Sugar()
+	}
+
+	openTracer, openTracerCloser, openTracerErr := tracing.InitTracer(
+		"sys.g",
+		zap_log.New(logger.With("component", "opentracing")),
+	)
+	if openTracerErr == nil {
+		opentracing.SetGlobalTracer(openTracer)
+		defer openTracerCloser.Close()
+	} else {
+		logger.Infow("failed to init openTracer", "error", openTracerErr)
 	}
 
 	codePushAdapter := codePushAdapter.New(
-		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "code-push.d")),
+		zap_log.New(logger.With("component", "adapters", "adapter", "code-push.d")),
 		func(options *codePushAdapter.Options) {
 			options.ServerAddr = serveCmdOptions.AddrCodePushD
 		},
@@ -65,7 +76,7 @@ func onServe(ctx context.Context, args []string) error {
 	codePushAdapter.Debug("connected to code-push.d", "addr", codePushAdapter.ServerAddr)
 
 	sessionAdapter := sessionAdapter.New(
-		log.New(gokitLog.With(logger, "component", "adapters", "adapter", "session.d")),
+		zap_log.New(logger.With("component", "adapters", "adapter", "session.d")),
 		func(options *sessionAdapter.Options) {
 			options.ServerAddr = serveCmdOptions.AddrSessionD
 		},
@@ -81,7 +92,7 @@ func onServe(ctx context.Context, args []string) error {
 		usecase.CtorConfig{
 			CodePushAdapter: codePushAdapter,
 			SessionAdapter:  sessionAdapter,
-			Logger:          log.New(gokitLog.With(logger, "component", "usecase")),
+			Logger:          zap_log.New(logger.With("component", "usecase")),
 		},
 		func(options *usecase.Options) {
 			options.RootUserName = serveCmdOptions.RootUserName
@@ -91,7 +102,7 @@ func onServe(ctx context.Context, args []string) error {
 
 	server := http.New(
 		useCase,
-		log.New(gokitLog.With(logger, "component", "interfaces", "interface", "http")),
+		zap_log.New(logger.With("component", "interfaces", "interface", "http")),
 		func(options *http.Options) {
 			options.Port = serveCmdOptions.Port
 		},

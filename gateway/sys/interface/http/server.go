@@ -5,6 +5,7 @@ import (
 	"github.com/funnyecho/code-push/gateway/sys/interface/http/endpoints"
 	"github.com/funnyecho/code-push/gateway/sys/interface/http/middleware"
 	"github.com/funnyecho/code-push/gateway/sys/usecase"
+	"github.com/funnyecho/code-push/pkg/gin_middleware/opentracing"
 	"github.com/funnyecho/code-push/pkg/log"
 	"github.com/gin-gonic/gin"
 	stdHttp "net/http"
@@ -64,6 +65,8 @@ func (s *server) initMiddleware() {
 
 func (s *server) initHttpHandler() {
 	r := gin.New()
+
+	r.Use(opentracing.Tracing())
 
 	apiGroup := r.Group("/api")
 	apiGroup.POST("/auth", s.endpoints.Auth)

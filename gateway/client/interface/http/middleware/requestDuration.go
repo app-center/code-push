@@ -2,16 +2,15 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"net/http"
 	"time"
 )
 
 func (m *Middleware) RequestDuration(c *gin.Context) {
-	startTime := time.Now()
+	//startTime := time.Now()
 
 	c.Next()
 
-	m.uc.RequestDuration(c.Request.URL.Path, c.Writer.Status() == http.StatusOK, durationToSeconds(time.Since(startTime)))
+	//m.uc.RequestDuration(c.Request.URL.Path, c.Writer.Status() == http.StatusOK, durationToSeconds(time.Since(startTime)))
 }
 
 func durationToSeconds(duration time.Duration) float64 {

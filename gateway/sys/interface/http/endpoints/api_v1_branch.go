@@ -22,7 +22,7 @@ func (e *Endpoints) CreateBranch(c *gin.Context) {
 		return
 	}
 
-	branch, createErr := e.uc.CreateBranch([]byte(input.BranchName))
+	branch, createErr := e.uc.CreateBranch(c.Request.Context(), []byte(input.BranchName))
 	if createErr != nil {
 		res.Error(c, createErr)
 		return

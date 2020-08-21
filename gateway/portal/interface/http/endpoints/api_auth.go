@@ -24,13 +24,13 @@ func (e *Endpoints) Auth(c *gin.Context) {
 		return
 	}
 
-	authorizeErr := e.uc.Auth([]byte(auth.BranchId), []byte(auth.Timestamp), []byte(auth.Nonce), []byte(auth.Sign))
+	authorizeErr := e.uc.Auth(c.Request.Context(), []byte(auth.BranchId), []byte(auth.Timestamp), []byte(auth.Nonce), []byte(auth.Sign))
 	if authorizeErr != nil {
 		res.Error(c, authorizeErr)
 		return
 	}
 
-	token, tokenErr := e.uc.SignToken([]byte(auth.BranchId))
+	token, tokenErr := e.uc.SignToken(c.Request.Context(), []byte(auth.BranchId))
 	if tokenErr != nil {
 		res.Error(c, tokenErr)
 		return

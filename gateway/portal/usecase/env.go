@@ -1,27 +1,28 @@
 package usecase
 
 import (
+	"context"
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
 	"github.com/funnyecho/code-push/gateway/portal"
 	"time"
 )
 
-func (u *useCase) CreateEnv(branchId, envName []byte) (*portal.Env, error) {
-	res, err := u.codePush.CreateEnv(branchId, envName)
+func (u *useCase) CreateEnv(ctx context.Context, branchId, envName []byte) (*portal.Env, error) {
+	res, err := u.codePush.CreateEnv(ctx, branchId, envName)
 	return unmarshalEnv(res), err
 }
 
-func (u *useCase) GetEnv(envId []byte) (*portal.Env, error) {
-	res, err := u.codePush.GetEnv(envId)
+func (u *useCase) GetEnv(ctx context.Context, envId []byte) (*portal.Env, error) {
+	res, err := u.codePush.GetEnv(ctx, envId)
 	return unmarshalEnv(res), err
 }
 
-func (u *useCase) DeleteEnv(envId []byte) error {
-	return u.codePush.DeleteEnv(envId)
+func (u *useCase) DeleteEnv(ctx context.Context, envId []byte) error {
+	return u.codePush.DeleteEnv(ctx, envId)
 }
 
-func (u *useCase) GetEnvEncToken(envId []byte) ([]byte, error) {
-	return u.codePush.GetEnvEncToken(envId)
+func (u *useCase) GetEnvEncToken(ctx context.Context, envId []byte) ([]byte, error) {
+	return u.codePush.GetEnvEncToken(ctx, envId)
 }
 
 func unmarshalEnv(e *pb.EnvResponse) *portal.Env {

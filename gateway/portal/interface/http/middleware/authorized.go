@@ -38,7 +38,7 @@ func AuthorizedWithReturns(uc usecase.UseCase, c *gin.Context) ([]byte, error) {
 		return nil, portal.ErrUnauthorized
 	}
 
-	branchId, verifyErr := uc.VerifyToken([]byte(accessToken))
+	branchId, verifyErr := uc.VerifyToken(c.Request.Context(), []byte(accessToken))
 	if verifyErr != nil {
 		return nil, portal.ErrInvalidToken
 	}

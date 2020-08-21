@@ -1,22 +1,23 @@
 package usecase
 
 import (
+	"context"
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc/pb"
 	"github.com/funnyecho/code-push/gateway/portal"
 	"time"
 )
 
-func (u *useCase) ReleaseVersion(params *portal.VersionReleaseParams) error {
-	return u.codePush.ReleaseVersion(marshalVersionReleaseParams(params))
+func (u *useCase) ReleaseVersion(ctx context.Context, params *portal.VersionReleaseParams) error {
+	return u.codePush.ReleaseVersion(ctx, marshalVersionReleaseParams(params))
 }
 
-func (u *useCase) GetVersion(envId, appVersion []byte) (*portal.Version, error) {
-	res, err := u.codePush.GetVersion(envId, appVersion)
+func (u *useCase) GetVersion(ctx context.Context, envId, appVersion []byte) (*portal.Version, error) {
+	res, err := u.codePush.GetVersion(ctx, envId, appVersion)
 	return unmarshalVersion(res), err
 }
 
-func (u *useCase) VersionStrictCompatQuery(envId, appVersion []byte) (*portal.VersionCompatQueryResult, error) {
-	res, err := u.codePush.VersionStrictCompatQuery(envId, appVersion)
+func (u *useCase) VersionStrictCompatQuery(ctx context.Context, envId, appVersion []byte) (*portal.VersionCompatQueryResult, error) {
+	res, err := u.codePush.VersionStrictCompatQuery(ctx, envId, appVersion)
 	return unmarshalVersionCompatQueryResult(res), err
 }
 

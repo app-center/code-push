@@ -30,7 +30,7 @@ func (e *Endpoints) CreateEnv(c *gin.Context) {
 		return
 	}
 
-	response, err := e.uc.CreateEnv(branchId, []byte(request.EnvName))
+	response, err := e.uc.CreateEnv(c.Request.Context(), branchId, []byte(request.EnvName))
 	if err != nil {
 		res.Error(c, err)
 		return
