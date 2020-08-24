@@ -59,7 +59,10 @@ func onServe(ctx context.Context, args []string) error {
 		logger = zapLogger.Sugar()
 	}
 
-	openTracer, openTracerCloser, openTracerErr := tracing.InitTracer("filer.d")
+	openTracer, openTracerCloser, openTracerErr := tracing.InitTracer(
+		"filer.d",
+		zap_log.New(logger.With("component", "opentracing")),
+	)
 	if openTracerErr == nil {
 		opentracing.SetGlobalTracer(openTracer)
 		defer openTracerCloser.Close()
