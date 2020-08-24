@@ -18,10 +18,9 @@ var serveCmdOptions serveConfig
 
 func main() {
 	svrkit.RunCmd(
-		svrkit.WithCmdName("portal.g"),
+		"portal.g",
 		svrkit.WithServeCmd(
-			svrkit.WithServeCmdConfigurable("client.g", &(serveCmdOptions.ConfigFilePath)),
-			svrkit.WithServeCmdEnvPrefix("PORTAL_G"),
+			svrkit.WithServeCmdConfigurable(&(serveCmdOptions.ConfigFilePath)),
 			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
 			svrkit.WithServeHttpPort(&(serveCmdOptions.Port)),
 			svrkit.WithServeCodePushAddr(&(serveCmdOptions.AddrCodePushD)),

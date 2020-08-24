@@ -1,3 +1,0 @@
-debug: false
-port: 9522
-bolt-path: storage/filer.d/db

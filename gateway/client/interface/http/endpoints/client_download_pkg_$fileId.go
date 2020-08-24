@@ -3,7 +3,7 @@ package endpoints
 import (
 	"fmt"
 	"github.com/funnyecho/code-push/gateway/client/interface/http/middleware"
-	res "github.com/funnyecho/code-push/pkg/gin_res"
+	res "github.com/funnyecho/code-push/pkg/ginResponse"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

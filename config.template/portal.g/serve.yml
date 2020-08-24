@@ -1,5 +1,0 @@
-debug: false
-port: 9621
-addr-code-push: :9520
-addr-filer: :9521
-addr-session: :9522

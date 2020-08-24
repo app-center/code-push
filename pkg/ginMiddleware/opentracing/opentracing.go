@@ -5,7 +5,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-func Tracing() gin.HandlerFunc {
+func StartTracing() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		span, spanCtx := opentracing.StartSpanFromContext(c.Request.Context(), c.Request.URL.Path)
 		defer span.Finish()

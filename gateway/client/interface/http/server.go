@@ -5,7 +5,7 @@ import (
 	"github.com/funnyecho/code-push/gateway/client/interface/http/endpoints"
 	"github.com/funnyecho/code-push/gateway/client/interface/http/middleware"
 	"github.com/funnyecho/code-push/gateway/client/usecase"
-	"github.com/funnyecho/code-push/pkg/gin_middleware/opentracing"
+	"github.com/funnyecho/code-push/pkg/ginMiddleware/opentracing"
 	"github.com/funnyecho/code-push/pkg/log"
 	"github.com/gin-gonic/gin"
 	stdHttp "net/http"
@@ -66,7 +66,7 @@ func (s *server) initMiddleware() {
 func (s *server) initHttpHandler() {
 	r := gin.New()
 
-	r.Use(s.middleware.RequestDuration, opentracing.Tracing())
+	r.Use(s.middleware.RequestDuration, opentracing.StartTracing())
 
 	r.GET("/client/download/pkg/:fileId", s.endpoints.DownloadFile)
 

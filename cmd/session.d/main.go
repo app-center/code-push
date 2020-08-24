@@ -23,10 +23,9 @@ var serveCmdOptions serveConfig
 
 func main() {
 	svrkit.RunCmd(
-		svrkit.WithCmdName("session.d"),
+		"session.d",
 		svrkit.WithServeCmd(
-			svrkit.WithServeCmdConfigurable("session.d", &(serveCmdOptions.ConfigFilePath)),
-			svrkit.WithServeCmdEnvPrefix("SESSION_D"),
+			svrkit.WithServeCmdConfigurable(&(serveCmdOptions.ConfigFilePath)),
 			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
 			svrkit.WithServeGrpcPort(&(serveCmdOptions.Port)),
 			svrkit.WithServeCmdConfigValidation(&serveCmdOptions),

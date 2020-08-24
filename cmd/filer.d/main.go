@@ -26,18 +26,17 @@ var serveCmdOptions serveConfig
 
 func main() {
 	svrkit.RunCmd(
-		svrkit.WithCmdName("filer.d"),
+		"filer.d",
 		svrkit.WithServeCmd(
-			svrkit.WithServeCmdConfigurable("filer.d", &(serveCmdOptions.ConfigFilePath)),
-			svrkit.WithServeCmdEnvPrefix("CODE_PUSH_D"),
+			svrkit.WithServeCmdConfigurable(&(serveCmdOptions.ConfigFilePath)),
 			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
 			svrkit.WithServeGrpcPort(&(serveCmdOptions.Port)),
-			svrkit.WithServeCmdBoltPath("filer.d", &(serveCmdOptions.BoltPath)),
-			svrkit.WithServeCmdFlagSet(func(set *flag.FlagSet) {
-				set.StringVar(&(serveCmdOptions.AliOssEndpoint), "alioss-endpoint", "", "endpoint of ali-oss")
-				set.StringVar(&(serveCmdOptions.AliOssBucket), "alioss-bucket", "", "bucket of ali-oss")
-				set.StringVar(&(serveCmdOptions.AliOssAccessKeyId), "alioss-access-key-id", "", "access key id of ali-oss")
-				set.StringVar(&(serveCmdOptions.AliOssAccessSecret), "alioss-access-secret", "", "access secret of ali-oss")
+			svrkit.WithServeCmdBBoltPath(&(serveCmdOptions.BoltPath)),
+			svrkit.WithServeCmdFlagSet(func(kit *svrkit.CmdKit, set *flag.FlagSet) {
+				set.StringVar(&(serveCmdOptions.AliOssEndpoint), kit.FlagNameWithPrefix("alioss_endpoint"), "", "endpoint of ali-oss")
+				set.StringVar(&(serveCmdOptions.AliOssBucket), kit.FlagNameWithPrefix("alioss_bucket"), "", "bucket of ali-oss")
+				set.StringVar(&(serveCmdOptions.AliOssAccessKeyId), kit.FlagNameWithPrefix("alioss_access_key_id"), "", "access key id of ali-oss")
+				set.StringVar(&(serveCmdOptions.AliOssAccessSecret), kit.FlagNameWithPrefix("alioss_access_secret"), "", "access secret of ali-oss")
 			}),
 			svrkit.WithServeCmdConfigValidation(&serveCmdOptions),
 			svrkit.WithServeCmdRun(onServe),

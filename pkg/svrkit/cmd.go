@@ -9,6 +9,7 @@ import (
 	"github.com/peterbourgon/ff/v3/ffyaml"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -17,13 +18,16 @@ var (
 	BuildPlatform string
 )
 
-type CmdOption func(kit *cmdKit)
-type ServeCmdOption func(cmd *ffcli.Command)
+type CmdOption func(kit *CmdKit)
+type ServeCmdOption func(kit *CmdKit, cmd *ffcli.Command)
 
-func RunCmd(options ...CmdOption) {
-	runner := &cmdKit{
+func RunCmd(cmdName string, options ...CmdOption) {
+	flagPrefix := strings.Replace(cmdName, ".", "_", -1)
+	flagPrefix = strings.Replace(flagPrefix, "-", "_", -1)
+	runner := &CmdKit{
 		executableName: filepath.Base(os.Args[0]),
-		name:           "RunCmd Kit",
+		name:           cmdName,
+		flagPrefix:     flagPrefix,
 	}
 
 	for _, fn := range options {
@@ -35,6 +39,7 @@ func RunCmd(options ...CmdOption) {
 	versionCmd = &ffcli.Command{
 		Name:      "version",
 		ShortHelp: "Version of service",
+		Options:   []ff.Option{ff.WithIgnoreUndefined(true)},
 		Exec: func(ctx context.Context, args []string) error {
 			fmt.Println(fmt.Sprintf("%s %s %s", runner.name, Version, BuildPlatform))
 			return nil
@@ -45,15 +50,17 @@ func RunCmd(options ...CmdOption) {
 		Name:        "serve",
 		ShortHelp:   fmt.Sprintf("%s serve [arguments]", runner.executableName),
 		FlagSet:     flag.NewFlagSet("serve", flag.ExitOnError),
-		Options:     []ff.Option{},
+		Options:     []ff.Option{ff.WithIgnoreUndefined(true)},
 		Subcommands: nil,
 		Exec: func(ctx context.Context, args []string) error {
 			return nil
 		},
 	}
 
+	serveCmd.Options = append(serveCmd.Options, ff.WithEnvVarNoPrefix())
+
 	for _, fn := range runner.serveCmdOptions {
-		fn(serveCmd)
+		fn(runner, serveCmd)
 	}
 
 	cmd = &ffcli.Command{
@@ -63,7 +70,7 @@ func RunCmd(options ...CmdOption) {
 			return fmt.Sprintf("%s\n\n%s", c.Name, ffcli.DefaultUsageFunc(c))
 		},
 		FlagSet: nil,
-		Options: nil,
+		Options: []ff.Option{ff.WithIgnoreUndefined(true)},
 		Subcommands: []*ffcli.Command{
 			versionCmd,
 			serveCmd,
@@ -80,92 +87,74 @@ func RunCmd(options ...CmdOption) {
 }
 
 func WithCmdName(name string) CmdOption {
-	return func(kit *cmdKit) {
+	return func(kit *CmdKit) {
 		kit.name = name
 	}
 }
 
 func WithServeCmd(options ...ServeCmdOption) CmdOption {
-	return func(kit *cmdKit) {
+	return func(kit *CmdKit) {
 		kit.serveCmdOptions = options
 	}
 }
 
-func WithServeCmdFlagSet(fn func(set *flag.FlagSet)) ServeCmdOption {
-	return func(cmd *ffcli.Command) {
-		fn(cmd.FlagSet)
+func WithServeCmdFlagSet(fn func(kit *CmdKit, set *flag.FlagSet)) ServeCmdOption {
+	return func(kit *CmdKit, cmd *ffcli.Command) {
+		fn(kit, cmd.FlagSet)
 	}
 }
 
-func WithServeCmdEnvPrefix(prefix string) ServeCmdOption {
-	return func(cmd *ffcli.Command) {
-		cmd.Options = append(cmd.Options, ff.WithEnvVarPrefix(prefix), ff.WithEnvVarSplit("_"))
-	}
-}
-
-func WithServeCmdConfigurable(name string, path *string) ServeCmdOption {
-	return func(cmd *ffcli.Command) {
-		cmd.FlagSet.StringVar(path, "config", fmt.Sprintf("config/%s/serve.yml", name), "alternative config file path")
+func WithServeCmdConfigurable(path *string) ServeCmdOption {
+	return func(kit *CmdKit, cmd *ffcli.Command) {
+		cmd.FlagSet.StringVar(path, "config", "config/serve.yml", "alternative config file path")
 		cmd.Options = append(cmd.Options, ff.WithConfigFileFlag("config"), ff.WithAllowMissingConfigFile(true), ff.WithConfigFileParser(ffyaml.Parser))
 	}
 }
 
 func WithServeCmdDebuggable(debug *bool) ServeCmdOption {
-	return func(cmd *ffcli.Command) {
-		cmd.FlagSet.BoolVar(debug, "debug", false, "run in debug mode")
+	return func(kit *CmdKit, cmd *ffcli.Command) {
+		cmd.FlagSet.BoolVar(debug, kit.FlagNameWithPrefix("debug"), false, "run in debug mode")
 	}
 }
 
 func WithServeHttpPort(port *int) ServeCmdOption {
-	return func(cmd *ffcli.Command) {
-		cmd.FlagSet.IntVar(port, "port", 0, "port for http server listen to")
+	return func(kit *CmdKit, cmd *ffcli.Command) {
+		cmd.FlagSet.IntVar(port, kit.FlagNameWithPrefix("port_http"), 0, "port for http server listen to")
 	}
 }
 
 func WithServeGrpcPort(port *int) ServeCmdOption {
-	return func(cmd *ffcli.Command) {
-		cmd.FlagSet.IntVar(port, "port", 0, "port for grpc server listen to")
+	return func(kit *CmdKit, cmd *ffcli.Command) {
+		cmd.FlagSet.IntVar(port, kit.FlagNameWithPrefix("port_grpc"), 0, "port for grpc server listen to")
 	}
 }
 
 func WithServeCodePushAddr(addr *string) ServeCmdOption {
-	return func(cmd *ffcli.Command) {
-		cmd.FlagSet.StringVar(addr, "addr-code-push", "", "address of code-push.d")
+	return func(kit *CmdKit, cmd *ffcli.Command) {
+		cmd.FlagSet.StringVar(addr, "addr_code_push_d", "", "address of code-push.d")
 	}
 }
 
 func WithServeFilerAddr(addr *string) ServeCmdOption {
-	return func(cmd *ffcli.Command) {
-		cmd.FlagSet.StringVar(addr, "addr-filer", "", "address of filer.d")
+	return func(kit *CmdKit, cmd *ffcli.Command) {
+		cmd.FlagSet.StringVar(addr, "addr_filer_d", "", "address of filer.d")
 	}
 }
 
 func WithServeSessionAddr(addr *string) ServeCmdOption {
-	return func(cmd *ffcli.Command) {
-		cmd.FlagSet.StringVar(addr, "addr-session", "", "address of session.d")
+	return func(kit *CmdKit, cmd *ffcli.Command) {
+		cmd.FlagSet.StringVar(addr, "addr_session_d", "", "address of session.d")
 	}
 }
 
-func WithServeMetricAddress(addr *string) ServeCmdOption {
-	return func(cmd *ffcli.Command) {
-		cmd.FlagSet.StringVar(addr, "addr-metric", "", "address of metric.g")
-	}
-}
-
-func WithServeTracingReporterAddress(addr *string) ServeCmdOption {
-	return func(cmd *ffcli.Command) {
-		cmd.FlagSet.StringVar(addr, "addr-tracing-reporter", "", "address of opentracing reporter")
-	}
-}
-
-func WithServeCmdBoltPath(name string, path *string) ServeCmdOption {
-	return func(cmd *ffcli.Command) {
-		cmd.FlagSet.StringVar(path, "bolt-path", fmt.Sprintf("storage/%s/db", name), "path of bolt storage file")
+func WithServeCmdBBoltPath(path *string) ServeCmdOption {
+	return func(kit *CmdKit, cmd *ffcli.Command) {
+		cmd.FlagSet.StringVar(path, kit.FlagNameWithPrefix("bbolt_path"), fmt.Sprintf("storage/%s/bbolt.db", kit.name), "path of bbolt storage file")
 	}
 }
 
 func WithServeCmdRun(fn func(ctx context.Context, args []string) error) ServeCmdOption {
-	return func(cmd *ffcli.Command) {
+	return func(kit *CmdKit, cmd *ffcli.Command) {
 		onServe := cmd.Exec
 
 		cmd.Exec = func(ctx context.Context, args []string) error {
@@ -192,8 +181,13 @@ func WithServeCmdConfigValidation(validator interface {
 	})
 }
 
-type cmdKit struct {
+type CmdKit struct {
 	executableName  string
 	name            string
+	flagPrefix      string
 	serveCmdOptions []ServeCmdOption
+}
+
+func (k *CmdKit) FlagNameWithPrefix(flagName string) string {
+	return fmt.Sprintf("%s.%s", k.flagPrefix, flagName)
 }

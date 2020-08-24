@@ -1,7 +1,7 @@
 package endpoints
 
 import (
-	res "github.com/funnyecho/code-push/pkg/gin_res"
+	res "github.com/funnyecho/code-push/pkg/ginResponse"
 	"github.com/gin-gonic/gin"
 	"mime/multipart"
 )

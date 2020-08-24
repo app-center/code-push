@@ -24,13 +24,12 @@ var serveCmdOptions serveConfig
 
 func main() {
 	svrkit.RunCmd(
-		svrkit.WithCmdName("code-push.d"),
+		"code-push.d",
 		svrkit.WithServeCmd(
-			svrkit.WithServeCmdConfigurable("code-push.d", &(serveCmdOptions.ConfigFilePath)),
-			svrkit.WithServeCmdEnvPrefix("CODE_PUSH_D"),
+			svrkit.WithServeCmdConfigurable(&(serveCmdOptions.ConfigFilePath)),
 			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
 			svrkit.WithServeGrpcPort(&(serveCmdOptions.Port)),
-			svrkit.WithServeCmdBoltPath("code-push.d", &(serveCmdOptions.BoltPath)),
+			svrkit.WithServeCmdBBoltPath(&(serveCmdOptions.BoltPath)),
 			svrkit.WithServeCmdConfigValidation(&serveCmdOptions),
 			svrkit.WithServeCmdRun(onServe),
 		),

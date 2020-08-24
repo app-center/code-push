@@ -1,0 +1,30 @@
+code_push_d.debug: false
+code_push_d.port_grpc: 9520
+code_push_d.bbolt_path: storage/code-push.d/bbolt.db
+
+filer_d.debug: false
+filer_d.port_grpc: 9521
+filer_d.bbolt_path: storage/filer.d/bbolt.db
+filer_d.alioss_endpoint: ""
+filer_d.alioss_bucket: ""
+filer_d.alioss_access_key_id: ""
+filer_d.alioss_access_secret: ""
+
+session_d.debug: false
+session_d.port_grpc: 9522
+session_d.bbolt_path: storage/session.d/bbolt.db
+
+sys_g.debug: false
+sys_g.port_http: 9620
+sys_g.root_user_name: uceNtigA
+sys_g.root_user_pwd: omenTergaCQU
+
+portal_g.debug: false
+portal_g.port_http: 9621
+
+client_g.debug: false
+client_g.port_http: 9622
+
+addr_code_push_d: :9520
+addr_filer_d: :9521
+addr_session_d: :9522

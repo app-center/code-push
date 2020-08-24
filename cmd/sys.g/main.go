@@ -18,17 +18,16 @@ var serveCmdOptions serveConfig
 
 func main() {
 	svrkit.RunCmd(
-		svrkit.WithCmdName("sys.g"),
+		"sys.g",
 		svrkit.WithServeCmd(
-			svrkit.WithServeCmdConfigurable("sys.g", &(serveCmdOptions.ConfigFilePath)),
-			svrkit.WithServeCmdEnvPrefix("SYS_G"),
+			svrkit.WithServeCmdConfigurable(&(serveCmdOptions.ConfigFilePath)),
 			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
 			svrkit.WithServeHttpPort(&(serveCmdOptions.Port)),
 			svrkit.WithServeCodePushAddr(&(serveCmdOptions.AddrCodePushD)),
 			svrkit.WithServeSessionAddr(&(serveCmdOptions.AddrSessionD)),
-			svrkit.WithServeCmdFlagSet(func(set *flag.FlagSet) {
-				set.StringVar(&(serveCmdOptions.RootUserName), "root-user-name", "", "root user name")
-				set.StringVar(&(serveCmdOptions.RootUserPwd), "root-user-pwd", "", "root user password")
+			svrkit.WithServeCmdFlagSet(func(kit *svrkit.CmdKit, set *flag.FlagSet) {
+				set.StringVar(&(serveCmdOptions.RootUserName), kit.FlagNameWithPrefix("root_user_name"), "", "root user name")
+				set.StringVar(&(serveCmdOptions.RootUserPwd), kit.FlagNameWithPrefix("root_user_pwd"), "", "root user password")
 			}),
 			svrkit.WithServeCmdConfigValidation(&serveCmdOptions),
 			svrkit.WithServeCmdRun(onServe),
