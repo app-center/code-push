@@ -17,6 +17,7 @@ type authResponse struct {
 }
 
 func (e *Endpoints) Auth(c *gin.Context) {
+
 	var auth authRequest
 
 	if err := c.Bind(&auth); err != nil {

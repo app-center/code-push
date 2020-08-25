@@ -1,12 +1,12 @@
 package http
 
 import (
-	"fmt"
 	"github.com/funnyecho/code-push/gateway/portal/interface/http/endpoints"
 	"github.com/funnyecho/code-push/gateway/portal/interface/http/middleware"
 	"github.com/funnyecho/code-push/gateway/portal/usecase"
 	"github.com/funnyecho/code-push/pkg/ginMiddleware/opentracing"
 	"github.com/funnyecho/code-push/pkg/log"
+	prometheus_gin "github.com/funnyecho/code-push/pkg/promEndpoint/gin"
 	"github.com/gin-gonic/gin"
 	stdHttp "net/http"
 )
@@ -40,17 +40,6 @@ type server struct {
 	handler    stdHttp.Handler
 }
 
-func (s *server) ListenAndServe() error {
-	addr := fmt.Sprintf(":%d", s.options.Port)
-	server := &stdHttp.Server{
-		Addr:           addr,
-		Handler:        s,
-		MaxHeaderBytes: 1 << 20,
-	}
-
-	return server.ListenAndServe()
-}
-
 func (s *server) ServeHTTP(writer stdHttp.ResponseWriter, request *stdHttp.Request) {
 	s.handler.ServeHTTP(writer, request)
 }
@@ -66,9 +55,10 @@ func (s *server) initMiddleware() {
 func (s *server) initHttpHandler() {
 	r := gin.New()
 
-	r.Use(opentracing.StartTracing())
+	prometheus_gin.Init(r)
 
-	apiGroup := r.Group("/api")
+	apiGroup := r.Group("/api", opentracing.StartTracing())
+
 	apiGroup.POST("/auth", s.endpoints.Auth)
 	apiGroup.POST("/v1/env", s.endpoints.CreateEnv)
 	apiGroup.POST("/v1/version", s.middleware.Authorized, s.endpoints.ReleaseVersion)
@@ -78,5 +68,4 @@ func (s *server) initHttpHandler() {
 }
 
 type Options struct {
-	Port int
 }

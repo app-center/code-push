@@ -22,7 +22,7 @@ func (c *serveConfig) Validate() error {
 	var errs []string
 
 	if c.Port == 0 {
-		errs = append(errs, "Invalid Port")
+		errs = append(errs, "Invalid PortGrpc")
 	}
 
 	if c.AddrCodePushD == "" {

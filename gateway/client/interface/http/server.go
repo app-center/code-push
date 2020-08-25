@@ -1,12 +1,12 @@
 package http
 
 import (
-	"fmt"
 	"github.com/funnyecho/code-push/gateway/client/interface/http/endpoints"
 	"github.com/funnyecho/code-push/gateway/client/interface/http/middleware"
 	"github.com/funnyecho/code-push/gateway/client/usecase"
 	"github.com/funnyecho/code-push/pkg/ginMiddleware/opentracing"
 	"github.com/funnyecho/code-push/pkg/log"
+	prometheus_gin "github.com/funnyecho/code-push/pkg/promEndpoint/gin"
 	"github.com/gin-gonic/gin"
 	stdHttp "net/http"
 )
@@ -40,17 +40,6 @@ type server struct {
 	handler    stdHttp.Handler
 }
 
-func (s *server) ListenAndServe() error {
-	addr := fmt.Sprintf(":%d", s.options.Port)
-	server := &stdHttp.Server{
-		Addr:           addr,
-		Handler:        s,
-		MaxHeaderBytes: 1 << 20,
-	}
-
-	return server.ListenAndServe()
-}
-
 func (s *server) ServeHTTP(writer stdHttp.ResponseWriter, request *stdHttp.Request) {
 	s.handler.ServeHTTP(writer, request)
 }
@@ -66,11 +55,11 @@ func (s *server) initMiddleware() {
 func (s *server) initHttpHandler() {
 	r := gin.New()
 
-	r.Use(s.middleware.RequestDuration, opentracing.StartTracing())
+	prometheus_gin.Init(r)
 
-	r.GET("/client/download/pkg/:fileId", s.endpoints.DownloadFile)
+	r.GET("/client/download/pkg/:fileId", opentracing.StartTracing(), s.endpoints.DownloadFile)
 
-	apiGroup := r.Group("/api/client")
+	apiGroup := r.Group("/api/client", opentracing.StartTracing())
 	apiGroup.POST("/auth/ddder", s.endpoints.Auth)
 	apiGroup.GET("/v1/upgrade/:envId/:version", s.endpoints.VersionUpgradeQuery)
 
@@ -78,5 +67,4 @@ func (s *server) initHttpHandler() {
 }
 
 type Options struct {
-	Port int
 }

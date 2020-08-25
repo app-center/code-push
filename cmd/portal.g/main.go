@@ -7,6 +7,7 @@ import (
 	"github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/gateway/portal/interface/http"
 	"github.com/funnyecho/code-push/gateway/portal/usecase"
+	http_kit "github.com/funnyecho/code-push/pkg/interfacekit/http"
 	zap_log "github.com/funnyecho/code-push/pkg/log/zap"
 	"github.com/funnyecho/code-push/pkg/svrkit"
 	"github.com/funnyecho/code-push/pkg/tracing"
@@ -109,14 +110,11 @@ func onServe(ctx context.Context, args []string) error {
 		},
 	)
 
-	server := http.New(
-		uc,
-		zap_log.New(logger.With("component", "interfaces", "interface", "http")),
-		func(options *http.Options) {
-			options.Port = serveCmdOptions.Port
-		},
+	return http_kit.ListenAndServe(
+		http_kit.WithServePort(serveCmdOptions.Port),
+		http_kit.WithServeHandler(http.New(
+			uc,
+			zap_log.New(logger.With("component", "interfaces", "interface", "http")),
+		)),
 	)
-
-	httpServeErr := server.ListenAndServe()
-	return httpServeErr
 }

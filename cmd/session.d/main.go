@@ -7,7 +7,9 @@ import (
 	"github.com/funnyecho/code-push/daemon/session/interface/grpc/pb"
 	"github.com/funnyecho/code-push/daemon/session/usecase"
 	"github.com/funnyecho/code-push/pkg/grpcInterceptor"
+	http_kit "github.com/funnyecho/code-push/pkg/interfacekit/http"
 	zap_log "github.com/funnyecho/code-push/pkg/log/zap"
+	prometheus_http "github.com/funnyecho/code-push/pkg/promEndpoint/http"
 	"github.com/funnyecho/code-push/pkg/svrkit"
 	"github.com/funnyecho/code-push/pkg/tracing"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -27,7 +29,8 @@ func main() {
 		svrkit.WithServeCmd(
 			svrkit.WithServeCmdConfigurable(&(serveCmdOptions.ConfigFilePath)),
 			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
-			svrkit.WithServeGrpcPort(&(serveCmdOptions.Port)),
+			svrkit.WithServeGrpcPort(&(serveCmdOptions.PortGrpc)),
+			svrkit.WithServeHttpPort(&(serveCmdOptions.PortHttp)),
 			svrkit.WithServeCmdConfigValidation(&serveCmdOptions),
 			svrkit.WithServeCmdRun(onServe),
 		),
@@ -71,7 +74,7 @@ func onServe(ctx context.Context, args []string) error {
 		grpcServerLogger,
 	)
 	{
-		grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", serveCmdOptions.Port))
+		grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", serveCmdOptions.PortGrpc))
 		if err != nil {
 			return err
 		}
@@ -93,6 +96,19 @@ func onServe(ctx context.Context, args []string) error {
 			return baseServer.Serve(grpcListener)
 		}, func(err error) {
 			grpcListener.Close()
+		})
+	}
+
+	{
+		g.Add(func() error {
+			return http_kit.ListenAndServe(
+				http_kit.WithServePort(serveCmdOptions.PortHttp),
+				http_kit.WithDefaultServeMuxHandler(
+					prometheus_http.Handle,
+				),
+			)
+		}, func(err error) {
+
 		})
 	}
 

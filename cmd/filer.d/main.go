@@ -10,7 +10,9 @@ import (
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
 	"github.com/funnyecho/code-push/daemon/filer/usecase"
 	"github.com/funnyecho/code-push/pkg/grpcInterceptor"
+	http_kit "github.com/funnyecho/code-push/pkg/interfacekit/http"
 	zap_log "github.com/funnyecho/code-push/pkg/log/zap"
+	prometheus_http "github.com/funnyecho/code-push/pkg/promEndpoint/http"
 	"github.com/funnyecho/code-push/pkg/svrkit"
 	"github.com/funnyecho/code-push/pkg/tracing"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -30,7 +32,8 @@ func main() {
 		svrkit.WithServeCmd(
 			svrkit.WithServeCmdConfigurable(&(serveCmdOptions.ConfigFilePath)),
 			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
-			svrkit.WithServeGrpcPort(&(serveCmdOptions.Port)),
+			svrkit.WithServeGrpcPort(&(serveCmdOptions.PortGrpc)),
+			svrkit.WithServeHttpPort(&(serveCmdOptions.PortHttp)),
 			svrkit.WithServeCmdBBoltPath(&(serveCmdOptions.BoltPath)),
 			svrkit.WithServeCmdFlagSet(func(kit *svrkit.CmdKit, set *flag.FlagSet) {
 				set.StringVar(&(serveCmdOptions.AliOssEndpoint), kit.FlagNameWithPrefix("alioss_endpoint"), "", "endpoint of ali-oss")
@@ -104,7 +107,7 @@ func onServe(ctx context.Context, args []string) error {
 	)
 
 	{
-		grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", serveCmdOptions.Port))
+		grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", serveCmdOptions.PortGrpc))
 		if err != nil {
 			return err
 		}
@@ -128,6 +131,19 @@ func onServe(ctx context.Context, args []string) error {
 			return baseServer.Serve(grpcListener)
 		}, func(err error) {
 			grpcListener.Close()
+		})
+	}
+
+	{
+		g.Add(func() error {
+			return http_kit.ListenAndServe(
+				http_kit.WithServePort(serveCmdOptions.PortHttp),
+				http_kit.WithDefaultServeMuxHandler(
+					prometheus_http.Handle,
+				),
+			)
+		}, func(err error) {
+
 		})
 	}
 

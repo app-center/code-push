@@ -9,14 +9,19 @@ import (
 type serveConfig struct {
 	ConfigFilePath string
 	Debug          bool
-	Port           int
+	PortGrpc       int
+	PortHttp       int
 }
 
 func (c *serveConfig) Validate() error {
 	var errs []string
 
-	if c.Port == 0 {
-		errs = append(errs, "Invalid Port")
+	if c.PortGrpc == 0 {
+		errs = append(errs, "Invalid Grpc Port")
+	}
+
+	if c.PortHttp == 0 {
+		errs = append(errs, "Invalid Http Port")
 	}
 
 	if len(errs) == 0 {
