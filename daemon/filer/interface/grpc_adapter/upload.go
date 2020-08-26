@@ -3,7 +3,7 @@ package filerAdapter
 import (
 	"context"
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
-	"github.com/funnyecho/code-push/pkg/grpcStreamer"
+	"github.com/funnyecho/code-push/pkg/grpc-streamer"
 	"github.com/pkg/errors"
 	"io"
 	"mime/multipart"
@@ -12,7 +12,7 @@ import (
 func (c *Client) UploadPkg(ctx context.Context, source multipart.File) (fileKey []byte, err error) {
 	stream, err := c.uploadClient.UploadToAliOss(ctx)
 
-	streamSender := grpcStreamer.NewSender(func(p byte) (err error) {
+	streamSender := grpc_streamer.NewSender(func(p byte) (err error) {
 		err = stream.Send(&pb.UploadToAliOssRequest{Data: uint32(p)})
 
 		return

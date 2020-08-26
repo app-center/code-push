@@ -1,4 +1,4 @@
-package grpcStreamer
+package grpc_streamer
 
 import "io"
 

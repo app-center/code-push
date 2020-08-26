@@ -2,7 +2,7 @@ package adapterkit
 
 import (
 	"fmt"
-	"github.com/funnyecho/code-push/pkg/grpcInterceptor"
+	"github.com/funnyecho/code-push/pkg/grpc-interceptor"
 	"github.com/funnyecho/code-push/pkg/log"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
@@ -76,13 +76,13 @@ func (a *grpcAdapter) Conn() error {
 		a.target,
 		grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
-			grpcInterceptor.UnaryClientMetricInterceptor(a.logger),
-			grpcInterceptor.UnaryClientErrorInterceptor(),
+			grpc_interceptor.UnaryClientMetricInterceptor(a.logger),
+			grpc_interceptor.UnaryClientErrorInterceptor(),
 			grpc_opentracing.UnaryClientInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
 		)),
 		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(
-			grpcInterceptor.StreamClientMetricInterceptor(a.logger),
-			grpcInterceptor.StreamClientErrorInterceptor(),
+			grpc_interceptor.StreamClientMetricInterceptor(a.logger),
+			grpc_interceptor.StreamClientErrorInterceptor(),
 			grpc_opentracing.StreamClientInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
 		)),
 	)

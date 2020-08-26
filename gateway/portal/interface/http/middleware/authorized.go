@@ -4,7 +4,7 @@ import (
 	"github.com/funnyecho/code-push/gateway/portal"
 	"github.com/funnyecho/code-push/gateway/portal/interface/http/constants"
 	"github.com/funnyecho/code-push/gateway/portal/usecase"
-	res "github.com/funnyecho/code-push/pkg/ginResponse"
+	res "github.com/funnyecho/code-push/pkg/gin-response"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

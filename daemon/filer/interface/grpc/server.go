@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/funnyecho/code-push/daemon/filer"
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
-	"github.com/funnyecho/code-push/pkg/grpcStreamer"
+	"github.com/funnyecho/code-push/pkg/grpc-streamer"
 	"github.com/funnyecho/code-push/pkg/log"
 	"io"
 )
@@ -22,7 +22,7 @@ type filerServer struct {
 }
 
 func (f *filerServer) UploadToAliOss(stream pb.Upload_UploadToAliOssServer) error {
-	fileKey, err := f.endpoints.UploadToAliOss(grpcStreamer.NewStreamReader(grpcStreamer.StreamReaderConfig{
+	fileKey, err := f.endpoints.UploadToAliOss(grpc_streamer.NewStreamReader(grpc_streamer.StreamReaderConfig{
 		RecvByte: func() (b byte, err error) {
 			chunk, recvErr := stream.Recv()
 			if recvErr != nil {

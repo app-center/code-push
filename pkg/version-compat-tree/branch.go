@@ -1,4 +1,4 @@
-package versionCompatTree
+package version_compat_tree
 
 import (
 	"container/list"

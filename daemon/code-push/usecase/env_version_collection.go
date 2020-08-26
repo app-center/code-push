@@ -3,7 +3,7 @@ package usecase
 import (
 	"github.com/funnyecho/code-push/daemon/code-push"
 	"github.com/funnyecho/code-push/pkg/semver"
-	"github.com/funnyecho/code-push/pkg/versionCompatTree"
+	"github.com/funnyecho/code-push/pkg/version-compat-tree"
 	"github.com/pkg/errors"
 )
 
@@ -16,7 +16,7 @@ func NewEnvVersionCollection(config EnvVersionCollectionConfig) (*EnvVersionColl
 	collection := &EnvVersionCollection{
 		envId:             string(config.EnvId),
 		domain:            config.DomainAdapter,
-		versionCompatTree: versionCompatTree.NewVersionCompatTree(),
+		versionCompatTree: version_compat_tree.NewVersionCompatTree(),
 	}
 
 	if initErr := collection.init(); initErr != nil {
@@ -35,7 +35,7 @@ type EnvVersionCollection struct {
 	envId             string
 	domain            DomainAdapter
 	versionList       code_push.VersionList
-	versionCompatTree versionCompatTree.ITree
+	versionCompatTree version_compat_tree.ITree
 }
 
 func (e *EnvVersionCollection) ReleaseVersion(params VersionReleaseParams) error {
@@ -167,7 +167,7 @@ func (e *EnvVersionCollection) init() error {
 
 	e.versionList = versionList
 
-	treeEntries := make([]versionCompatTree.IEntry, len(versionList))
+	treeEntries := make([]version_compat_tree.IEntry, len(versionList))
 	for i, version := range versionList {
 		treeEntries[i] = newVersionCompatEntry(version)
 	}

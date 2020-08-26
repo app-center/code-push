@@ -1,8 +1,8 @@
-package grpcInterceptor
+package grpc_interceptor
 
 import (
 	"context"
-	"github.com/funnyecho/code-push/pkg/grpcInterceptor/internal"
+	"github.com/funnyecho/code-push/pkg/grpc-interceptor/internal"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"google.golang.org/grpc"
 	"time"

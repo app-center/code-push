@@ -9,10 +9,10 @@ import (
 	interfacegrpc "github.com/funnyecho/code-push/daemon/filer/interface/grpc"
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc/pb"
 	"github.com/funnyecho/code-push/daemon/filer/usecase"
-	"github.com/funnyecho/code-push/pkg/grpcInterceptor"
+	"github.com/funnyecho/code-push/pkg/grpc-interceptor"
 	http_kit "github.com/funnyecho/code-push/pkg/interfacekit/http"
 	zap_log "github.com/funnyecho/code-push/pkg/log/zap"
-	prometheus_http "github.com/funnyecho/code-push/pkg/promEndpoint/http"
+	prometheus_http "github.com/funnyecho/code-push/pkg/prom-endpoint/http"
 	"github.com/funnyecho/code-push/pkg/svrkit"
 	"github.com/funnyecho/code-push/pkg/tracing"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -116,13 +116,13 @@ func onServe(ctx context.Context, args []string) error {
 		g.Add(func() error {
 			baseServer := grpc.NewServer(
 				grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-					grpcInterceptor.UnaryServerMetricInterceptor(grpcServerLogger),
-					grpcInterceptor.UnaryServerErrorInterceptor(),
+					grpc_interceptor.UnaryServerMetricInterceptor(grpcServerLogger),
+					grpc_interceptor.UnaryServerErrorInterceptor(),
 					grpc_opentracing.UnaryServerInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
 				)),
 				grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-					grpcInterceptor.StreamServerMetricInterceptor(grpcServerLogger),
-					grpcInterceptor.StreamServerErrorInterceptor(),
+					grpc_interceptor.StreamServerMetricInterceptor(grpcServerLogger),
+					grpc_interceptor.StreamServerErrorInterceptor(),
 					grpc_opentracing.StreamServerInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
 				)),
 			)

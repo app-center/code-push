@@ -4,9 +4,9 @@ import (
 	"github.com/funnyecho/code-push/gateway/client/interface/http/endpoints"
 	"github.com/funnyecho/code-push/gateway/client/interface/http/middleware"
 	"github.com/funnyecho/code-push/gateway/client/usecase"
-	"github.com/funnyecho/code-push/pkg/ginMiddleware/opentracing"
+	"github.com/funnyecho/code-push/pkg/gin-middleware/opentracing"
 	"github.com/funnyecho/code-push/pkg/log"
-	prometheus_gin "github.com/funnyecho/code-push/pkg/promEndpoint/gin"
+	prometheus_gin "github.com/funnyecho/code-push/pkg/prom-endpoint/gin"
 	"github.com/gin-gonic/gin"
 	stdHttp "net/http"
 )

@@ -1,4 +1,4 @@
-package grpcStreamer
+package grpc_streamer
 
 func NewSender(sendByte SendByte) *streamSender {
 	return &streamSender{sendByte: sendByte}

@@ -1,7 +1,7 @@
 package endpoints
 
 import (
-	"github.com/funnyecho/code-push/pkg/ginResponse"
+	"github.com/funnyecho/code-push/pkg/gin-response"
 	"github.com/gin-gonic/gin"
 )
 
