@@ -2,7 +2,7 @@ package endpoints
 
 import (
 	"github.com/funnyecho/code-push/gateway/portal"
-	res "github.com/funnyecho/code-push/pkg/gin-response"
+	res "github.com/funnyecho/code-push/pkg/ginkit/response"
 	"github.com/gin-gonic/gin"
 )
 

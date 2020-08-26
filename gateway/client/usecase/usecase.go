@@ -1,8 +1,11 @@
 package usecase
 
-import "github.com/funnyecho/code-push/pkg/log"
+import (
+	"github.com/funnyecho/code-push/gateway/client"
+	"github.com/funnyecho/code-push/pkg/log"
+)
 
-func NewUseCase(config CtorConfig, optionsFns ...func(*Options)) UseCase {
+func NewUseCase(config *CtorConfig, optionsFns ...func(*Options)) UseCase {
 	ctorOptions := &Options{}
 
 	for _, fn := range optionsFns {
@@ -25,11 +28,13 @@ type CtorConfig struct {
 	SessionAdapter
 	FilerAdapter
 	log.Logger
+	*client.Metrics
 }
 
 type useCase struct {
 	*adapters
 	log.Logger
+	*client.Metrics
 	options *Options
 }
 

@@ -7,15 +7,27 @@ import (
 )
 
 func MustInit(metrics interface{}, factory Factory) {
-	if err := Init(metrics, factory); err != nil {
+	if err := initMetrics(metrics, factory); err != nil {
 		panic(err.Error())
 	}
 }
 
+func MustInitD(metrics interface{}) {
+	MustInit(metrics, DefaultFactory)
+}
+
 func Init(m interface{}, factory Factory) error {
+	return initMetrics(m, factory)
+}
+
+func InitD(m interface{}) error {
+	return initMetrics(m, DefaultFactory)
+}
+
+func initMetrics(m interface{}, factory Factory) error {
 	// Allow user to opt out of reporting metrics by passing in nil.
 	if factory == nil {
-		factory = NullFactory
+		factory = DefaultFactory
 	}
 
 	counterPtrType := reflect.TypeOf((*Counter)(nil)).Elem()

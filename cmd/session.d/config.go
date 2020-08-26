@@ -7,10 +7,10 @@ import (
 )
 
 type serveConfig struct {
-	ConfigFilePath string
-	Debug          bool
-	PortGrpc       int
-	PortHttp       int
+	ConfigFilePath string `flag:"config" value:"config/serve.yml" usage:"alternative config file path"`
+	Debug          bool   `flag:"session_d.debug" value:"false" usage:"run in debug mode"`
+	PortGrpc       int    `flag:"session_d.port_grpc" usage:"port for grpc server listen to"`
+	PortHttp       int    `flag:"session_d.port_http" usage:"port for http server listen to"`
 }
 
 func (c *serveConfig) Validate() error {

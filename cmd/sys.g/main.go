@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/gateway/sys/interface/http"
@@ -21,16 +20,10 @@ func main() {
 	svrkit.RunCmd(
 		"sys.g",
 		svrkit.WithServeCmd(
-			svrkit.WithServeCmdConfigurable(&(serveCmdOptions.ConfigFilePath)),
-			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
-			svrkit.WithServeHttpPort(&(serveCmdOptions.Port)),
-			svrkit.WithServeCodePushAddr(&(serveCmdOptions.AddrCodePushD)),
-			svrkit.WithServeSessionAddr(&(serveCmdOptions.AddrSessionD)),
-			svrkit.WithServeCmdFlagSet(func(kit *svrkit.CmdKit, set *flag.FlagSet) {
-				set.StringVar(&(serveCmdOptions.RootUserName), kit.FlagNameWithPrefix("root_user_name"), "", "root user name")
-				set.StringVar(&(serveCmdOptions.RootUserPwd), kit.FlagNameWithPrefix("root_user_pwd"), "", "root user password")
-			}),
+			svrkit.WithServeCmdConfigurable(),
+			svrkit.WithServeCmdBindFlag(&serveCmdOptions),
 			svrkit.WithServeCmdConfigValidation(&serveCmdOptions),
+			svrkit.WithServeCmdPromFactorySetup(),
 			svrkit.WithServeCmdRun(onServe),
 		),
 	)
@@ -103,8 +96,13 @@ func onServe(ctx context.Context, args []string) error {
 	return http_kit.ListenAndServe(
 		http_kit.WithServePort(serveCmdOptions.Port),
 		http_kit.WithServeHandler(http.New(
-			uc,
-			zap_log.New(logger.With("component", "interfaces", "interface", "http")),
+			&http.CtorConfig{
+				UseCase: uc,
+				Logger:  zap_log.New(logger.With("component", "interfaces", "interface", "http")),
+			},
+			func(options *http.Options) {
+				options.Debug = serveCmdOptions.Debug
+			},
 		)),
 	)
 }

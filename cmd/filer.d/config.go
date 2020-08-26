@@ -8,16 +8,16 @@ import (
 )
 
 type serveConfig struct {
-	ConfigFilePath string
-	Debug          bool
-	PortGrpc       int
-	PortHttp       int
-	BoltPath       string
+	ConfigFilePath string `flag:"config" value:"config/serve.yml" usage:"alternative config file path"`
+	Debug          bool   `flag:"filer_d.debug" value:"false" usage:"run in debug mode"`
+	PortGrpc       int    `flag:"filer_d.port_grpc" usage:"port for grpc server listen to"`
+	PortHttp       int    `flag:"filer_d.port_http" usage:"port for http server listen to"`
+	BoltPath       string `flag:"filer_d.bbolt_path" value:"storage/filer.d/bbolt.db" usage:"path of bbolt storage file"`
 
-	AliOssEndpoint     string
-	AliOssBucket       string
-	AliOssAccessKeyId  string
-	AliOssAccessSecret string
+	AliOssEndpoint     string `flag:"filer_d.alioss_endpoint" usage:"endpoint of ali-oss"`
+	AliOssBucket       string `flag:"filer_d.alioss_bucket" usage:"bucket of ali-oss"`
+	AliOssAccessKeyId  string `flag:"filer_d.alioss_access_key_id" usage:"access key id of ali-oss"`
+	AliOssAccessSecret string `flag:"filer_d.alioss_access_secret" usage:"access secret of ali-oss"`
 }
 
 func (c *serveConfig) Validate() error {

@@ -8,11 +8,11 @@ import (
 )
 
 type serveConfig struct {
-	ConfigFilePath string
-	Debug          bool
-	PortGrpc       int
-	PortHttp       int
-	BoltPath       string
+	ConfigFilePath string `flag:"config" value:"config/serve.yml" usage:"alternative config file path"`
+	Debug          bool   `flag:"code_push_d.debug" value:"false" usage:"run in debug mode"`
+	PortGrpc       int    `flag:"code_push_d.port_grpc" usage:"port for grpc server listen to"`
+	PortHttp       int    `flag:"code_push_d.port_http" usage:"port for http server listen to"`
+	BoltPath       string `flag:"code_push_d.bbolt_path" value:"storage/code-push.d/bbolt.db" usage:"path of bbolt storage file"`
 }
 
 func (c *serveConfig) Validate() error {

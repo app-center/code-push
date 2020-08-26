@@ -1,7 +1,7 @@
 package endpoints
 
 import (
-	"github.com/funnyecho/code-push/pkg/gin-response"
+	"github.com/funnyecho/code-push/pkg/ginkit/response"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,22 +21,22 @@ func (e *Endpoints) Auth(c *gin.Context) {
 	var auth authRequest
 
 	if err := c.Bind(&auth); err != nil {
-		res.Error(c, err)
+		ginkit_res.Error(c, err)
 		return
 	}
 
 	authorizeErr := e.uc.Auth(c.Request.Context(), []byte(auth.BranchId), []byte(auth.Timestamp), []byte(auth.Nonce), []byte(auth.Sign))
 	if authorizeErr != nil {
-		res.Error(c, authorizeErr)
+		ginkit_res.Error(c, authorizeErr)
 		return
 	}
 
 	token, tokenErr := e.uc.SignToken(c.Request.Context(), []byte(auth.BranchId))
 	if tokenErr != nil {
-		res.Error(c, tokenErr)
+		ginkit_res.Error(c, tokenErr)
 		return
 	}
 
-	res.Success(c, authResponse{string(token)})
+	ginkit_res.Success(c, authResponse{string(token)})
 	return
 }

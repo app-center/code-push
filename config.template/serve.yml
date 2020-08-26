@@ -15,7 +15,6 @@ filer_d.alioss_access_secret: ""
 session_d.debug: false
 session_d.port_grpc: 9522
 session_d.port_http: 9532
-session_d.bbolt_path: storage/session.d/bbolt.db
 
 sys_g.debug: false
 sys_g.port_http: 9620

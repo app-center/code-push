@@ -5,6 +5,7 @@ import (
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
+	"github.com/funnyecho/code-push/gateway/client"
 	"github.com/funnyecho/code-push/gateway/client/interface/http"
 	"github.com/funnyecho/code-push/gateway/client/usecase"
 	http_kit "github.com/funnyecho/code-push/pkg/interfacekit/http"
@@ -21,13 +22,10 @@ func main() {
 	svrkit.RunCmd(
 		"client.g",
 		svrkit.WithServeCmd(
-			svrkit.WithServeCmdConfigurable(&(serveCmdOptions.ConfigFilePath)),
-			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
-			svrkit.WithServeHttpPort(&(serveCmdOptions.Port)),
-			svrkit.WithServeCodePushAddr(&(serveCmdOptions.AddrCodePushD)),
-			svrkit.WithServeFilerAddr(&(serveCmdOptions.AddrFilerD)),
-			svrkit.WithServeSessionAddr(&(serveCmdOptions.AddrSessionD)),
+			svrkit.WithServeCmdConfigurable(),
+			svrkit.WithServeCmdBindFlag(&serveCmdOptions),
 			svrkit.WithServeCmdConfigValidation(&serveCmdOptions),
+			svrkit.WithServeCmdPromFactorySetup(),
 			svrkit.WithServeCmdRun(onServe),
 		),
 	)
@@ -98,23 +96,29 @@ func onServe(ctx context.Context, args []string) error {
 	defer filerAdapter.Close()
 	filerAdapter.Debug("connected to filer.d", "addr", filerAdapter.ServerAddr)
 
+	clientMetrics := client.NewMetrics()
+
 	uc := usecase.NewUseCase(
-		usecase.CtorConfig{
+		&usecase.CtorConfig{
 			CodePushAdapter: codePushAdapter,
 			SessionAdapter:  sessionAdapter,
 			FilerAdapter:    filerAdapter,
 			Logger:          zap_log.New(logger.With("component", "usecase")),
-		},
-		func(options *usecase.Options) {
-
+			Metrics:         clientMetrics,
 		},
 	)
 
 	return http_kit.ListenAndServe(
 		http_kit.WithServePort(serveCmdOptions.Port),
 		http_kit.WithServeHandler(http.New(
-			uc,
-			zap_log.New(logger.With("component", "interfaces", "interface", "http")),
+			&http.CtorConfig{
+				UseCase: uc,
+				Logger:  zap_log.New(logger.With("component", "interfaces", "interface", "http")),
+				Metrics: clientMetrics,
+			},
+			func(options *http.Options) {
+				options.Debug = serveCmdOptions.Debug
+			},
 		)),
 	)
 }

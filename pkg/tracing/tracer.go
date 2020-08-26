@@ -68,7 +68,7 @@ func (t *tracerLogger) Error(msg string) {
 }
 
 func (t *tracerLogger) Infof(msg string, args ...interface{}) {
-	t.logger.Info(fmt.Sprintf(msg, args...))
+	t.logger.Debug(fmt.Sprintf(msg, args...))
 }
 
 type tracerCloser struct {

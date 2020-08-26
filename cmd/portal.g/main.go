@@ -21,13 +21,10 @@ func main() {
 	svrkit.RunCmd(
 		"portal.g",
 		svrkit.WithServeCmd(
-			svrkit.WithServeCmdConfigurable(&(serveCmdOptions.ConfigFilePath)),
-			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
-			svrkit.WithServeHttpPort(&(serveCmdOptions.Port)),
-			svrkit.WithServeCodePushAddr(&(serveCmdOptions.AddrCodePushD)),
-			svrkit.WithServeFilerAddr(&(serveCmdOptions.AddrFilerD)),
-			svrkit.WithServeSessionAddr(&(serveCmdOptions.AddrSessionD)),
+			svrkit.WithServeCmdConfigurable(),
+			svrkit.WithServeCmdBindFlag(&serveCmdOptions),
 			svrkit.WithServeCmdConfigValidation(&serveCmdOptions),
+			svrkit.WithServeCmdPromFactorySetup(),
 			svrkit.WithServeCmdRun(onServe),
 		),
 	)
@@ -113,8 +110,13 @@ func onServe(ctx context.Context, args []string) error {
 	return http_kit.ListenAndServe(
 		http_kit.WithServePort(serveCmdOptions.Port),
 		http_kit.WithServeHandler(http.New(
-			uc,
-			zap_log.New(logger.With("component", "interfaces", "interface", "http")),
+			&http.CtorConfig{
+				UseCase: uc,
+				Logger:  zap_log.New(logger.With("component", "interfaces", "interface", "http")),
+			},
+			func(options *http.Options) {
+				options.Debug = serveCmdOptions.Debug
+			},
 		)),
 	)
 }

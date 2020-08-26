@@ -1,4 +1,4 @@
-package res
+package ginkit_res
 
 import (
 	stderr "errors"

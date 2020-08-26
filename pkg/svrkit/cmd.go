@@ -4,6 +4,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/funnyecho/code-push/pkg/flagkit"
+	"github.com/funnyecho/code-push/pkg/metrics"
+	promfactory "github.com/funnyecho/code-push/pkg/metrics/prometheus"
 	"github.com/peterbourgon/ff/v3"
 	"github.com/peterbourgon/ff/v3/ffcli"
 	"github.com/peterbourgon/ff/v3/ffyaml"
@@ -104,9 +107,14 @@ func WithServeCmdFlagSet(fn func(kit *CmdKit, set *flag.FlagSet)) ServeCmdOption
 	}
 }
 
-func WithServeCmdConfigurable(path *string) ServeCmdOption {
+func WithServeCmdBindFlag(flags interface{}) ServeCmdOption {
 	return func(kit *CmdKit, cmd *ffcli.Command) {
-		cmd.FlagSet.StringVar(path, "config", "config/serve.yml", "alternative config file path")
+		flagkit.MustBind(flags, cmd.FlagSet)
+	}
+}
+
+func WithServeCmdConfigurable() ServeCmdOption {
+	return func(kit *CmdKit, cmd *ffcli.Command) {
 		cmd.Options = append(cmd.Options, ff.WithConfigFileFlag("config"), ff.WithAllowMissingConfigFile(true), ff.WithConfigFileParser(ffyaml.Parser))
 	}
 }
@@ -177,6 +185,13 @@ func WithServeCmdConfigValidation(validator interface {
 			return configErr
 		}
 
+		return nil
+	})
+}
+
+func WithServeCmdPromFactorySetup() ServeCmdOption {
+	return WithServeCmdRun(func(ctx context.Context, args []string) error {
+		metrics.SetDefaultFactory(promfactory.New())
 		return nil
 	})
 }

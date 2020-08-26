@@ -1,11 +1,11 @@
-package opentracing
+package ginkit_middleware_opentracing
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 )
 
-func StartTracing() gin.HandlerFunc {
+func UseOpentracing() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		span, spanCtx := opentracing.StartSpanFromContext(c.Request.Context(), c.Request.URL.Path)
 		defer span.Finish()

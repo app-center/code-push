@@ -1,17 +1,16 @@
 package http
 
 import (
+	"github.com/funnyecho/code-push/gateway/client"
 	"github.com/funnyecho/code-push/gateway/client/interface/http/endpoints"
 	"github.com/funnyecho/code-push/gateway/client/interface/http/middleware"
 	"github.com/funnyecho/code-push/gateway/client/usecase"
-	"github.com/funnyecho/code-push/pkg/gin-middleware/opentracing"
+	ginkit_server "github.com/funnyecho/code-push/pkg/ginkit/server"
 	"github.com/funnyecho/code-push/pkg/log"
-	prometheus_gin "github.com/funnyecho/code-push/pkg/prom-endpoint/gin"
-	"github.com/gin-gonic/gin"
 	stdHttp "net/http"
 )
 
-func New(uc usecase.UseCase, logger log.Logger, fns ...func(*Options)) *server {
+func New(config *CtorConfig, fns ...func(*Options)) *server {
 	ctorOptions := &Options{}
 
 	for _, fn := range fns {
@@ -19,8 +18,9 @@ func New(uc usecase.UseCase, logger log.Logger, fns ...func(*Options)) *server {
 	}
 
 	svr := &server{
-		uc:      uc,
-		Logger:  logger,
+		uc:      config.UseCase,
+		Logger:  config.Logger,
+		metrics: config.Metrics,
 		options: ctorOptions,
 	}
 
@@ -34,6 +34,7 @@ func New(uc usecase.UseCase, logger log.Logger, fns ...func(*Options)) *server {
 type server struct {
 	uc usecase.UseCase
 	log.Logger
+	metrics    *client.Metrics
 	options    *Options
 	endpoints  *endpoints.Endpoints
 	middleware *middleware.Middleware
@@ -49,22 +50,30 @@ func (s *server) initEndpoints() {
 }
 
 func (s *server) initMiddleware() {
-	s.middleware = middleware.New(s.uc)
+	s.middleware = middleware.New(s.uc, s.metrics)
 }
 
 func (s *server) initHttpHandler() {
-	r := gin.New()
+	r := ginkit_server.New(
+		ginkit_server.WithDebugMode(s.options.Debug),
+		ginkit_server.WithLogger(s.Logger),
+	)
 
-	prometheus_gin.Init(r)
+	r.GET("/client/download/pkg/:fileId", s.endpoints.DownloadFile)
 
-	r.GET("/client/download/pkg/:fileId", opentracing.StartTracing(), s.endpoints.DownloadFile)
-
-	apiGroup := r.Group("/api/client", opentracing.StartTracing())
+	apiGroup := r.Group("/api/client")
 	apiGroup.POST("/auth/ddder", s.endpoints.Auth)
 	apiGroup.GET("/v1/upgrade/:envId/:version", s.endpoints.VersionUpgradeQuery)
 
 	s.handler = r
 }
 
+type CtorConfig struct {
+	usecase.UseCase
+	log.Logger
+	*client.Metrics
+}
+
 type Options struct {
+	Debug bool
 }

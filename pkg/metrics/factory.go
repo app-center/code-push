@@ -24,6 +24,11 @@ type Factory interface {
 }
 
 var NullFactory Factory = &nullFactory{}
+var DefaultFactory Factory = NullFactory
+
+func SetDefaultFactory(factory Factory) {
+	DefaultFactory = factory
+}
 
 type nullFactory struct{}
 

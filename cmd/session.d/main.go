@@ -27,11 +27,10 @@ func main() {
 	svrkit.RunCmd(
 		"session.d",
 		svrkit.WithServeCmd(
-			svrkit.WithServeCmdConfigurable(&(serveCmdOptions.ConfigFilePath)),
-			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
-			svrkit.WithServeGrpcPort(&(serveCmdOptions.PortGrpc)),
-			svrkit.WithServeHttpPort(&(serveCmdOptions.PortHttp)),
+			svrkit.WithServeCmdConfigurable(),
+			svrkit.WithServeCmdBindFlag(&serveCmdOptions),
 			svrkit.WithServeCmdConfigValidation(&serveCmdOptions),
+			svrkit.WithServeCmdPromFactorySetup(),
 			svrkit.WithServeCmdRun(onServe),
 		),
 	)

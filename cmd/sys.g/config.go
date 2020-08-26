@@ -7,15 +7,15 @@ import (
 )
 
 type serveConfig struct {
-	ConfigFilePath string
-	Debug          bool
-	Port           int
+	ConfigFilePath string `flag:"config" value:"config/serve.yml" usage:"alternative config file path"`
+	Debug          bool   `flag:"sys_g.debug" value:"false" usage:"run in debug mode"`
+	Port           int    `flag:"sys_g.port_http" usage:"port for http server listen to"`
 
-	AddrCodePushD string
-	AddrSessionD  string
+	AddrCodePushD string `flag:"addr_code_push_d" usage:"address of code-push.d"`
+	AddrSessionD  string `flag:"addr_session_d" usage:"address of session.d"`
 
-	RootUserName string
-	RootUserPwd  string
+	RootUserName string `flag:"sys_g.root_user_name" usage:"root user name"`
+	RootUserPwd  string `flag:"sys_g.root_user_pwd" usage:"root user password"`
 }
 
 func (c *serveConfig) Validate() error {

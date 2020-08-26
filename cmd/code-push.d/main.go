@@ -28,12 +28,10 @@ func main() {
 	svrkit.RunCmd(
 		"code-push.d",
 		svrkit.WithServeCmd(
-			svrkit.WithServeCmdConfigurable(&(serveCmdOptions.ConfigFilePath)),
-			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
-			svrkit.WithServeGrpcPort(&(serveCmdOptions.PortGrpc)),
-			svrkit.WithServeHttpPort(&(serveCmdOptions.PortHttp)),
-			svrkit.WithServeCmdBBoltPath(&(serveCmdOptions.BoltPath)),
+			svrkit.WithServeCmdConfigurable(),
+			svrkit.WithServeCmdBindFlag(&serveCmdOptions),
 			svrkit.WithServeCmdConfigValidation(&serveCmdOptions),
+			svrkit.WithServeCmdPromFactorySetup(),
 			svrkit.WithServeCmdRun(onServe),
 		),
 	)

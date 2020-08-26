@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"github.com/funnyecho/code-push/daemon/filer/adapter/alioss"
 	"github.com/funnyecho/code-push/daemon/filer/domain/bolt"
@@ -30,18 +29,10 @@ func main() {
 	svrkit.RunCmd(
 		"filer.d",
 		svrkit.WithServeCmd(
-			svrkit.WithServeCmdConfigurable(&(serveCmdOptions.ConfigFilePath)),
-			svrkit.WithServeCmdDebuggable(&(serveCmdOptions.Debug)),
-			svrkit.WithServeGrpcPort(&(serveCmdOptions.PortGrpc)),
-			svrkit.WithServeHttpPort(&(serveCmdOptions.PortHttp)),
-			svrkit.WithServeCmdBBoltPath(&(serveCmdOptions.BoltPath)),
-			svrkit.WithServeCmdFlagSet(func(kit *svrkit.CmdKit, set *flag.FlagSet) {
-				set.StringVar(&(serveCmdOptions.AliOssEndpoint), kit.FlagNameWithPrefix("alioss_endpoint"), "", "endpoint of ali-oss")
-				set.StringVar(&(serveCmdOptions.AliOssBucket), kit.FlagNameWithPrefix("alioss_bucket"), "", "bucket of ali-oss")
-				set.StringVar(&(serveCmdOptions.AliOssAccessKeyId), kit.FlagNameWithPrefix("alioss_access_key_id"), "", "access key id of ali-oss")
-				set.StringVar(&(serveCmdOptions.AliOssAccessSecret), kit.FlagNameWithPrefix("alioss_access_secret"), "", "access secret of ali-oss")
-			}),
+			svrkit.WithServeCmdConfigurable(),
+			svrkit.WithServeCmdBindFlag(&serveCmdOptions),
 			svrkit.WithServeCmdConfigValidation(&serveCmdOptions),
+			svrkit.WithServeCmdPromFactorySetup(),
 			svrkit.WithServeCmdRun(onServe),
 		),
 	)
