@@ -1,4 +1,4 @@
-package http_kit
+package httpkit
 
 import (
 	"fmt"
@@ -8,23 +8,52 @@ import (
 type ServeOptions func(options *serverOptions)
 type ServeMuxOptions func(*http.ServeMux)
 
-func ListenAndServe(options ...ServeOptions) error {
+func Actor(withOptions ...ServeOptions) (execute func() error, interrupt func(error)) {
+	var server *http.Server
+	var actErr error
+
+	execute = func() error {
+		actErr, server = listenAndServe(withOptions...)
+
+		return actErr
+	}
+
+	interrupt = func(_ error) {
+		if server != nil {
+			server.Close()
+		}
+	}
+
+	return
+}
+
+func ListenAndServe(withOptions ...ServeOptions) error {
+	err, _ := listenAndServe(withOptions...)
+	return err
+}
+
+func listenAndServe(withOptions ...ServeOptions) (error, *http.Server) {
 	option := &serverOptions{
 		port:    0,
 		handler: nil,
 	}
 
-	for _, fn := range options {
+	for _, fn := range withOptions {
 		fn(option)
 	}
 
 	addr := fmt.Sprintf(":%d", option.port)
 	server := &http.Server{
-		Addr:              addr,
-		Handler:           option.handler,
+		Addr:    addr,
+		Handler: option.handler,
 	}
 
-	return server.ListenAndServe()
+	err := server.ListenAndServe()
+	if err != nil {
+		return err, nil
+	}
+
+	return nil, server
 }
 
 func WithServePort(port int) ServeOptions {
@@ -56,6 +85,6 @@ func WithServeMuxPatternHandler(pattern string, handler http.Handler) ServeMuxOp
 }
 
 type serverOptions struct {
-	port int
+	port    int
 	handler http.Handler
 }

@@ -48,7 +48,7 @@ func errorStacksMiddleware(err error) resOptionsFn {
 			if ok {
 				_ = c.Error(parsedError)
 			} else {
-				reasonableErr := errors.Error("FA_INTERNAL_ERROR")
+				reasonableErr := errors.Error("INTERNAL_ERROR")
 
 				isReasonableCause := stderr.Is(cause, &reasonableErr)
 				causeType := gin.ErrorTypePrivate
@@ -68,7 +68,7 @@ func errorStacksMiddleware(err error) resOptionsFn {
 
 func bodyErrorCodeMiddleware(err error) resOptionsFn {
 	return func(c *gin.Context, statusCode *int, body gin.H) {
-		reasonableErr := errors.Error("FA_INTERNAL_ERROR")
+		reasonableErr := errors.Error("INTERNAL_ERROR")
 
 		_ = stderr.As(err, &reasonableErr)
 

@@ -14,8 +14,8 @@ func NewMetrics() *Metrics {
 
 type Metrics struct {
 	HttpRequestDuration metrics.Histogram `metric:"http_request_duration_seconds" labels:"method,path,status_code" help:"Duration of api requesting"`
-	HttpRequestSucceed  metrics.Counter   `metric:"http_request_total" tags:"result=ok" labels:"method,path,status_code"`
-	HttpRequestFailed   metrics.Counter   `metric:"http_request_total" tags:"result=err" labels:"method,path,status_code"`
+	HttpRequestSucceed  metrics.Counter   `metric:"http_request_total" tags:"result=ok" labels:"method,path,status_code" help:"http requesting counter"`
+	HttpRequestFailed   metrics.Counter   `metric:"http_request_total" tags:"result=err" labels:"method,path,status_code" help:"http requesting counter"`
 }
 
 func (m *Metrics) ObserveHttpRequestDuration(seconds float64, method, path string, statusCode int) {

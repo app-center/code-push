@@ -3,11 +3,11 @@ package client
 import "github.com/funnyecho/code-push/pkg/errors"
 
 const (
-	ErrInternalError        = errors.Error("FA_INTERNAL_ERROR")
-	ErrParamsInvalid        = errors.Error("FA_PARAMS_INVALID")
-	ErrUnauthorized         = errors.Error("FA_UNAUTHORIZED")
-	ErrInvalidToken         = errors.Error("FA_INVALID_TOKEN")
-	ErrInvalidEnv           = errors.Error("FA_INVALID_ENV")
-	ErrVersionNotFound      = errors.Error("FA_VERSION_NOT_FOUND")
-	ErrVersionNotUpgradable = errors.Error("FA_VERSION_NOT_UPGRADABLE")
+	ErrInternalError        = errors.Error("INTERNAL_ERROR")
+	ErrParamsInvalid        = errors.Error("PARAMS_INVALID")
+	ErrUnauthorized         = errors.Error("UNAUTHORIZED")
+	ErrInvalidToken         = errors.Error("INVALID_TOKEN")
+	ErrInvalidEnv           = errors.Error("INVALID_ENV")
+	ErrVersionNotFound      = errors.Error("VERSION_NOT_FOUND")
+	ErrVersionNotUpgradable = errors.Error("VERSION_NOT_UPGRADABLE")
 )

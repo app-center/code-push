@@ -2,23 +2,21 @@ package main
 
 import (
 	"context"
-	"fmt"
 	sessiongrpc "github.com/funnyecho/code-push/daemon/session/interface/grpc"
 	"github.com/funnyecho/code-push/daemon/session/interface/grpc/pb"
 	"github.com/funnyecho/code-push/daemon/session/usecase"
-	"github.com/funnyecho/code-push/pkg/grpc-interceptor"
-	http_kit "github.com/funnyecho/code-push/pkg/interfacekit/http"
+	grpckit_server "github.com/funnyecho/code-push/pkg/interfacekit/grpc/server"
+	"github.com/funnyecho/code-push/pkg/interfacekit/http"
 	zap_log "github.com/funnyecho/code-push/pkg/log/zap"
 	prometheus_http "github.com/funnyecho/code-push/pkg/prom-endpoint/http"
 	"github.com/funnyecho/code-push/pkg/svrkit"
 	"github.com/funnyecho/code-push/pkg/tracing"
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/oklog/run"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"net"
+	"syscall"
 )
 
 var serveCmdOptions serveConfig
@@ -67,49 +65,31 @@ func onServe(ctx context.Context, args []string) error {
 		zap_log.New(logger.With("component", "usecase")),
 	)
 
-	grpcServerLogger := zap_log.New(logger.With("component", "interfaces", "interface", "grpc"))
-	grpcServer := sessiongrpc.New(
-		uc,
-		grpcServerLogger,
-	)
 	{
-		grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", serveCmdOptions.PortGrpc))
-		if err != nil {
-			return err
-		}
+		grpcServerLogger := zap_log.New(logger.With("component", "interfaces", "interface", "grpc"))
+		grpcServer := sessiongrpc.New(
+			uc,
+			grpcServerLogger,
+		)
 
-		g.Add(func() error {
-			baseServer := grpc.NewServer(
-				grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-					grpc_interceptor.UnaryServerMetricInterceptor(grpcServerLogger),
-					grpc_interceptor.UnaryServerErrorInterceptor(),
-					grpc_opentracing.UnaryServerInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
-				)),
-				grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-					grpc_interceptor.StreamServerMetricInterceptor(grpcServerLogger),
-					grpc_interceptor.StreamServerErrorInterceptor(),
-					grpc_opentracing.StreamServerInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
-				)),
-			)
-			pb.RegisterAccessTokenServer(baseServer, grpcServer)
-			return baseServer.Serve(grpcListener)
-		}, func(err error) {
-			grpcListener.Close()
-		})
+		g.Add(grpckit_server.Actor(
+			grpckit_server.WithServePort(serveCmdOptions.PortGrpc),
+			grpckit_server.WithLogger(grpcServerLogger),
+			grpckit_server.WithServeExecution(func(_ net.Listener, server *grpc.Server) error {
+				pb.RegisterAccessTokenServer(server, grpcServer)
+				return nil
+			}),
+		))
 	}
 
 	{
-		g.Add(func() error {
-			return http_kit.ListenAndServe(
-				http_kit.WithServePort(serveCmdOptions.PortHttp),
-				http_kit.WithDefaultServeMuxHandler(
-					prometheus_http.Handle,
-				),
-			)
-		}, func(err error) {
-
-		})
+		g.Add(httpkit.Actor(
+			httpkit.WithServePort(serveCmdOptions.PortHttp),
+			httpkit.WithDefaultServeMuxHandler(prometheus_http.Handle),
+		))
 	}
+
+	g.Add(run.SignalHandler(ctx, syscall.SIGINT, syscall.SIGTERM))
 
 	err := g.Run()
 	if err != nil {

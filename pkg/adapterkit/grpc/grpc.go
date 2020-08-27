@@ -1,12 +1,12 @@
-package adapterkit
+package adapterkit_grpc
 
 import (
 	"fmt"
-	"github.com/funnyecho/code-push/pkg/grpc-interceptor"
+	"github.com/funnyecho/code-push/pkg/adapterkit"
+	adapterkit_grpc_interceptor_error "github.com/funnyecho/code-push/pkg/adapterkit/grpc/interceptor/error"
+	adapterkit_grpc_interceptor_opentracing "github.com/funnyecho/code-push/pkg/adapterkit/grpc/interceptor/opentracing"
 	"github.com/funnyecho/code-push/pkg/log"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"strings"
@@ -16,7 +16,7 @@ type GrpcAdaptOption interface {
 	apply(*grpcAdapter)
 }
 
-func GrpcAdapter(options ...GrpcAdaptOption) Adaptable {
+func GrpcAdapter(options ...GrpcAdaptOption) adapterkit.Adaptable {
 	adapter := &grpcAdapter{}
 
 	for _, fn := range options {
@@ -76,14 +76,12 @@ func (a *grpcAdapter) Conn() error {
 		a.target,
 		grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
-			grpc_interceptor.UnaryClientMetricInterceptor(a.logger),
-			grpc_interceptor.UnaryClientErrorInterceptor(),
-			grpc_opentracing.UnaryClientInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
+			adapterkit_grpc_interceptor_error.WithUnaryInterceptor(),
+			adapterkit_grpc_interceptor_opentracing.WithUnaryInterceptor(),
 		)),
 		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(
-			grpc_interceptor.StreamClientMetricInterceptor(a.logger),
-			grpc_interceptor.StreamClientErrorInterceptor(),
-			grpc_opentracing.StreamClientInterceptor(grpc_opentracing.WithTracer(opentracing.GlobalTracer())),
+			adapterkit_grpc_interceptor_error.WithStreamInterceptor(),
+			adapterkit_grpc_interceptor_opentracing.WithStreamInterceptor(),
 		)),
 	)
 	if err != nil {
