@@ -1,7 +1,6 @@
 package http
 
 import (
-	"github.com/funnyecho/code-push/gateway/client"
 	"github.com/funnyecho/code-push/gateway/client/interface/http/endpoints"
 	"github.com/funnyecho/code-push/gateway/client/interface/http/middleware"
 	"github.com/funnyecho/code-push/gateway/client/usecase"
@@ -20,7 +19,6 @@ func New(config *CtorConfig, fns ...func(*Options)) *server {
 	svr := &server{
 		uc:      config.UseCase,
 		Logger:  config.Logger,
-		metrics: config.Metrics,
 		options: ctorOptions,
 	}
 
@@ -34,7 +32,6 @@ func New(config *CtorConfig, fns ...func(*Options)) *server {
 type server struct {
 	uc usecase.UseCase
 	log.Logger
-	metrics    *client.Metrics
 	options    *Options
 	endpoints  *endpoints.Endpoints
 	middleware *middleware.Middleware
@@ -50,7 +47,7 @@ func (s *server) initEndpoints() {
 }
 
 func (s *server) initMiddleware() {
-	s.middleware = middleware.New(s.uc, s.metrics)
+	s.middleware = middleware.New(s.uc)
 }
 
 func (s *server) initHttpHandler() {
@@ -71,7 +68,6 @@ func (s *server) initHttpHandler() {
 type CtorConfig struct {
 	usecase.UseCase
 	log.Logger
-	*client.Metrics
 }
 
 type Options struct {

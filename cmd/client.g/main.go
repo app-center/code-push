@@ -5,7 +5,6 @@ import (
 	"github.com/funnyecho/code-push/daemon/code-push/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/daemon/filer/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/daemon/session/interface/grpc_adapter"
-	"github.com/funnyecho/code-push/gateway/client"
 	"github.com/funnyecho/code-push/gateway/client/interface/http"
 	"github.com/funnyecho/code-push/gateway/client/usecase"
 	http_kit "github.com/funnyecho/code-push/pkg/interfacekit/http"
@@ -96,15 +95,12 @@ func onServe(ctx context.Context, args []string) error {
 	defer filerAdapter.Close()
 	filerAdapter.Debug("connected to filer.d", "addr", filerAdapter.ServerAddr)
 
-	clientMetrics := client.NewMetrics()
-
 	uc := usecase.NewUseCase(
 		&usecase.CtorConfig{
 			CodePushAdapter: codePushAdapter,
 			SessionAdapter:  sessionAdapter,
 			FilerAdapter:    filerAdapter,
 			Logger:          zap_log.New(logger.With("component", "usecase")),
-			Metrics:         clientMetrics,
 		},
 	)
 
@@ -114,7 +110,6 @@ func onServe(ctx context.Context, args []string) error {
 			&http.CtorConfig{
 				UseCase: uc,
 				Logger:  zap_log.New(logger.With("component", "interfaces", "interface", "http")),
-				Metrics: clientMetrics,
 			},
 			func(options *http.Options) {
 				options.Debug = serveCmdOptions.Debug

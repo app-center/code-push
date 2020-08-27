@@ -3,6 +3,7 @@ BuildDist = build
 ReleaseDist = release
 
 Platforms = linux darwin windows
+GOOS = $(shell go env GOOS)
 
 Cmds := $(foreach n,$(shell go list ./cmd/*),$(notdir $(n)))
 
@@ -29,13 +30,17 @@ $(ReleaseDistribution): platform = $(shell $(foreach p,$(Platforms),echo $@ | gr
 $(ReleaseDistribution): cmd = $(notdir $@)
 $(ReleaseDistribution):
 	@-rm $@
-	@cd cmd/$(cmd); CGO_ENABLED=0 GOOS=$(platform) GOARCH=amd64 go build -ldflags="-X 'main.Version=$(Version)' -X 'main.BuildTime=$(Date)'" -o ../../$@;
+	@cd cmd/$(cmd);\
+		CGO_ENABLED=0 GOOS=$(platform) GOARCH=amd64 \
+		go build -ldflags="-X 'github.com/funnyecho/code-push/pkg/svrkit.BuildPlatform=$(platform)' -X 'github.com/funnyecho/code-push/pkg/svrkit.Version=$(Version)' -X 'github.com/funnyecho/code-push/pkg/svrkit.BuildTime=$(Date)'" -o ../../$@;
 .PHONY: $(ReleaseDistribution)
 
 $(BuildDistribution): cmd = $(notdir $@)
 $(BuildDistribution):
 	@-rm $@
-	cd cmd/$(cmd); CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=amd64 go build -ldflags="-X 'main.Version=$(Version)' -X 'main.BuildTime=$(Date)'" -o ../../$@;
+	cd cmd/$(cmd); \
+		CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=amd64 \
+		go build -ldflags="-X 'github.com/funnyecho/code-push/pkg/svrkit.BuildPlatform=$(GOOS)' -X 'github.com/funnyecho/code-push/pkg/svrkit.Version=$(Version)' -X 'github.com/funnyecho/code-push/pkg/svrkit.BuildTime=$(Date)'" -o ../../$@;
 .PHONY: $(BuildDistribution)
 
 build: $(BuildDistribution)

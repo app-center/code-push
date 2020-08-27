@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"github.com/funnyecho/code-push/gateway/client"
 	"github.com/funnyecho/code-push/pkg/log"
 )
 
@@ -28,13 +27,11 @@ type CtorConfig struct {
 	SessionAdapter
 	FilerAdapter
 	log.Logger
-	*client.Metrics
 }
 
 type useCase struct {
 	*adapters
 	log.Logger
-	*client.Metrics
 	options *Options
 }
 
