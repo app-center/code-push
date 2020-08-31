@@ -3,15 +3,20 @@ BuildDist = build
 ReleaseDist = release
 
 Platforms = linux darwin windows
+CmdTypes = svr cli
 GOOS = $(shell go env GOOS)
 
-Cmds := $(foreach n,$(shell go list ./cmd/*),$(notdir $(n)))
+Svrs := $(foreach n,$(shell go list ./cmd/svr/*),$(notdir $(n)))
+Clis := $(foreach n,$(shell go list ./cmd/cli/*),$(notdir $(n)))
 
 Version := $(shell git describe --tags --dirty --match="v*" 2> /dev/null || echo v0.0.0-dev)
 Date := $(shell date -u '+%Y-%m-%d-%H%M UTC')
 
-ReleaseDistribution = $(foreach p,$(Platforms),$(foreach c,$(Cmds),$(ReleaseDist)/$(Version)/$(p)-amd64/$(c)))
-BuildDistribution = $(foreach c,$(Cmds),$(BuildDist)/$(c))
+SvrReleaseDistribution = $(foreach p,$(Platforms),$(foreach c,$(Svrs),$(ReleaseDist)/svr/$(Version)/$(p)-amd64/$(c)))
+SvrBuildDistribution = $(foreach c,$(Svrs),$(BuildDist)/svr/$(c))
+
+CliReleaseDistribution = $(foreach p,$(Platforms),$(foreach c,$(Clis),$(ReleaseDist)/cli/$(Version)/$(p)-amd64/$(c)))
+CliBuildDistribution = $(foreach c,$(Clis),$(BuildDist)/cli/$(c))
 
 go-clean:
 	go clean ./cmd/...
@@ -26,29 +31,41 @@ clean: go-clean
 	rm -rf $(ReleaseDist)/$(Version)
 .PHONY: clean
 
-$(ReleaseDistribution): platform = $(shell $(foreach p,$(Platforms),echo $@ | grep -oh $(p);))
-$(ReleaseDistribution): cmd = $(notdir $@)
-$(ReleaseDistribution):
-	@-rm $@
-	@cd cmd/$(cmd);\
-		CGO_ENABLED=0 GOOS=$(platform) GOARCH=amd64 \
-		go build -ldflags="-X 'github.com/funnyecho/code-push/pkg/svrkit.BuildPlatform=$(platform)' -X 'github.com/funnyecho/code-push/pkg/svrkit.Version=$(Version)' -X 'github.com/funnyecho/code-push/pkg/svrkit.BuildTime=$(Date)'" -o ../../$@;
-.PHONY: $(ReleaseDistribution)
+$(SvrReleaseDistribution):
+	$(call go_build,$@)
+.PHONY: $(SvrReleaseDistribution)
 
-$(BuildDistribution): cmd = $(notdir $@)
-$(BuildDistribution):
-	@-rm $@
-	cd cmd/$(cmd); \
-		CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=amd64 \
-		go build -ldflags="-X 'github.com/funnyecho/code-push/pkg/svrkit.BuildPlatform=$(GOOS)' -X 'github.com/funnyecho/code-push/pkg/svrkit.Version=$(Version)' -X 'github.com/funnyecho/code-push/pkg/svrkit.BuildTime=$(Date)'" -o ../../$@;
-.PHONY: $(BuildDistribution)
+$(SvrBuildDistribution):
+	$(call go_build,$@)
+.PHONY: $(SvrBuildDistribution)
 
-build: $(BuildDistribution)
+$(CliReleaseDistribution):
+	$(call go_build,$@)
+.PHONY: $(CliReleaseDistribution)
+
+$(CliBuildDistribution):
+	$(call go_build,$@)
+.PHONY: $(CliBuildDistribution)
+
+build: $(SvrBuildDistribution) $(CliBuildDistribution)
 .PHONY: build
 
-release: $(ReleaseDistribution)
+release: $(SvrReleaseDistribution) $(CliReleaseDistribution)
 .PHONY: release
 
 test:
 	echo $(Cmds)
 .PHONY: test
+
+define go_build
+	@-rm $1
+	$(eval buildPlatform = $(shell $(foreach p,$(Platforms),echo $1 | grep -owh $(p);)))
+	$(eval buildCmdType = $(shell $(foreach p,$(CmdTypes),echo $1 | grep -owh $(p);)))
+	$(eval buildCmd := $(notdir $1))
+	$(eval buildGOOS := $(if $(buildPlatform),$(buildPlatform),$(GOOS)))
+	CGO_ENABLED=0 GOOS=$(buildGOOS) GOARCH=amd64 \
+		go build \
+			-ldflags="-X 'github.com/funnyecho/code-push/pkg/svrkit.BuildPlatform=$(buildGOOS)-amd64' -X 'github.com/funnyecho/code-push/pkg/svrkit.Version=$(Version)' -X 'github.com/funnyecho/code-push/pkg/svrkit.BuildTime=$(Date)'" \
+			-o ./$1 \
+			./cmd/$(buildCmdType)/$(buildCmd);
+endef
