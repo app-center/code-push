@@ -7,7 +7,7 @@ CmdTypes = svr cli
 GOOS = $(shell go env GOOS)
 
 Svrs := $(foreach n,$(shell go list ./cmd/svr/*),$(notdir $(n)))
-Clis := $(foreach n,$(shell go list ./cmd/cli/*),$(notdir $(n)))
+#Clis := $(foreach n,$(shell go list ./cmd/cli/*),$(notdir $(n)))
 
 Version := $(shell git describe --tags --dirty --match="v*" 2> /dev/null || echo v0.0.0-dev)
 Date := $(shell date -u '+%Y-%m-%d-%H%M UTC')
@@ -47,15 +47,13 @@ $(CliBuildDistribution):
 	$(call go_build,$@)
 .PHONY: $(CliBuildDistribution)
 
-build: $(SvrBuildDistribution) $(CliBuildDistribution)
+#build: $(CliBuildDistribution)
+build: $(SvrBuildDistribution)
 .PHONY: build
 
-release: $(SvrReleaseDistribution) $(CliReleaseDistribution)
+#release: $(CliReleaseDistribution)
+release: $(SvrReleaseDistribution)
 .PHONY: release
-
-test:
-	echo $(Cmds)
-.PHONY: test
 
 define go_build
 	@-rm $1

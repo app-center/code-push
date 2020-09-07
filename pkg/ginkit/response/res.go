@@ -42,27 +42,14 @@ type resOptionsFn func(c *gin.Context, statusCode *int, body gin.H)
 
 func errorStacksMiddleware(err error) resOptionsFn {
 	return func(c *gin.Context, statusCode *int, body gin.H) {
-		for cause := err; cause != nil; cause = stderr.Unwrap(cause) {
-			parsedError, ok := cause.(*gin.Error)
+		reasonableErr := errors.Error("INTERNAL_ERROR")
 
-			if ok {
-				_ = c.Error(parsedError)
-			} else {
-				reasonableErr := errors.Error("INTERNAL_ERROR")
+		_ = stderr.As(err, &reasonableErr)
 
-				isReasonableCause := stderr.Is(cause, &reasonableErr)
-				causeType := gin.ErrorTypePrivate
-
-				if isReasonableCause {
-					causeType = gin.ErrorTypePublic
-				}
-
-				_ = c.Error(&gin.Error{
-					Err:  err,
-					Type: causeType,
-				})
-			}
-		}
+		_ = c.Error(&gin.Error{
+			Err:  err,
+			Type: gin.ErrorTypePublic,
+		})
 	}
 }
 
