@@ -10,12 +10,17 @@ type ServeMuxOptions func(*http.ServeMux)
 
 func Actor(withOptions ...ServeOptions) (execute func() error, interrupt func(error)) {
 	var server *http.Server
-	var actErr error
+	var serverErr error
 
 	execute = func() error {
-		actErr, server = listenAndServe(withOptions...)
+		serverErr, server = createServer(withOptions...)
 
-		return actErr
+		if serverErr != nil {
+			return serverErr
+		}
+
+		serverErr = server.ListenAndServe()
+		return serverErr
 	}
 
 	interrupt = func(_ error) {
@@ -28,11 +33,16 @@ func Actor(withOptions ...ServeOptions) (execute func() error, interrupt func(er
 }
 
 func ListenAndServe(withOptions ...ServeOptions) error {
-	err, _ := listenAndServe(withOptions...)
-	return err
+	err, server := createServer(withOptions...)
+
+	if err != nil {
+		return err
+	}
+
+	return server.ListenAndServe()
 }
 
-func listenAndServe(withOptions ...ServeOptions) (error, *http.Server) {
+func createServer(withOptions ...ServeOptions) (error, *http.Server) {
 	option := &serverOptions{
 		port:    0,
 		handler: nil,
@@ -46,11 +56,6 @@ func listenAndServe(withOptions ...ServeOptions) (error, *http.Server) {
 	server := &http.Server{
 		Addr:    addr,
 		Handler: option.handler,
-	}
-
-	err := server.ListenAndServe()
-	if err != nil {
-		return err, nil
 	}
 
 	return nil, server

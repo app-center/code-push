@@ -84,7 +84,6 @@ func RunCmd(cmdName string, options ...CmdOption) {
 	}
 
 	if err := cmd.ParseAndRun(context.Background(), os.Args[1:]); err != nil {
-		fmt.Printf("FF failed to parse and run: %s", err.Error())
 		os.Exit(1)
 	}
 }

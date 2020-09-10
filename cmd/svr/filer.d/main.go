@@ -45,9 +45,10 @@ func onServe(ctx context.Context, args []string) error {
 		} else {
 			zapLogger, _ = zap.NewProduction()
 		}
-		defer logger.Sync()
 
 		logger = zapLogger.Sugar()
+
+		defer logger.Sync()
 	}
 
 	openTracer, openTracerCloser, openTracerErr := tracing.InitTracer(

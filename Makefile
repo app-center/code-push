@@ -63,6 +63,7 @@ define go_build
 	$(eval buildGOOS := $(if $(buildPlatform),$(buildPlatform),$(GOOS)))
 	CGO_ENABLED=0 GOOS=$(buildGOOS) GOARCH=amd64 \
 		go build \
+			-gcflags="all=-N -l" \
 			-ldflags="-X 'github.com/funnyecho/code-push/pkg/svrkit.BuildPlatform=$(buildGOOS)-amd64' -X 'github.com/funnyecho/code-push/pkg/svrkit.Version=$(Version)' -X 'github.com/funnyecho/code-push/pkg/svrkit.BuildTime=$(Date)'" \
 			-o ./$1 \
 			./cmd/$(buildCmdType)/$(buildCmd);

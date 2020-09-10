@@ -16,21 +16,21 @@ import (
 func Actor(withOptions ...ServerOptions) (execute func() error, interrupt func(error)) {
 	var listener net.Listener
 	var server *grpc.Server
-	var actErr error
+	var err error
 
 	execute = func() error {
-		actErr, listener, server = listenAndServe(withOptions...)
+		err, listener, server = newServer(withOptions...)
 
-		return actErr
+		if err == nil {
+			err = server.Serve(listener)
+		}
+
+		return err
 	}
 
 	interrupt = func(_ error) {
 		if server != nil {
 			server.Stop()
-		}
-
-		if listener != nil {
-			listener.Close()
 		}
 	}
 
@@ -38,7 +38,13 @@ func Actor(withOptions ...ServerOptions) (execute func() error, interrupt func(e
 }
 
 func ListenAndServe(withOptions ...ServerOptions) (error, net.Listener, *grpc.Server) {
-	return listenAndServe(withOptions...)
+	err, listener, server := newServer(withOptions...)
+
+	if err == nil {
+		err = server.Serve(listener)
+	}
+
+	return err, listener, server
 }
 
 type ServerOptions func(options *serverOptions)
@@ -73,7 +79,7 @@ func WithLogger(logger log.Logger) ServerOptions {
 	}
 }
 
-func listenAndServe(withOptions ...ServerOptions) (error, net.Listener, *grpc.Server) {
+func newServer(withOptions ...ServerOptions) (error, net.Listener, *grpc.Server) {
 	options := &serverOptions{}
 	for _, fn := range withOptions {
 		fn(options)
@@ -114,16 +120,8 @@ func listenAndServe(withOptions ...ServerOptions) (error, net.Listener, *grpc.Se
 	)
 
 	executeErr := options.onExecute(listener, server)
-	if executeErr != nil {
-		return executeErr, listener, nil
-	}
 
-	serveErr := server.Serve(listener)
-	if serveErr != nil {
-		return serveErr, listener, nil
-	}
-
-	return nil, listener, server
+	return executeErr, listener, server
 }
 
 type serverOptions struct {
