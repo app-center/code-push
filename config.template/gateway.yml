@@ -1,0 +1,8 @@
+debug: false
+
+port_http: 9530
+
+addr_daemon: :9520
+
+root_user_name: uceNtigA
+root_user_pwd: omenTergaCQU

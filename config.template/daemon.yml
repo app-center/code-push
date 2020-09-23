@@ -1,0 +1,11 @@
+debug: false
+
+port_grpc: 9520
+port_http: 9531
+
+bbolt_path: storage/daemon/bbolt.db
+
+alioss_endpoint: ""
+alioss_bucket: ""
+alioss_access_key_id: ""
+alioss_access_secret: ""

@@ -1,0 +1,21 @@
+# version.yml
+
+ver: 1
+
+branch_id: xxxxxxx
+
+[package_base_path]: xxxx # default: ./$(env_name)/$(app_version)
+[package_name]: xxxx # default: nextly.pkg
+
+versions:
+    - [env_name]: xxxx
+      app_version: xxxx
+      [compat_app_version]: xxxx
+      must_update: T/F	# default: false
+      changelog: xxxxxxx
+      [package_key]: xxxx  # specified if version released
+
+    - [env_name]: xxxx
+      [imports]:
+        - path_of_versions.yml
+        - path_of_versions.yml

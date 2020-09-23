@@ -1,0 +1,14 @@
+# version_lock.yml
+
+lock_version: 1
+branch_id: xxxxxxx
+envs:
+  - [env_id]
+    [env_name]
+    [versions]:
+      - app_version
+        compat_app_version
+        must_update:
+        changelog:
+        package_integrity: "sha1-"
+        release_at:

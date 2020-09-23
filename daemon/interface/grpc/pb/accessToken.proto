@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package pb;
+import "common.proto";
+
+service AccessToken {
+  rpc GenerateAccessToken(GenerateAccessTokenRequest) returns (StringResponse);
+  rpc VerifyAccessToken(VerifyAccessTokenRequest) returns (VerifyAccessTokenResponse);
+}
+
+message GenerateAccessTokenRequest {
+  AccessTokenClaims claims = 1;
+}
+
+message VerifyAccessTokenRequest {
+  string token = 1;
+}
+
+message VerifyAccessTokenResponse {
+  AccessTokenClaims claims = 1;
+}
+
+message AccessTokenClaims {
+  AccessTokenIssuer issuer = 1;
+  string subject = 2;
+  bytes audience = 3;
+}
+
+enum AccessTokenIssuer {
+  SYS = 0;
+  PORTAL = 1;
+  CLIENT = 2;
+}

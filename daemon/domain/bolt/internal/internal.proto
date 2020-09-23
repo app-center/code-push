@@ -1,0 +1,36 @@
+syntax = "proto3";
+package internal;
+
+message Branch {
+  string ID = 1;
+  string Name = 2;
+  string EncToken = 3;
+  int64 CreateTime = 4;
+}
+
+message Env {
+  string BranchId = 1;
+  string ID = 2;
+  string Name = 3;
+  string EncToken = 4;
+  int64 CreateTime = 5;
+}
+
+message Version {
+  string EnvId = 1;
+  string AppVersion = 2;
+  string CompatAppVersion = 3;
+  bool MustUpdate = 4;
+  string Changelog = 5;
+  string PackageFileKey = 6;
+  int64 CreateTime = 7;
+}
+
+message File {
+  string Key = 1;
+  string Value = 2;
+  string Desc = 3;
+  int64 CreateTime = 4;
+  string FileMD5 = 5;
+  int64 FileSize = 6;
+}
