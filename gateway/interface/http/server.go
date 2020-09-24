@@ -28,17 +28,17 @@ func New(configFn func(*Options)) stdHttp.Handler {
 
 
 
-	gSys := r.Group("/sys")
-	gPortal := r.Group("/portal")
+	//gSys := r.Group("/sys")
+	//gPortal := r.Group("/portal")
 	gClient := r.Group("/client")
 
-	gSysApi := gSys.Group("/api/sys")
+	gSysApi := r.Group("/api/sys")
 	gSysApi.POST("/auth", sys.Auth)
 
 	gSysApiV1 := gSysApi.Group("/v1")
 	gSysApiV1.POST("/branch", sys.MidAuthorized, sys.CreateBranch)
 
-	gPortalApi := gPortal.Group("/api/portal")
+	gPortalApi := r.Group("/api/portal")
 	gPortalApi.POST("/auth", portal.Auth)
 
 	gPortalApiV1 := gPortalApi.Group("/v1")
@@ -48,7 +48,8 @@ func New(configFn func(*Options)) stdHttp.Handler {
 
 	gClient.GET("/download/pkg/:fileId", client.DownloadFile)
 
-	gClientApi := gSys.Group("/api/client")
+	gClientApi := r.Group("/api/client")
+	gClientApi.POST("/auth/ddder", client.Auth)
 	gClientApi.POST("/auth", client.Auth)
 	gClientApiV1 := gClientApi.Group("/v1")
 	gClientApiV1.GET("/upgrade/:envId/:version", client.MidAuthorized, client.VersionUpgradeQuery)

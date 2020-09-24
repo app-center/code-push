@@ -15,7 +15,7 @@ func MidAuthorized(c *gin.Context) {
 		return
 	}
 
-	WithEnvId(string(envId))
+	WithEnvId(string(envId), c)
 	c.Next()
 }
 

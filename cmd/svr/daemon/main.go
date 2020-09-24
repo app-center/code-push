@@ -103,6 +103,9 @@ func onServe(ctx context.Context, args []string) error {
 				pb.RegisterBranchServer(server, grpcServer)
 				pb.RegisterEnvServer(server, grpcServer)
 				pb.RegisterVersionServer(server, grpcServer)
+				pb.RegisterAccessTokenServer(server, grpcServer)
+				pb.RegisterUploadServer(server, grpcServer)
+				pb.RegisterFileServer(server, grpcServer)
 				return nil
 			}),
 		))

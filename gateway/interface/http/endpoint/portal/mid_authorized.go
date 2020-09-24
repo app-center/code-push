@@ -15,7 +15,7 @@ func MidAuthorized(c *gin.Context) {
 		return
 	}
 
-	WithBranchId(string(branchId))
+	WithBranchId(string(branchId), c)
 
 	c.Next()
 }
