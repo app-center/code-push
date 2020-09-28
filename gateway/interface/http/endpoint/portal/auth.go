@@ -1,9 +1,11 @@
 package portal
 
 import (
+	"github.com/funnyecho/code-push/gateway"
 	"github.com/funnyecho/code-push/gateway/interface/http/endpoint"
 	"github.com/funnyecho/code-push/pkg/ginkit/response"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 type authRequest struct {
@@ -13,8 +15,20 @@ type authRequest struct {
 	Sign      string `form:"sign" binding:"required"`
 }
 
+type jwtAuthRequest struct {
+	Token string `form:"token" binding:"required"`
+}
+
+type refreshAuthRequest struct {
+	Token string `uri:"token" binding:"required"`
+}
+
 type authResponse struct {
 	Token string `json:"token"`
+}
+
+type refreshAuthResponse struct {
+	BranchId string `json:"branchId"`
 }
 
 func Auth(c *gin.Context) {
@@ -38,5 +52,47 @@ func Auth(c *gin.Context) {
 	}
 
 	ginkit_res.Success(c, authResponse{string(token)})
+	return
+}
+
+func AuthWithJwt(c *gin.Context) {
+	var auth jwtAuthRequest
+
+	if err := c.Bind(&auth); err != nil {
+		ginkit_res.Error(c, err)
+		return
+	}
+
+	branchId, authorizeErr := endpoint.UseUC(c).AuthBranchWithJWT(c.Request.Context(), auth.Token)
+	if authorizeErr != nil {
+		ginkit_res.Error(c, authorizeErr)
+		return
+	}
+
+	token, tokenErr := endpoint.UseUC(c).SignTokenForBranch(c.Request.Context(), branchId)
+	if tokenErr != nil {
+		ginkit_res.Error(c, tokenErr)
+		return
+	}
+
+	ginkit_res.Success(c, authResponse{string(token)})
+	return
+}
+
+func RefreshAuthorization(c *gin.Context) {
+	var request refreshAuthRequest
+
+	if err := c.ShouldBindUri(&request); err != nil {
+		ginkit_res.Error(c, err)
+		return
+	}
+
+	branchId, verifyErr := endpoint.UseUC(c).VerifyTokenForBranch(c.Request.Context(), []byte(request.Token))
+	if verifyErr != nil {
+		ginkit_res.ErrorWithStatusCode(c, http.StatusUnauthorized, gateway.ErrUnauthorized)
+		return
+	}
+
+	ginkit_res.Success(c, refreshAuthResponse{BranchId: string(branchId)})
 	return
 }

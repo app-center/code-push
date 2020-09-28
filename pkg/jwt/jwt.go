@@ -3,49 +3,13 @@ package jwt
 import (
 	"fmt"
 	gojwt "github.com/dgrijalva/jwt-go"
-	"time"
 )
 
-func NewJwt(fns ...func(*Options)) *Jwt {
-	jwtOptions := &Options{
-		Secret:   "",
-		Issuer:   "",
-		Lifetime: 0,
-	}
-
-	for _, fn := range fns {
-		fn(jwtOptions)
-	}
-
-	return &Jwt{options: jwtOptions}
+func SignWithHS256(claims *gojwt.StandardClaims, secret []byte) (token string, err error) {
+	return signWithHMAC(claims, gojwt.SigningMethodHS256, secret)
 }
 
-type Options struct {
-	Secret   string
-	Issuer   string
-	Lifetime time.Duration
-}
-
-type Jwt struct {
-	options *Options
-}
-
-func (j *Jwt) SignToken(subject string) (token string, err error) {
-	expireTime := time.Now().Add(j.options.Lifetime)
-
-	claims := gojwt.StandardClaims{
-		ExpiresAt: expireTime.Unix(),
-		Issuer:    j.options.Issuer,
-		Subject:   subject,
-	}
-
-	tokenClaims := gojwt.NewWithClaims(gojwt.SigningMethodHS256, claims)
-	token, err = tokenClaims.SignedString(j.options.Secret)
-
-	return
-}
-
-func (j *Jwt) VerifyToken(tokenString string) (*gojwt.StandardClaims, error) {
+func VerifyWithHMAC(tokenString string, secret []byte) (*gojwt.StandardClaims, error) {
 	claims := &gojwt.StandardClaims{}
 
 	token, err := gojwt.ParseWithClaims(
@@ -56,7 +20,7 @@ func (j *Jwt) VerifyToken(tokenString string) (*gojwt.StandardClaims, error) {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 
-			return j.options.Secret, nil
+			return secret, nil
 		})
 
 	if token != nil {
@@ -68,4 +32,21 @@ func (j *Jwt) VerifyToken(tokenString string) (*gojwt.StandardClaims, error) {
 	} else {
 		return nil, err
 	}
+}
+
+func ExtractClaims(tokenString string) (*gojwt.StandardClaims, error) {
+	claims := &gojwt.StandardClaims{}
+	_, _, err := new(gojwt.Parser).ParseUnverified(tokenString, claims)
+	if err != nil {
+		return nil, err
+	}
+
+	return claims, nil
+}
+
+func signWithHMAC(claims *gojwt.StandardClaims, method *gojwt.SigningMethodHMAC, secret []byte) (token string, err error) {
+	tokenClaims := gojwt.NewWithClaims(method, claims)
+	token, err = tokenClaims.SignedString(secret)
+
+	return
 }

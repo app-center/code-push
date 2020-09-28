@@ -23,7 +23,10 @@ func (uc *useCase) GenerateAccessToken(claims *daemon.AccessTokenClaims) ([]byte
 
 	token := uuid.NewV4().String()
 
-	uc.accessTokenCache.Set(token, claims, cache.DefaultExpiration)
+	uc.accessTokenCache.Set(token, &accessTokenCacheEntry{
+		claims:    claims,
+		expiredAt: time.Now().Add(accessTokenExpiration).Unix(),
+	}, cache.DefaultExpiration)
 
 	return []byte(token), nil
 }
@@ -39,7 +42,14 @@ func (uc *useCase) VerifyAccessToken(token []byte) (*daemon.AccessTokenClaims, e
 		return nil, daemon.ErrAccessTokenInvalid
 	}
 
-	claims := v.(*daemon.AccessTokenClaims)
+	entry := v.(*accessTokenCacheEntry)
+	if entry == nil {
+		return nil, daemon.ErrAccessTokenInvalid
+	}
+
+	claims := entry.claims
+	expired := entry.expiredAt
+
 	if claims == nil {
 		return nil, daemon.ErrAccessTokenInvalid
 	}
@@ -48,11 +58,18 @@ func (uc *useCase) VerifyAccessToken(token []byte) (*daemon.AccessTokenClaims, e
 		return nil, errors.Wrapf(daemon.ErrAccessTokenInvalid, "invalid token issuer: %d", claims.Issuer)
 	}
 
+	now := time.Now().Unix()
+	if now > expired {
+		return nil, daemon.ErrAccessTokenInvalid
+	} else {
+		entry.expiredAt = time.Now().Add(accessTokenExpiration).Unix()
+	}
+
 	return claims, nil
 }
 
 func (uc *useCase) initAccessTokenUseCase() {
-	uc.accessTokenCache = cache.New(24*time.Hour, 24*time.Hour)
+	uc.accessTokenCache = cache.New(accessTokenCacheExpiration, accessTokenCacheExpiration)
 }
 
 func (uc *useCase) isValidAccessTokenIssuer(issuer daemon.AccessTokenIssuer) bool {
@@ -62,4 +79,12 @@ func (uc *useCase) isValidAccessTokenIssuer(issuer daemon.AccessTokenIssuer) boo
 	default:
 		return false
 	}
+}
+
+const accessTokenCacheExpiration = 24 * time.Hour
+const accessTokenExpiration = 1 * time.Hour
+
+type accessTokenCacheEntry struct {
+	claims    *daemon.AccessTokenClaims
+	expiredAt int64
 }

@@ -21,6 +21,7 @@ type Auth interface {
 	VerifyTokenForRootUser(ctx context.Context, token []byte) error
 
 	AuthBranch(ctx context.Context, branchId, timestamp, nonce, sign []byte) error
+	AuthBranchWithJWT(ctx context.Context, token string) (branchId []byte, err error)
 	SignTokenForBranch(ctx context.Context, branchId []byte) ([]byte, error)
 	VerifyTokenForBranch(ctx context.Context, token []byte) (branchId []byte, err error)
 

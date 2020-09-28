@@ -26,26 +26,25 @@ func New(configFn func(*Options)) stdHttp.Handler {
 		endpoint.WithUseCase(config.UseCase),
 	)
 
-
-
 	//gSys := r.Group("/sys")
-	//gPortal := r.Group("/portal")
-	gClient := r.Group("/client")
-
 	gSysApi := r.Group("/api/sys")
 	gSysApi.POST("/auth", sys.Auth)
 
 	gSysApiV1 := gSysApi.Group("/v1")
 	gSysApiV1.POST("/branch", sys.MidAuthorized, sys.CreateBranch)
 
+	//gPortal := r.Group("/portal")
 	gPortalApi := r.Group("/api/portal")
+	gPortalApi.POST("/auth/jwt", portal.AuthWithJwt)
 	gPortalApi.POST("/auth", portal.Auth)
+	gPortalApi.GET("/auth/:token", portal.RefreshAuthorization)
 
 	gPortalApiV1 := gPortalApi.Group("/v1")
 	gPortalApiV1.POST("/env", portal.MidAuthorized, portal.CreateEnv)
 	gPortalApiV1.POST("/version", portal.MidAuthorized, portal.ReleaseVersion)
 	gPortalApiV1.POST("/upload/pkg", portal.MidAuthorized, portal.UploadPkg)
 
+	gClient := r.Group("/client")
 	gClient.GET("/download/pkg/:fileId", client.DownloadFile)
 
 	gClientApi := r.Group("/api/client")

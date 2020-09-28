@@ -30,7 +30,7 @@ func authorized(c *gin.Context) ([]byte, error) {
 	} else {
 		accessToken = c.Query("access-token")
 		if accessToken == "" {
-			accessToken = c.GetHeader("Portal-Access-Token")
+			accessToken = c.GetHeader("X-Authorization")
 		}
 	}
 

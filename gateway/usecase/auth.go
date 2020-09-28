@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	daemonAdapter "github.com/funnyecho/code-push/daemon/interface/grpc_adapter"
 	"github.com/funnyecho/code-push/gateway"
+	"github.com/funnyecho/code-push/pkg/jwt"
 	"github.com/funnyecho/code-push/pkg/oauth"
 	"github.com/funnyecho/code-push/pkg/util"
 	"github.com/pkg/errors"
@@ -75,6 +76,30 @@ func (uc *useCase) AuthBranch(ctx context.Context, branchId, timestamp, nonce, s
 	}
 
 	return nil
+}
+
+func (uc *useCase) AuthBranchWithJWT(ctx context.Context, token string) (branchId []byte, err error) {
+	claims, err := jwt.ExtractClaims(token)
+
+	if err != nil {
+		return nil, errors.WithMessagef(err, "failed to extract claims from token: %s", token)
+	}
+
+	iBranchId := []byte(claims.Subject)
+	branchEncToken, branchEncTokenErr := uc.daemon.GetBranchEncToken(ctx, iBranchId)
+	if branchEncTokenErr != nil {
+		return nil, errors.WithMessagef(gateway.ErrUnauthorized, "failed to get token from branchId:%s", claims.Subject)
+	}
+
+	_, verifyErr := jwt.VerifyWithHMAC(token, branchEncToken)
+	if verifyErr != nil {
+		return nil, errors.WithMessage(gateway.ErrUnauthorized, "failed to verify token")
+	}
+
+	branchId = iBranchId
+	err = nil
+
+	return
 }
 
 func (uc *useCase) SignTokenForBranch(ctx context.Context, branchId []byte) ([]byte, error) {
