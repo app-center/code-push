@@ -14,15 +14,15 @@ type versionUpgradeQueryRequest struct {
 }
 
 type versionUpgradeQueryResponse struct {
-	AppVersion          string                     `json:"app_version"`
-	LatestAppVersion    string                     `json:"latest_app_version"`
-	CanUpdateAppVersion string                     `json:"can_update_app_version"`
-	MustUpdate          bool                       `json:"must_update"`
-	PackageInfo         *versionUpgradePackageInfo `json:"package_info"`
+	AppVersion          string                     `json:"appVersion"`
+	LatestAppVersion    string                     `json:"latestAppVersion"`
+	CanUpdateAppVersion string                     `json:"canUpdateAppVersion"`
+	MustUpdate          bool                       `json:"mustUpdate"`
+	PackageInfo         *versionUpgradePackageInfo `json:"packageInfo"`
 }
 
 type versionUpgradePackageInfo struct {
-	PackageBlob string `json:"package_blob"`
+	PackageBlob string `json:"packageBlob"`
 	MD5         string `json:"md5"`
 	Size        int64  `json:"size"`
 }
@@ -50,8 +50,8 @@ func VersionUpgradeQuery(c *gin.Context) {
 	var queryResCode string
 
 	queryData := &versionUpgradeQueryResponse{
-		MustUpdate:          result.MustUpdate,
-		PackageInfo:         nil,
+		MustUpdate:  result.MustUpdate,
+		PackageInfo: nil,
 	}
 
 	if result.AppVersion != nil {

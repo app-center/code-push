@@ -9,7 +9,7 @@ import (
 )
 
 type authRequest struct {
-	BranchId  string `form:"branch_id" binding:"required"`
+	BranchId  string `form:"branchId" binding:"required"`
 	Timestamp string `form:"timestamp" binding:"required"`
 	Nonce     string `form:"nonce" binding:"required"`
 	Sign      string `form:"sign" binding:"required"`

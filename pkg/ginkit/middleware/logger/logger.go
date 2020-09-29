@@ -11,14 +11,15 @@ func UseLogger(logger log.Logger) gin.HandlerFunc {
 		raw := c.Request.URL.RawQuery
 		clientIP := c.ClientIP()
 		method := c.Request.Method
-		statusCode := c.Writer.Status()
-		errorMessage := c.Errors.String()
 
 		c.Next()
 
 		if raw != "" {
 			path = path + "?" + raw
 		}
+
+		statusCode := c.Writer.Status()
+		errorMessage := c.Errors.String()
 
 		logger.Debug(
 			"gin-request",

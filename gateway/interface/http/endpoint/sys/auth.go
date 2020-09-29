@@ -7,8 +7,8 @@ import (
 )
 
 type authRequest struct {
-	Username string `form:"user_name" binding:"required"`
-	Password string `form:"user_pwd" binding:"required"`
+	Username string `form:"userName" binding:"required"`
+	Password string `form:"userPwd" binding:"required"`
 }
 
 type authResponse struct {

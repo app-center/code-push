@@ -103,5 +103,5 @@ func generateBranchEncToken() (string, error) {
 }
 
 func generateBranchId(branchName string) string {
-	return util.EncodeBase64(util.EncodeMD5(branchName + "/" + uuid.NewV4().String()))
+	return util.EncodeMD5(branchName + "/" + uuid.NewV4().String())
 }

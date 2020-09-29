@@ -12,7 +12,7 @@ type uploadPkgRequest struct {
 }
 
 type uploadPkgResponse struct {
-	FileKey string `json:"file_key"`
+	FileKey string `json:"fileKey"`
 }
 
 func UploadPkg(c *gin.Context) {

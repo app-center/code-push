@@ -7,7 +7,7 @@ import (
 )
 
 type authRequest struct {
-	EnvId     string `form:"env_id" binding:"required"`
+	EnvId     string `form:"envId" binding:"required"`
 	Timestamp string `form:"timestamp" binding:"required"`
 	Nonce     string `form:"nonce" binding:"required"`
 	Sign      string `form:"sign" binding:"required"`
@@ -40,4 +40,3 @@ func Auth(c *gin.Context) {
 	ginkit_res.Success(c, authResponse{string(token)})
 	return
 }
-

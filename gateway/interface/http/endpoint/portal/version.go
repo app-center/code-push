@@ -8,12 +8,12 @@ import (
 )
 
 type releaseVersionRequest struct {
-	EnvId            string `form:"env_id" binding:"required"`
-	AppVersion       string `form:"app_version" binding:"required"`
-	CompatAppVersion string `form:"compat_app_version"`
-	Changelog        string `form:"change_log" binding:"required"`
-	PackageFileKey   string `form:"package_file_key" binding:"required"`
-	MustUpdate       bool   `form:"must_update"`
+	EnvId            string `form:"envId" binding:"required"`
+	AppVersion       string `form:"appVersion" binding:"required"`
+	CompatAppVersion string `form:"compatAppVersion"`
+	Changelog        string `form:"changelog" binding:"required"`
+	PackageFileKey   string `form:"packageFileKey" binding:"required"`
+	MustUpdate       bool   `form:"mustUpdate"`
 }
 
 func ReleaseVersion(c *gin.Context) {

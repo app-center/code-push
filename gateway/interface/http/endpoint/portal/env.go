@@ -7,12 +7,12 @@ import (
 )
 
 type createEnvRequest struct {
-	EnvName string `form:"env_name" binding:"required"`
+	EnvName string `form:"envName" binding:"required"`
 }
 
 type createEnvResponse struct {
-	EnvId       string `json:"env_id"`
-	EnvEncToken string `json:"env_enc_token"`
+	EnvId       string `json:"envId"`
+	EnvEncToken string `json:"envEncToken"`
 }
 
 func CreateEnv(c *gin.Context) {

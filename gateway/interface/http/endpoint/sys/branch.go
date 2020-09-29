@@ -7,13 +7,13 @@ import (
 )
 
 type createBranchRequest struct {
-	BranchName string `form:"branch_name" binding:"required"`
+	BranchName string `form:"branchName" binding:"required"`
 }
 
 type createBranchResponse struct {
-	BranchId       string `form:"branch_id" binding:"required"`
-	BranchName     string `form:"branch_name" binding:"required"`
-	BranchEncToken string `form:"branch_enc_token" binding:"required"`
+	BranchId       string `form:"branchId" binding:"required"`
+	BranchName     string `form:"branchName" binding:"required"`
+	BranchEncToken string `form:"branchEncToken" binding:"required"`
 }
 
 func CreateBranch(c *gin.Context) {
