@@ -26,6 +26,7 @@ type Env interface {
 	GetEnv(envId []byte) (*daemon.Env, error)
 	DeleteEnv(envId []byte) error
 	GetEnvEncToken(envId []byte) ([]byte, error)
+	GetEnvsWithBranchId(branchId string) ([]*daemon.Env, error)
 }
 
 type Version interface {
@@ -63,4 +64,5 @@ type Upload interface {
 type AccessToken interface {
 	GenerateAccessToken(claims *daemon.AccessTokenClaims) ([]byte, error)
 	VerifyAccessToken(token []byte) (*daemon.AccessTokenClaims, error)
+	EvictAccessToken(token []byte) error
 }

@@ -29,6 +29,25 @@ func (s *EnvService) Env(envId []byte) (*daemon.Env, error) {
 	return &e, nil
 }
 
+func (s *EnvService) GetEnvsWithBranchId(branchId string) ([]*daemon.Env, error) {
+	var r []*daemon.Env
+
+	s.client.db.View(func(tx *bbolt.Tx) error {
+		tx.Bucket(bucketEnv).ForEach(func(k, v []byte) error {
+			var e daemon.Env
+			if err := internal.UnmarshalEnv(v, &e); err == nil && e.BranchId == branchId {
+				r = append(r, &e)
+			}
+
+			return nil
+		})
+
+		return nil
+	})
+
+	return r, nil
+}
+
 func (s *EnvService) CreateEnv(env *daemon.Env) error {
 	if len(env.ID) == 0 ||
 		len(env.Name) == 0 ||

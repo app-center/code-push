@@ -16,11 +16,12 @@ func MidAuthorized(c *gin.Context) {
 	}
 
 	WithBranchId(string(branchId), c)
+	WithAccessToken(string(getAccessToken(c)), c)
 
 	c.Next()
 }
 
-func authorized(c *gin.Context) ([]byte, error) {
+func getAccessToken(c *gin.Context) []byte {
 	var accessToken string
 
 	accessTokenFromCookies, cookiesErr := c.Cookie("access-token")
@@ -35,6 +36,15 @@ func authorized(c *gin.Context) ([]byte, error) {
 	}
 
 	if len(accessToken) == 0 {
+		return nil
+	}
+
+	return []byte(accessToken)
+}
+
+func authorized(c *gin.Context) ([]byte, error) {
+	accessToken := getAccessToken(c)
+	if accessToken == nil {
 		return nil, gateway.ErrUnauthorized
 	}
 

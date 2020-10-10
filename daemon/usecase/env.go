@@ -63,6 +63,14 @@ func (uc *useCase) GetEnv(envId []byte) (*daemon.Env, error) {
 	return envEntity, nil
 }
 
+func (uc *useCase) GetEnvsWithBranchId(branchId string) ([]*daemon.Env, error) {
+	if branchId == "" {
+		return nil, errors.WithMessage(daemon.ErrParamsInvalid, "branchId required")
+	}
+
+	return uc.domain.GetEnvsWithBranchId(branchId)
+}
+
 func (uc *useCase) DeleteEnv(envId []byte) error {
 	if envId == nil {
 		return errors.Wrapf(daemon.ErrParamsInvalid, "envId is empty")

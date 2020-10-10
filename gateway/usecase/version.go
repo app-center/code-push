@@ -17,6 +17,11 @@ func (uc *useCase) GetVersion(ctx context.Context, envId, appVersion []byte) (*g
 	return unmarshalVersion(res), err
 }
 
+func (uc *useCase) GetVersionList(ctx context.Context, envId []byte) ([]*gateway.Version, error) {
+	res, err := uc.daemon.GetVersionList(ctx, envId)
+	return unmarshalVersionList(res), err
+}
+
 func (uc *useCase) VersionStrictCompatQuery(ctx context.Context, envId, appVersion []byte) (*gateway.VersionCompatQueryResult, error) {
 	res, err := uc.daemon.VersionStrictCompatQuery(ctx, envId, appVersion)
 	return unmarshalVersionCompatQueryResult(res), err
@@ -57,6 +62,20 @@ func unmarshalVersion(v *pb.VersionResponse) *gateway.Version {
 	}
 }
 
+func unmarshalVersionList(vs []*pb.VersionResponse) []*gateway.Version {
+	if vs == nil {
+		return nil
+	}
+
+	list := make([]*gateway.Version, len(vs))
+
+	for i, v := range vs {
+		list[i] = unmarshalVersion(v)
+	}
+
+	return list
+}
+
 func unmarshalVersionCompatQueryResult(r *pb.VersionStrictCompatQueryResponse) *gateway.VersionCompatQueryResult {
 	if r == nil {
 		return nil
@@ -84,4 +103,3 @@ func marshalVersionReleaseParams(p *gateway.VersionReleaseParams) *pb.VersionRel
 		MustUpdate:       p.MustUpdate,
 	}
 }
-

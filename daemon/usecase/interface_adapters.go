@@ -13,6 +13,7 @@ type DomainAdapter interface {
 	IsBranchNameExisted(branchName []byte) (bool, error)
 
 	Env(envId []byte) (*daemon.Env, error)
+	GetEnvsWithBranchId(branchId string) ([]*daemon.Env, error)
 	CreateEnv(env *daemon.Env) error
 	DeleteEnv(envId []byte) error
 	IsEnvAvailable(envId []byte) bool

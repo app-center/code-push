@@ -20,3 +20,7 @@ func (c *Client) GetBranchEncToken(ctx context.Context, branchId []byte) ([]byte
 	res, err := c.branchClient.GetBranchEncToken(ctx, &pb.GetBranchEncTokenRequest{BranchId: branchId})
 	return unmarshalStringResponse(res), err
 }
+
+func (c *Client) GetBranch(ctx context.Context, branchId string) (*pb.BranchResponse, error) {
+	return c.branchClient.GetBranch(ctx, &pb.GetBranchRequest{BranchId: []byte(branchId)})
+}

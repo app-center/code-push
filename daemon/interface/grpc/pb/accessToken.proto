@@ -6,6 +6,7 @@ import "common.proto";
 service AccessToken {
   rpc GenerateAccessToken(GenerateAccessTokenRequest) returns (StringResponse);
   rpc VerifyAccessToken(VerifyAccessTokenRequest) returns (VerifyAccessTokenResponse);
+  rpc EvictAccessToken(EvictAccessTokenRequest) returns (PlainResponse) {}
 }
 
 message GenerateAccessTokenRequest {
@@ -13,6 +14,10 @@ message GenerateAccessTokenRequest {
 }
 
 message VerifyAccessTokenRequest {
+  string token = 1;
+}
+
+message EvictAccessTokenRequest {
   string token = 1;
 }
 

@@ -17,6 +17,15 @@ func (c *Client) GetVersion(ctx context.Context, envId, appVersion []byte) (*pb.
 	})
 }
 
+func (c *Client) GetVersionList(ctx context.Context, envId []byte) ([]*pb.VersionResponse, error) {
+	res, err := c.versionClient.ListVersions(ctx, &pb.ListVersionsRequest{EnvId: envId})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.List, nil
+}
+
 func (c *Client) VersionStrictCompatQuery(ctx context.Context, envId, appVersion []byte) (*pb.VersionStrictCompatQueryResponse, error) {
 	return c.versionClient.VersionStrictCompatQuery(ctx, &pb.VersionStrictCompatQueryRequest{
 		EnvId:      envId,

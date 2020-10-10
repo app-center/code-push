@@ -175,3 +175,11 @@ func (uc *useCase) VerifyTokenForEnv(ctx context.Context, token []byte) (envId [
 
 	return subject, nil
 }
+
+func (uc *useCase) EvictToken(ctx context.Context, token []byte) error {
+	if token == nil {
+		return gateway.ErrParamsInvalid
+	}
+
+	return uc.daemon.EvictAccessToken(ctx, string(token))
+}

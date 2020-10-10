@@ -11,3 +11,13 @@ func UseBranchId(c *gin.Context) string {
 
 	return branchId.(string)
 }
+
+func WithAccessToken(token string, c *gin.Context) {
+	c.Set("accessToken", token)
+}
+
+func UseAccessToken(c *gin.Context) string {
+	token, _ := c.Get("accessToken")
+
+	return token.(string)
+}

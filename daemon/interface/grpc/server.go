@@ -69,6 +69,11 @@ func (s *server) GetEnvEncToken(ctx context.Context, request *pb.EnvIdRequest) (
 	return MarshalBytesToStringResponse(res), err
 }
 
+func (s *server) GetEnvsWithBranchId(ctx context.Context, request *pb.BranchIdRequest) (*pb.EnvListResponse, error) {
+	res, err := s.uc.GetEnvsWithBranchId(request.GetBranchId())
+	return MarshalEnvListResponse(res), err
+}
+
 func (s *server) ReleaseVersion(ctx context.Context, request *pb.VersionReleaseRequest) (*pb.PlainResponse, error) {
 	err := s.uc.ReleaseVersion(UnmarshalVersionReleaseParams(request))
 	return nil, err
@@ -102,8 +107,13 @@ func (s *server) VerifyAccessToken(ctx context.Context, request *pb.VerifyAccess
 	}, err
 }
 
-func (f *server) UploadToAliOss(stream pb.Upload_UploadToAliOssServer) error {
-	fileKey, err := f.uc.UploadToAliOss(grpc_streamer.NewStreamReader(grpc_streamer.StreamReaderConfig{
+func (s *server) EvictAccessToken(ctx context.Context, request *pb.EvictAccessTokenRequest) (*pb.PlainResponse, error) {
+	err := s.uc.EvictAccessToken([]byte(request.GetToken()))
+	return nil, err
+}
+
+func (s *server) UploadToAliOss(stream pb.Upload_UploadToAliOssServer) error {
+	fileKey, err := s.uc.UploadToAliOss(grpc_streamer.NewStreamReader(grpc_streamer.StreamReaderConfig{
 		RecvByte: func() (b byte, err error) {
 			chunk, recvErr := stream.Recv()
 			if recvErr != nil {
@@ -127,14 +137,14 @@ func (f *server) UploadToAliOss(stream pb.Upload_UploadToAliOssServer) error {
 	return stream.SendAndClose(marshalBytesToStringResponse(fileKey))
 }
 
-func (f *server) GetSource(ctx context.Context, request *pb.GetSourceRequest) (*pb.FileSource, error) {
-	source, err := f.uc.GetSource(request.GetKey())
+func (s *server) GetSource(ctx context.Context, request *pb.GetSourceRequest) (*pb.FileSource, error) {
+	source, err := s.uc.GetSource(request.GetKey())
 
 	return marshalFileSource(source), err
 }
 
-func (f *server) InsertSource(ctx context.Context, request *pb.InsertSourceRequest) (*pb.StringResponse, error) {
-	key, err := f.uc.InsertSource(request.GetValue(), request.GetDesc(), request.GetFileMD5(), request.GetFileSize())
+func (s *server) InsertSource(ctx context.Context, request *pb.InsertSourceRequest) (*pb.StringResponse, error) {
+	key, err := s.uc.InsertSource(request.GetValue(), request.GetDesc(), request.GetFileMD5(), request.GetFileSize())
 	return marshalBytesToStringResponse(key), err
 }
 
@@ -157,12 +167,32 @@ func MarshalEnvResponse(e *daemon.Env) *pb.EnvResponse {
 	}
 
 	return &pb.EnvResponse{
-		BranchId:    e.BranchId,
-		EnvId:       e.ID,
-		Name:        e.Name,
-		EnvEncToken: e.EncToken,
-		CreateTime:  e.CreateTime.UnixNano(),
+		Id:         e.ID,
+		BranchId:   e.BranchId,
+		Name:       e.Name,
+		EncToken:   e.EncToken,
+		CreateTime: e.CreateTime.UnixNano(),
 	}
+}
+
+func MarshalEnvListResponse(es []*daemon.Env) *pb.EnvListResponse {
+	if es == nil {
+		return nil
+	}
+
+	list := make([]*pb.EnvResponse, len(es))
+
+	for i, v := range es {
+		list[i] = &pb.EnvResponse{
+			Id:         v.ID,
+			BranchId:   v.BranchId,
+			Name:       v.Name,
+			EncToken:   v.EncToken,
+			CreateTime: v.CreateTime.UnixNano(),
+		}
+	}
+
+	return &pb.EnvListResponse{List: list}
 }
 
 func MarshalVersionResponse(v *daemon.Version) *pb.VersionResponse {
@@ -228,7 +258,7 @@ func UnmarshalVersionReleaseParams(request *pb.VersionReleaseRequest) usecase.Ve
 	return NewVersionReleaseParams(request)
 }
 
-	func marshalAccessTokenClaims(claims *daemon.AccessTokenClaims) *pb.AccessTokenClaims {
+func marshalAccessTokenClaims(claims *daemon.AccessTokenClaims) *pb.AccessTokenClaims {
 	if claims == nil {
 		return nil
 	}

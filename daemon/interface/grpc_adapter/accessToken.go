@@ -40,3 +40,9 @@ func (c *Client) VerifyAccessToken(ctx context.Context, token string) (subject [
 
 	return []byte(claims.Subject), nil
 }
+
+func (c *Client) EvictAccessToken(ctx context.Context, token string) error {
+	_, err := c.accessTokenClient.EvictAccessToken(ctx, &pb.EvictAccessTokenRequest{Token: token})
+
+	return err
+}

@@ -25,6 +25,25 @@ func (uc *useCase) GetEnvEncToken(ctx context.Context, envId []byte) ([]byte, er
 	return uc.daemon.GetEnvEncToken(ctx, envId)
 }
 
+func (uc *useCase) GetEnvsWithBranchId(ctx context.Context, branchId string) ([]*gateway.Env, error) {
+	res, err := uc.daemon.GetEnvsWithBranchId(ctx, branchId)
+	return unmarshalEnvList(res), err
+}
+
+func unmarshalEnvList(es []*pb.EnvResponse) []*gateway.Env {
+	if es == nil {
+		return nil
+	}
+
+	list := make([]*gateway.Env, len(es))
+
+	for i, e := range es {
+		list[i] = unmarshalEnv(e)
+	}
+
+	return list
+}
+
 func unmarshalEnv(e *pb.EnvResponse) *gateway.Env {
 	if e == nil {
 		return nil
@@ -32,9 +51,9 @@ func unmarshalEnv(e *pb.EnvResponse) *gateway.Env {
 
 	return &gateway.Env{
 		BranchId:   e.GetBranchId(),
-		ID:         e.GetEnvId(),
+		ID:         e.GetId(),
 		Name:       e.GetName(),
-		EncToken:   e.GetEnvEncToken(),
+		EncToken:   e.GetEncToken(),
 		CreateTime: time.Unix(0, e.CreateTime),
 	}
 }

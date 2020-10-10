@@ -25,3 +25,12 @@ func (c *Client) GetEnvEncToken(ctx context.Context, envId []byte) ([]byte, erro
 	res, err := c.envClient.GetEnvEncToken(ctx, &pb.EnvIdRequest{EnvId: envId})
 	return unmarshalStringResponse(res), err
 }
+
+func (c *Client) GetEnvsWithBranchId(ctx context.Context, branchId string) ([]*pb.EnvResponse, error) {
+	res, err := c.envClient.GetEnvsWithBranchId(ctx, &pb.BranchIdRequest{BranchId: branchId})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.List, nil
+}

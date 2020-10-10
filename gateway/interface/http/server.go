@@ -40,6 +40,11 @@ func New(configFn func(*Options)) stdHttp.Handler {
 	gPortalApi.GET("/auth/:token", portal.RefreshAuthorization)
 
 	gPortalApiV1 := gPortalApi.Group("/v1")
+	gPortalApiV1.POST("/logout", portal.MidAuthorized, portal.Logout)
+	gPortalApiV1.GET("/branch", portal.MidAuthorized, portal.GetBranch)
+	gPortalApiV1.GET("/env/:envId/version", portal.MidAuthorized, portal.GetVersionList)
+	gPortalApiV1.GET("/env/:envId", portal.MidAuthorized, portal.GetEnv)
+	gPortalApiV1.GET("/env", portal.MidAuthorized, portal.GetEnvs)
 	gPortalApiV1.POST("/env", portal.MidAuthorized, portal.CreateEnv)
 	gPortalApiV1.POST("/version", portal.MidAuthorized, portal.ReleaseVersion)
 	gPortalApiV1.POST("/upload/pkg", portal.MidAuthorized, portal.UploadPkg)

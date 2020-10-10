@@ -96,3 +96,14 @@ func RefreshAuthorization(c *gin.Context) {
 	ginkit_res.Success(c, refreshAuthResponse{BranchId: string(branchId)})
 	return
 }
+
+func Logout(c *gin.Context) {
+	err := endpoint.UseUC(c).EvictToken(c.Request.Context(), []byte(UseAccessToken(c)))
+	if err != nil {
+		ginkit_res.Error(c, err)
+		return
+	}
+
+	ginkit_res.Success(c, nil)
+	return
+}

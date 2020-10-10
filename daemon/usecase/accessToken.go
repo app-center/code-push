@@ -31,9 +31,18 @@ func (uc *useCase) GenerateAccessToken(claims *daemon.AccessTokenClaims) ([]byte
 	return []byte(token), nil
 }
 
+func (uc *useCase) EvictAccessToken(token []byte) error {
+	if token == nil {
+		return errors.Wrap(daemon.ErrParamsInvalid, "token is required")
+	}
+
+	uc.accessTokenCache.Delete(string(token))
+	return nil
+}
+
 func (uc *useCase) VerifyAccessToken(token []byte) (*daemon.AccessTokenClaims, error) {
 	if token == nil {
-		return nil, errors.Wrap(daemon.ErrParamsInvalid, "claims is required")
+		return nil, errors.Wrap(daemon.ErrParamsInvalid, "token is required")
 	}
 
 	v, existed := uc.accessTokenCache.Get(string(token))

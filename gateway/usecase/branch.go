@@ -16,6 +16,11 @@ func (uc *useCase) DeleteBranch(ctx context.Context, branchId []byte) error {
 	return uc.daemon.DeleteBranch(ctx, branchId)
 }
 
+func (uc *useCase) GetBranch(ctx context.Context, branchId string) (*gateway.Branch, error) {
+	b, err := uc.daemon.GetBranch(ctx, branchId)
+	return unmarshalBranch(b), err
+}
+
 func unmarshalBranch(b *pb.BranchResponse) *gateway.Branch {
 	if b == nil {
 		return nil

@@ -11,9 +11,9 @@ type createBranchRequest struct {
 }
 
 type createBranchResponse struct {
-	BranchId       string `form:"branchId" binding:"required"`
-	BranchName     string `form:"branchName" binding:"required"`
-	BranchEncToken string `form:"branchEncToken" binding:"required"`
+	BranchId       string `json:"branchId" binding:"required"`
+	BranchName     string `json:"branchName" binding:"required"`
+	BranchEncToken string `json:"branchEncToken" binding:"required"`
 }
 
 func CreateBranch(c *gin.Context) {
