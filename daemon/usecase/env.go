@@ -7,7 +7,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func (uc *useCase) CreateEnv(branchId, envName []byte) (*daemon.Env, error) {
+func (uc *useCase) CreateEnv(branchId, envName, envEncToken []byte) (*daemon.Env, error) {
 	if branchId == nil || envName == nil {
 		return nil, errors.Wrapf(daemon.ErrParamsInvalid, "branchId or envName can't not be empty")
 	}
@@ -26,10 +26,19 @@ func (uc *useCase) CreateEnv(branchId, envName []byte) (*daemon.Env, error) {
 	}
 
 	envId := generateEnvId(string(branchId))
-	encToken, encTokenErr := generateEnvEncToken()
 
-	if encTokenErr != nil {
-		return nil, errors.Wrapf(encTokenErr, "generate env enc token failed")
+	encToken := ""
+
+	if envEncToken == nil || len(envEncToken) == 0 {
+		token, encTokenErr := generateEnvEncToken()
+
+		if encTokenErr != nil {
+			return nil, errors.Wrapf(encTokenErr, "generate env enc token failed")
+		}
+
+		encToken = token
+	} else {
+		encToken = string(envEncToken)
 	}
 
 	envToCreate := &daemon.Env{

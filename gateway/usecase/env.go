@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-func (uc *useCase) CreateEnv(ctx context.Context, branchId, envName []byte) (*gateway.Env, error) {
-	res, err := uc.daemon.CreateEnv(ctx, branchId, envName)
+func (uc *useCase) CreateEnv(ctx context.Context, branchId, envName, envEncToken []byte) (*gateway.Env, error) {
+	res, err := uc.daemon.CreateEnv(ctx, branchId, envName, envEncToken)
 	return unmarshalEnv(res), err
 }
 

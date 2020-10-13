@@ -5,10 +5,11 @@ import (
 	"github.com/funnyecho/code-push/daemon/interface/grpc/pb"
 )
 
-func (c *Client) CreateEnv(ctx context.Context, branchId, envName []byte) (*pb.EnvResponse, error) {
+func (c *Client) CreateEnv(ctx context.Context, branchId, envName, envEncToken []byte) (*pb.EnvResponse, error) {
 	return c.envClient.CreateEnv(ctx, &pb.CreateEnvRequest{
-		BranchId: branchId,
-		EnvName:  envName,
+		BranchId:    branchId,
+		EnvName:     envName,
+		EnvEncToken: envEncToken,
 	})
 }
 

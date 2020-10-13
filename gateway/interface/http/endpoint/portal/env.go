@@ -10,7 +10,8 @@ import (
 )
 
 type createEnvRequest struct {
-	EnvName string `form:"envName" binding:"required"`
+	EnvName     string `form:"envName" binding:"required"`
+	EnvEncToken string `form:"envEncToken"`
 }
 
 type getEnvRequest struct {
@@ -35,7 +36,12 @@ func CreateEnv(c *gin.Context) {
 		return
 	}
 
-	response, err := endpoint.UseUC(c).CreateEnv(c.Request.Context(), []byte(UseBranchId(c)), []byte(request.EnvName))
+	var envEncToken []byte
+	if request.EnvEncToken != "" {
+		envEncToken = []byte(request.EnvEncToken)
+	}
+
+	response, err := endpoint.UseUC(c).CreateEnv(c.Request.Context(), []byte(UseBranchId(c)), []byte(request.EnvName), envEncToken)
 	if err != nil {
 		res.Error(c, err)
 		return

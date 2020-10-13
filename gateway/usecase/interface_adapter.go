@@ -12,7 +12,7 @@ type DaemonAdapter interface {
 	GetBranch(ctx context.Context, branchId string) (*pb.BranchResponse, error)
 	GetBranchEncToken(ctx context.Context, branchId []byte) ([]byte, error)
 
-	CreateEnv(ctx context.Context, branchId, envName []byte) (*pb.EnvResponse, error)
+	CreateEnv(ctx context.Context, branchId, envName, envEncToken []byte) (*pb.EnvResponse, error)
 	GetEnv(ctx context.Context, envId []byte) (*pb.EnvResponse, error)
 	DeleteEnv(ctx context.Context, envId []byte) error
 	GetEnvEncToken(ctx context.Context, envId []byte) ([]byte, error)

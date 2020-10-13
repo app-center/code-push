@@ -39,7 +39,7 @@ type Branch interface {
 }
 
 type Env interface {
-	CreateEnv(ctx context.Context, branchId, envName []byte) (*gateway.Env, error)
+	CreateEnv(ctx context.Context, branchId, envName, envEncToken []byte) (*gateway.Env, error)
 	GetEnv(ctx context.Context, envId []byte) (*gateway.Env, error)
 	DeleteEnv(ctx context.Context, envId []byte) error
 	GetEnvEncToken(ctx context.Context, envId []byte) ([]byte, error)
