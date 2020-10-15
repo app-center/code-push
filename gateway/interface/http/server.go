@@ -26,6 +26,8 @@ func New(configFn func(*Options)) stdHttp.Handler {
 		endpoint.WithUseCase(config.UseCase),
 	)
 
+	r.Static("/app-center", config.AppCenterPath)
+
 	//gSys := r.Group("/sys")
 	gSysApi := r.Group("/api/sys")
 	gSysApi.POST("/auth", sys.Auth)
@@ -64,5 +66,6 @@ func New(configFn func(*Options)) stdHttp.Handler {
 type Options struct {
 	usecase.UseCase
 	log.Logger
-	Debug bool
+	Debug         bool
+	AppCenterPath string
 }

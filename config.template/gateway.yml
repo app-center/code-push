@@ -6,3 +6,5 @@ addr_daemon: :9520
 
 root_user_name: uceNtigA
 root_user_pwd: omenTergaCQU
+
+app_center_path: ./app-center

@@ -80,6 +80,7 @@ func onServe(ctx context.Context, args []string) error {
 			options.Debug = serveCmdOptions.Debug
 			options.UseCase = uc
 			options.Logger = zap_log.New(logger.With("component", "interfaces", "interface", "http"))
+			options.AppCenterPath = serveCmdOptions.AppCenterPath
 		})),
 	)
 }

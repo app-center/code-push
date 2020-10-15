@@ -15,6 +15,8 @@ type serveConfig struct {
 
 	RootUserName string `flag:"root_user_name" usage:"root user name"`
 	RootUserPwd  string `flag:"root_user_pwd" usage:"root user password"`
+
+	AppCenterPath string `flag:"app_center_path" usage:"path to /app-center web application"`
 }
 
 func (c *serveConfig) Validate() error {
@@ -34,6 +36,10 @@ func (c *serveConfig) Validate() error {
 
 	if len(c.RootUserPwd) < 6 {
 		errs = append(errs, "length of root use pwd shall be larger than 6")
+	}
+
+	if c.AppCenterPath == "" {
+		errs = append(errs, "Invalid app_center_path")
 	}
 
 	if len(errs) == 0 {
