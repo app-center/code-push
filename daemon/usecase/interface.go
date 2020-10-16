@@ -22,7 +22,7 @@ type Branch interface {
 }
 
 type Env interface {
-	CreateEnv(branchId, envName, envEncToken []byte) (*daemon.Env, error)
+	CreateEnv(branchId, envId, envName, envEncToken []byte) (*daemon.Env, error)
 	GetEnv(envId []byte) (*daemon.Env, error)
 	DeleteEnv(envId []byte) error
 	GetEnvEncToken(envId []byte) ([]byte, error)

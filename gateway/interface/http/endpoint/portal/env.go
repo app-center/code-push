@@ -11,6 +11,7 @@ import (
 
 type createEnvRequest struct {
 	EnvName     string `form:"envName" binding:"required"`
+	EnvId       string `form:"envId"`
 	EnvEncToken string `form:"envEncToken"`
 }
 
@@ -41,7 +42,12 @@ func CreateEnv(c *gin.Context) {
 		envEncToken = []byte(request.EnvEncToken)
 	}
 
-	response, err := endpoint.UseUC(c).CreateEnv(c.Request.Context(), []byte(UseBranchId(c)), []byte(request.EnvName), envEncToken)
+	var envId []byte
+	if request.EnvId != "" {
+		envId = []byte(request.EnvId)
+	}
+
+	response, err := endpoint.UseUC(c).CreateEnv(c.Request.Context(), []byte(UseBranchId(c)), envId, []byte(request.EnvName), envEncToken)
 	if err != nil {
 		res.Error(c, err)
 		return

@@ -50,7 +50,7 @@ func (s *server) GetBranchEncToken(ctx context.Context, request *pb.GetBranchEnc
 }
 
 func (s *server) CreateEnv(ctx context.Context, request *pb.CreateEnvRequest) (*pb.EnvResponse, error) {
-	res, err := s.uc.CreateEnv(request.BranchId, request.EnvName, request.EnvEncToken)
+	res, err := s.uc.CreateEnv(request.BranchId, request.EnvId, request.EnvName, request.EnvEncToken)
 	return MarshalEnvResponse(res), err
 }
 

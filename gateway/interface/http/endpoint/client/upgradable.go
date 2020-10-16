@@ -14,15 +14,15 @@ type versionUpgradeQueryRequest struct {
 }
 
 type versionUpgradeQueryResponse struct {
-	AppVersion          string                     `json:"appVersion"`
-	LatestAppVersion    string                     `json:"latestAppVersion"`
-	CanUpdateAppVersion string                     `json:"canUpdateAppVersion"`
-	MustUpdate          bool                       `json:"mustUpdate"`
-	PackageInfo         *versionUpgradePackageInfo `json:"packageInfo"`
+	AppVersion          string                     `json:"app_version"`
+	LatestAppVersion    string                     `json:"latest_app_version"`
+	CanUpdateAppVersion string                     `json:"can_update_app_version"`
+	MustUpdate          bool                       `json:"must_update"`
+	PackageInfo         *versionUpgradePackageInfo `json:"package_info"`
 }
 
 type versionUpgradePackageInfo struct {
-	PackageBlob string `json:"packageBlob"`
+	PackageBlob string `json:"package_blob"`
 	MD5         string `json:"md5"`
 	Size        int64  `json:"size"`
 }

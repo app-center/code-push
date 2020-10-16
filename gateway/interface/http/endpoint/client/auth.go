@@ -7,7 +7,7 @@ import (
 )
 
 type authRequest struct {
-	EnvId     string `form:"envId" binding:"required"`
+	EnvId     string `form:"env_id" binding:"required"`
 	Timestamp string `form:"timestamp" binding:"required"`
 	Nonce     string `form:"nonce" binding:"required"`
 	Sign      string `form:"sign" binding:"required"`

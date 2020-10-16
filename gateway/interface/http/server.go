@@ -52,7 +52,7 @@ func New(configFn func(*Options)) stdHttp.Handler {
 	gPortalApiV1.POST("/upload/pkg", portal.MidAuthorized, portal.UploadPkg)
 
 	gClient := r.Group("/client")
-	gClient.GET("/download/pkg/:fileId", client.DownloadFile)
+	gClient.GET("/download/pkg/:fileId", client.MidAuthorized, client.DownloadFile)
 
 	gClientApi := r.Group("/api/client")
 	gClientApi.POST("/auth/ddder", client.Auth)
