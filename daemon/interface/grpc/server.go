@@ -176,19 +176,17 @@ func MarshalEnvResponse(e *daemon.Env) *pb.EnvResponse {
 }
 
 func MarshalEnvListResponse(es []*daemon.Env) *pb.EnvListResponse {
-	if es == nil {
-		return nil
-	}
-
 	list := make([]*pb.EnvResponse, len(es))
 
-	for i, v := range es {
-		list[i] = &pb.EnvResponse{
-			Id:         v.ID,
-			BranchId:   v.BranchId,
-			Name:       v.Name,
-			EncToken:   v.EncToken,
-			CreateTime: v.CreateTime.UnixNano(),
+	if es != nil {
+		for i, v := range es {
+			list[i] = &pb.EnvResponse{
+				Id:         v.ID,
+				BranchId:   v.BranchId,
+				Name:       v.Name,
+				EncToken:   v.EncToken,
+				CreateTime: v.CreateTime.UnixNano(),
+			}
 		}
 	}
 

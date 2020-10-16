@@ -33,5 +33,9 @@ func (c *Client) GetEnvsWithBranchId(ctx context.Context, branchId string) ([]*p
 		return nil, err
 	}
 
+	if res == nil {
+		return nil, nil
+	}
+
 	return res.List, nil
 }
