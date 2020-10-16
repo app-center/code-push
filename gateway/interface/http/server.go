@@ -19,6 +19,9 @@ func New(configFn func(*Options)) stdHttp.Handler {
 	r := ginkit_server.New(
 		ginkit_server.WithDebugMode(config.Debug),
 		ginkit_server.WithLogger(config.Logger),
+		ginkit_server.WithDisableMetrics(),
+		ginkit_server.WithDisableOpentracing(),
+		ginkit_server.WithDisablePrometheusEndpoint(),
 	)
 
 	r.Use(

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/funnyecho/code-push/pkg/adapterkit"
 	adapterkit_grpc_interceptor_error "github.com/funnyecho/code-push/pkg/adapterkit/grpc/interceptor/error"
-	adapterkit_grpc_interceptor_opentracing "github.com/funnyecho/code-push/pkg/adapterkit/grpc/interceptor/opentracing"
 	"github.com/funnyecho/code-push/pkg/log"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/pkg/errors"
@@ -77,11 +76,11 @@ func (a *grpcAdapter) Conn() error {
 		grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
 			adapterkit_grpc_interceptor_error.WithUnaryInterceptor(),
-			adapterkit_grpc_interceptor_opentracing.WithUnaryInterceptor(),
+			//adapterkit_grpc_interceptor_opentracing.WithUnaryInterceptor(),
 		)),
 		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(
 			adapterkit_grpc_interceptor_error.WithStreamInterceptor(),
-			adapterkit_grpc_interceptor_opentracing.WithStreamInterceptor(),
+			//adapterkit_grpc_interceptor_opentracing.WithStreamInterceptor(),
 		)),
 	)
 	if err != nil {

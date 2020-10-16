@@ -99,6 +99,8 @@ func onServe(ctx context.Context, args []string) error {
 		g.Add(grpckit_server.Actor(
 			grpckit_server.WithServePort(serveCmdOptions.PortGrpc),
 			grpckit_server.WithLogger(grpcServerLogger),
+			grpckit_server.WithDisableOpentracing(),
+			grpckit_server.WithDisableMetrics(),
 			grpckit_server.WithServeExecution(func(_ net.Listener, server *grpc.Server) error {
 				pb.RegisterBranchServer(server, grpcServer)
 				pb.RegisterEnvServer(server, grpcServer)
